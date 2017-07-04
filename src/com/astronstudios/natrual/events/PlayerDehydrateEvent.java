@@ -1,13 +1,11 @@
 package com.astronstudios.natrual.events;
 
-
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-@Deprecated
-public class PlayerDehydrateDeathEvent extends Event implements Cancellable {
+public class PlayerDehydrateEvent extends Event implements Cancellable {
 
     private static HandlerList list = new HandlerList();
 
@@ -15,7 +13,7 @@ public class PlayerDehydrateDeathEvent extends Event implements Cancellable {
     private int from, to;
     private boolean cancel = false;
 
-    public PlayerDehydrateDeathEvent(Player player, int from, int to) {
+    public PlayerDehydrateEvent(Player player, int from, int to) {
         this.player = player;
         this.from = from;
         this.to = to;

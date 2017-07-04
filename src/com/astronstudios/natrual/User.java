@@ -1,5 +1,6 @@
 package com.astronstudios.natrual;
 
+import com.astronstudios.natrual.events.PlayerDehydrateEvent;
 import com.astronstudios.natrual.items.CampFire;
 import com.astronstudios.natrual.recipes.EnchantmentsManager;
 import com.astronstudios.natrual.util.CustomStack;
@@ -164,7 +165,11 @@ public class User {
     }
 
     public void saturate(int v) {
-        this.thirst = this.thirst + v > 20 ? 20 : this.thirst + v < 0 ? 0 : this.thirst + v;
+        PlayerDehydrateEvent event = new PlayerDehydrateEvent(Bukkit.getPlayer(this.uuid),
+                this.thirst, this.thirst + v > 20 ? 20 : this.thirst + v < 0 ? 0 : this.thirst + v);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) return;
+        this.thirst = event.getTo();
         if (v < 0) {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) {
