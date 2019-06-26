@@ -1,0 +1,56 @@
+#
+#  ___  _                          _    _  _        _
+# | __|| |_  ___  _ _  _ _   __ _ | |  | \| | __ _ | |_  _  _  _ _  ___
+# | _| |  _|/ -_)| '_|| ' \ / _` || |  | .` |/ _` ||  _|| || || '_|/ -_)
+# |___| \__|\___||_|  |_||_|\__,_||_|  |_|\_|\__,_| \__| \_,_||_|  \___|
+#                   version 2.0  (supports 1.14*)
+#                        created by Masstrix
+#
+#                        TEMPERATURE SETTINGS
+#
+# Biome specific atmosphere ground level temperature.
+# Biome names do not need to be exact and will match to the closest name.
+biome:
+  base: 13 # Fallback value if not match is found.
+  ocean: 10
+  cold_ocean: 2
+  plains: 13
+  beach: 10
+  swamp: 17
+  mountain: 5
+  savanna: 20
+  jungle: 25
+  lukewarm_ocean: 20
+  dessert: 30
+  dessert_hills: 35
+  frozen: -3
+  tiga: -5
+  snowy: -10
+  ice: -10
+  end: -2
+  nether: 35
+
+weather:
+  clear: 0
+
+# Block emission temperatures.
+blocks:
+  lava: 500
+  fire: 100
+  torch: 40
+  campfire: 80
+  lantern: 30
+  glowstone: 20
+  netherrack: 10
+  jack_o_lantern: 20
+  snow: -2
+  end_stone: -3
+  end_portal: -5
+  nether_portal: 25
+
+armor:
+  leather_helmet: 1
+  leather_chestplate: 3
+  leather_leggings: 2
+  leather_boots: 1
+  turtle_helmet: 1
