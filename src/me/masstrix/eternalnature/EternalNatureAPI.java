@@ -3,7 +3,7 @@ package me.masstrix.eternalnature;
 import me.masstrix.eternalnature.api.EternalUser;
 import me.masstrix.eternalnature.api.EternalWorld;
 import me.masstrix.eternalnature.core.TemperatureData;
-import me.masstrix.eternalnature.data.SystemConfig;
+import me.masstrix.eternalnature.config.SystemConfig;
 
 import java.util.UUID;
 

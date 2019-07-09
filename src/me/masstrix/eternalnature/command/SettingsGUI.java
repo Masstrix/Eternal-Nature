@@ -2,7 +2,7 @@ package me.masstrix.eternalnature.command;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.PluginData;
-import me.masstrix.eternalnature.data.SystemConfig;
+import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
 import me.masstrix.eternalnature.util.StringUtil;
 import org.bukkit.Bukkit;
@@ -25,6 +25,7 @@ public class SettingsGUI implements Listener {
     private int hydrationDamage = asSlot(1, 4);
     private int temperatureDamage = asSlot(1, 4);
     private int waterfalls = asSlot(1, 2);
+    private int autoplant = asSlot(1, 3);
     private int rebuildConfig = asSlot(1, 8);
 
     private EternalNature plugin;
@@ -109,6 +110,18 @@ public class SettingsGUI implements Listener {
                 .addSwitch("Currently:", config.areWaterfallsEnabled())
                 .build());
         setToggle("Waterfalls", waterfalls + 9, config.areWaterfallsEnabled());
+
+        gui.setItem(autoplant, new ItemBuilder(Material.OAK_SAPLING)
+                .setName("&aAuto Plant")
+                .addLore("")
+                .addLore("Toggle if saplings are")
+                .addLore("automatically planted if left")
+                .addLore("long enough.")
+                .addLore("")
+                .addSwitch("Currently:", config.isAutoPlantSaplings())
+                .build());
+        setToggle("Auto Plant", autoplant + 9, config.isAutoPlantSaplings());
+
         gui.setItem(hydrationDamage, new ItemBuilder(Material.TUBE_CORAL)
                 .setName("&aHydration damage")
                 .addLore("")
@@ -182,6 +195,12 @@ public class SettingsGUI implements Listener {
         else if (slot == hydrationDamage) {
             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
             config.setHydrationCauseDamage(!config.isHydrationCauseDamage());
+            config.save();
+            updateItems();
+        }
+        else if (slot == autoplant) {
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+            config.setAutoPlantSaplings(!config.isAutoPlantSaplings());
             config.save();
             updateItems();
         }

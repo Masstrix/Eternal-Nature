@@ -3,6 +3,8 @@ package me.masstrix.eternalnature.data;
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.api.EternalUser;
 import me.masstrix.eternalnature.core.TemperatureData;
+import me.masstrix.eternalnature.config.StatusRenderMethod;
+import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.world.ChunkData;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
@@ -164,7 +166,7 @@ public class UserData implements EternalUser {
 
         // Render user info.
         StringBuilder actionBar = new StringBuilder();
-        if (config.getThirstRenderMethod() == SystemConfig.StatusRenderMethod.BOSSBAR) {
+        if (config.getThirstRenderMethod() == StatusRenderMethod.BOSSBAR) {
             if (hydrationBar == null) {
                 hydrationBar = Bukkit.createBossBar("h2-", BarColor.BLUE, BarStyle.SEGMENTED_12);
                 hydrationBar.addPlayer(player);
@@ -192,7 +194,7 @@ public class UserData implements EternalUser {
             }
             actionBar.append(h20);
         }
-        if (config.getTempRenderMethod() == SystemConfig.StatusRenderMethod.BOSSBAR) {
+        if (config.getTempRenderMethod() == StatusRenderMethod.BOSSBAR) {
             if (tempBar == null) {
                 tempBar = Bukkit.createBossBar("Temp", BarColor.GREEN, BarStyle.SOLID);
                 tempBar.addPlayer(player);

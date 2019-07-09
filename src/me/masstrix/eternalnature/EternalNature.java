@@ -1,7 +1,7 @@
 package me.masstrix.eternalnature;
 
 import me.masstrix.eternalnature.command.*;
-import me.masstrix.eternalnature.data.SystemConfig;
+import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.listeners.*;
 import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.eternalnature.util.VersionChecker;

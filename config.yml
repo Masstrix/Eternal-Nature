@@ -19,7 +19,9 @@ general:
   notify-update-join: true
 
 # Global settings across all worlds.
-global-settings:
+global:
+  auto-plant-saplings: true
+  waterfalls: true
   hydration:
     enabled: true
     lose-from-walking: true
@@ -34,10 +36,6 @@ global-settings:
     # on processing time. This can increase performance but also calculateSection more local
     # data.
     save-data: false
-
-environment:
-  waterfalls:
-    enabled: true
 
 # Render settings for how to display things to players.
 # styles: ACTIONBAR (text above hotbar), BOSSBAR (top of screen)

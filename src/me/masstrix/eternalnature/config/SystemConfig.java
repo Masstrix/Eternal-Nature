@@ -1,4 +1,4 @@
-package me.masstrix.eternalnature.data;
+package me.masstrix.eternalnature.config;
 
 import me.masstrix.eternalnature.EternalNature;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -19,6 +19,7 @@ public class SystemConfig {
     // Global
     private boolean thirstFlash = true;
     private boolean thirstDamage = true;
+    private boolean autoPlantSaplings = true;
 
     // Render
     private boolean tempFlash = true;
@@ -33,23 +34,6 @@ public class SystemConfig {
     private int updateCalls = 10; // calls per second for updates
     private int renderCalls = 20; // calls per second for renders
     private int scanRadius = 10;
-
-    public enum StatusRenderMethod {
-        ACTIONBAR, BOSSBAR;
-
-        static StatusRenderMethod getOr(String val, StatusRenderMethod def) {
-            for (StatusRenderMethod m : StatusRenderMethod.values()) {
-                if (m.name().equalsIgnoreCase(val)) {
-                    return m;
-                }
-            }
-            return def;
-        }
-
-        public StatusRenderMethod opisite() {
-            return this == ACTIONBAR ? BOSSBAR : ACTIONBAR;
-        }
-    }
 
     public SystemConfig(EternalNature plugin) {
         this.plugin = plugin;
@@ -76,12 +60,15 @@ public class SystemConfig {
 
         checkForUpdates = config.getBoolean("general.check-for-updates", true);
 
+        waterfallsEnabled = config.getBoolean("global.waterfalls", true);
+        autoPlantSaplings = config.getBoolean("global.auto-plant-saplings", true);
+
         if (config.contains("render.hydration.style"))
             thirstRenderMethod = StatusRenderMethod.getOr(
                     config.getString("render.hydration.style"), StatusRenderMethod.ACTIONBAR);
         if (config.contains("render.hydration.flash"))
             thirstFlash = config.getBoolean("render.hydration.flash");
-        if (config.contains("global-settings.hydration.cause-damage"))
+        if (config.contains("global.hydration.cause-damage"))
             thirstDamage = config.getBoolean("global-settings.hydration.cause-damage");
 
         if (config.contains("render.temperature.style"))
@@ -91,8 +78,6 @@ public class SystemConfig {
         updateCalls = config.getInt("advanced.update-calls", 10);
         renderCalls = config.getInt("advanced.render-calls", 10);
         renderCalls = config.getInt("advanced.temperature.scan-radius", 10);
-
-        waterfallsEnabled = config.getBoolean("environment.waterfalls", true);
 
         if (updateCalls > 20 || updateCalls < 0) updateCalls = 10;
         if (renderCalls > 20 || renderCalls < 0) renderCalls = 20;
@@ -132,6 +117,14 @@ public class SystemConfig {
         config.set("render.temperature.style", method.name());
     }
 
+    public boolean isAutoPlantSaplings() {
+        return autoPlantSaplings;
+    }
+
+    public void setAutoPlantSaplings(boolean autoPlantSaplings) {
+        this.autoPlantSaplings = autoPlantSaplings;
+    }
+
     public boolean isTempFlash() {
         return tempFlash;
     }
@@ -141,27 +134,27 @@ public class SystemConfig {
     }
 
     public boolean isTempCatchFire() {
-        return (boolean) config.get("global-settings.temperature.catch-fire", true);
+        return (boolean) config.get("global.temperature.catch-fire", true);
     }
 
     public boolean isSweatEnabled() {
-        return (boolean) config.get("global-settings.temperature.sweat", true);
+        return (boolean) config.get("global.temperature.sweat", true);
     }
 
     public boolean tempCuaseDamage() {
-        return (boolean) config.get("global-settings.temperature.cause-damage", true);
+        return (boolean) config.get("global.temperature.cause-damage", true);
     }
 
     public boolean isHydrationEnabled() {
-        return (boolean) config.get("global-settings.hydration.enabled", true);
+        return (boolean) config.get("global.hydration.enabled", true);
     }
 
     public boolean isTempreatureEnabled() {
-        return (boolean) config.get("global-settings.temperature.enabled", true);
+        return (boolean) config.get("global.temperature.enabled", true);
     }
 
     public boolean isSprintingGains() {
-        return (boolean) config.get("global-settings.temperature.sprinting", true);
+        return (boolean) config.get("global.temperature.sprinting", true);
     }
 
     public boolean isHydrationCauseDamage() {
@@ -170,7 +163,7 @@ public class SystemConfig {
 
     public void setHydrationCauseDamage(boolean b) {
         this.thirstDamage = b;
-        config.set("global-settings.hydration.cause-damage", b);
+        config.set("global.hydration.cause-damage", b);
     }
 
     public boolean areWaterfallsEnabled() {
