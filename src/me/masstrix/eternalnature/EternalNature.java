@@ -58,6 +58,7 @@ public class EternalNature extends JavaPlugin {
         manager.registerEvents(new ConsumeListener(this), this);
         manager.registerEvents(new ChunkListener(this), this);
         manager.registerEvents(new BlockListener(this), this);
+        manager.registerEvents(new ItemListener(this), this);
         manager.registerEvents(settingsGUI, this);
 
         // Only check for updates if enabled.

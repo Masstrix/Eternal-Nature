@@ -6,6 +6,10 @@ public class MathUtil {
 
     private static Random random = new Random();
 
+    public static boolean chance(int val) {
+        return randomInt(val) == 1;
+    }
+
     public static int randomInt(int max) {
         return random.nextInt(max);
     }

@@ -3,6 +3,7 @@ package me.masstrix.eternalnature;
 import me.masstrix.eternalnature.core.Renderer;
 import me.masstrix.eternalnature.core.TemperatureData;
 import me.masstrix.eternalnature.core.UserWorker;
+import me.masstrix.eternalnature.core.world.SaplingPlanter;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.data.UserData;
 import me.masstrix.eternalnature.util.Stopwatch;
@@ -23,6 +24,7 @@ public class EternalEngine {
     private UserWorker userWorker;
     private WorldProvider worldProvider;
     private TemperatureData temperatureData;
+    private SaplingPlanter saplingPlanter;
 
     private Map<UUID, UserData> users = new HashMap<>();
 
@@ -41,6 +43,7 @@ public class EternalEngine {
         userWorker = new UserWorker(plugin, this);
         renderer = new Renderer(plugin, this);
         worldProvider = new WorldProvider(plugin);
+        saplingPlanter = new SaplingPlanter(plugin);
     }
 
     void start() {
@@ -48,6 +51,7 @@ public class EternalEngine {
         userWorker.start();
         renderer.start();
         worldProvider.start();
+        saplingPlanter.start();
     }
 
     private void loadPlayerData() {
@@ -98,6 +102,10 @@ public class EternalEngine {
         return worldProvider;
     }
 
+    public SaplingPlanter getSaplingPlanter() {
+        return saplingPlanter;
+    }
+
     /**
      * Shutdowns the engine and all threads or processes currently being
      * run by the plugin.
@@ -106,6 +114,7 @@ public class EternalEngine {
         renderer.end();
         userWorker.end();
         worldProvider.end();
+        saplingPlanter.end();
     }
 
     /**
