@@ -1,8 +1,6 @@
 package me.masstrix.eternalnature.listeners;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.core.TemperatureData;
-import me.masstrix.eternalnature.core.TemperatureWorker;
 import me.masstrix.eternalnature.core.world.WaterfallEmitter;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -109,33 +107,7 @@ public class BlockListener implements Listener {
         //calculateArea(event.getBlock());
     }
 
-    /**
-     * Recalculate the area around the block if it is an emitter.
-     *
-     * @param block block being calculated.
-     */
-    private void calculateArea(final Block block) {
-        TemperatureWorker worker = plugin.getEngine().getTemperatureWorker();
+    private void calculateArea(Block block) {
 
-        // Recalculate temperature around block
-        TemperatureData map = worker.getDataMap();
-        if (map.doesEmit(TemperatureData.DataTempType.BLOCK, block.getType().name())) {
-            worker.calculateArea(block.getLocation());
-        }
-    }
-
-    /**
-     * Recalculate the area around the block if it is an emitter.
-     *
-     * @param loc location being calculated.
-     */
-    private void calculateArea(final Location loc) {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                TemperatureWorker worker = plugin.getEngine().getTemperatureWorker();
-                worker.calculateArea(loc.getBlock().getLocation());
-            }
-        }.runTaskLater(plugin, 5);
     }
 }

@@ -2,7 +2,6 @@ package me.masstrix.eternalnature;
 
 import me.masstrix.eternalnature.core.Renderer;
 import me.masstrix.eternalnature.core.TemperatureData;
-import me.masstrix.eternalnature.core.TemperatureWorker;
 import me.masstrix.eternalnature.core.UserWorker;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.data.UserData;
