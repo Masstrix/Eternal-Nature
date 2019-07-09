@@ -20,8 +20,6 @@ public class ChunkListener implements Listener {
         int x = event.getChunk().getX();
         int z = event.getChunk().getZ();
 
-        plugin.getEngine().getTemperatureWorker().unloadChunk(event.getWorld(), x, z);
-
         World world = event.getWorld();
         WorldData data = plugin.getEngine().getWorldProvider().getWorld(world);
         data.unloadChunk(x, z);

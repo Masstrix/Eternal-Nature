@@ -37,7 +37,7 @@ public class NatureCommand extends EternalCommand {
         }
 
         if (args[0].equalsIgnoreCase("reload")) {
-            plugin.getEngine().getTemperatureWorker().getDataMap().loadConfigData();
+            plugin.getEngine().getTemperatureData().loadConfigData();
             plugin.getSystemConfig().reload();
             msg("Reloading files...");
             msg("&aReloaded config files");
@@ -53,8 +53,7 @@ public class NatureCommand extends EternalCommand {
             msg("     &7Background Stats");
             msg("");
             msg("Players cached: &7" + plugin.getEngine().getCashedUsers().size());
-            msg("Worlds Loaded: &7" + plugin.getEngine().getTemperatureWorker().getLoadedWorlds());
-            msg("Points Cached: &7" + plugin.getEngine().getTemperatureWorker().getCachedPoints());
+            msg("Worlds Loaded: &7" + plugin.getEngine().getWorldProvider().getLoaded());
             msg("");
         }
 

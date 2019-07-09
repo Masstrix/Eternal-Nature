@@ -59,4 +59,8 @@ public class WorldProvider implements EternalWorker {
         ticker.cancel();
         worldData.forEach((n, w) -> w.unload());
     }
+
+    public int getLoaded() {
+        return worldData.size();
+    }
 }
