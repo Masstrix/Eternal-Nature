@@ -29,6 +29,7 @@ public class SystemConfig {
 
     // Environment
     private boolean waterfallsEnabled = true;
+    private boolean leafEffectsEnabled = true;
 
     // Advanced
     private int updateCalls = 10; // calls per second for updates
@@ -61,6 +62,7 @@ public class SystemConfig {
         checkForUpdates = config.getBoolean("general.check-for-updates", true);
 
         waterfallsEnabled = config.getBoolean("global.waterfalls", true);
+        leafEffectsEnabled = config.getBoolean("global.falling-leaves", true);
         autoPlantSaplings = config.getBoolean("global.auto-plant-saplings", true);
 
         if (config.contains("render.hydration.style"))
@@ -173,6 +175,15 @@ public class SystemConfig {
     public void setWaterfallsEnabled(boolean b) {
         waterfallsEnabled = b;
         config.set("environment.waterfalls", waterfallsEnabled);
+    }
+
+    public boolean areFallingLeavesEnabled() {
+        return leafEffectsEnabled;
+    }
+
+    public void setLeafEffectsEnabled(boolean b) {
+        leafEffectsEnabled = b;
+        config.set("global.falling-leaves", leafEffectsEnabled);
     }
 
     public void save() {

@@ -22,6 +22,7 @@ general:
 global:
   auto-plant-saplings: true
   waterfalls: true
+  falling-leaves: true
   hydration:
     enabled: true
     lose-from-walking: true
