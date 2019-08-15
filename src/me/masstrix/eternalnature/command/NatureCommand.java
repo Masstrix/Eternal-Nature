@@ -1,6 +1,7 @@
 package me.masstrix.eternalnature.command;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.config.ConfigOption;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -44,7 +45,7 @@ public class NatureCommand extends EternalCommand {
         }
 
         else if (args[0].equalsIgnoreCase("setting")) {
-            if (wasPlayer()) plugin.getSettingsGUI().open((Player) getSender());
+            if (wasPlayer()) plugin.getSettingsMenu().open((Player) getSender());
         }
 
         else if (args[0].equalsIgnoreCase("stats")) {
@@ -64,7 +65,7 @@ public class NatureCommand extends EternalCommand {
             msg("");
             msg(" Current Version: &7" + plugin.getDescription().getVersion());
             if (plugin.getVersionMeta() == null) {
-                if (plugin.getSystemConfig().checkForUpdates()) {
+                if (plugin.getSystemConfig().isEnabled(ConfigOption.UPDATES_CHECK)) {
                     msg("&cUnable to check plugin version.");
                 } else {
                     msg("&cVersion checking is disabled.");

@@ -1,6 +1,7 @@
 package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.core.render.LeafEffect;
 import me.masstrix.eternalnature.util.CuboidScanner;
 import me.masstrix.eternalnature.util.MathUtil;
@@ -38,6 +39,7 @@ public class LeafEmitter {
             public void run() {
                 if (passed++ >= ticks) {
                     passed = 0;
+                    if (!plugin.getSystemConfig().isEnabled(ConfigOption.LEAF_EFFECT)) return;
                     scan();
                     int online = Bukkit.getOnlinePlayers().size();
                     if (online > 20) {
@@ -59,6 +61,7 @@ public class LeafEmitter {
                         dead.add(effect);
                 }
                 effects.removeAll(dead);
+                if (!plugin.getSystemConfig().isEnabled(ConfigOption.LEAF_EFFECT)) return;
                 for (Location loc : locations) {
                     if (MathUtil.chance(300)) {
                         effects.add(new LeafEffect(loc));

@@ -50,6 +50,11 @@ public class ItemBuilder {
         return this;
     }
 
+    public ItemBuilder addSwitchView(String prefix, boolean toggle) {
+        addLore(prefix + (toggle ? "&a Enabled" : "&c Disabled"));
+        return this;
+    }
+
     public ItemBuilder addSwitch(String prefix, String on, String off, boolean toggle) {
         addLore(prefix + (toggle ? on : off), "&eClick to " + (toggle ? off : on));
         return this;

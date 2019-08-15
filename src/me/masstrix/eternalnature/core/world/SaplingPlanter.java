@@ -1,6 +1,7 @@
 package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.EternalWorker;
 import me.masstrix.eternalnature.util.MathUtil;
@@ -34,7 +35,7 @@ public class SaplingPlanter implements EternalWorker {
      * a sapling to potentially grow.
      */
     public void findSaplings() {
-        if (!config.isAutoPlantSaplings()) return;
+        if (!config.isEnabled(ConfigOption.AUTO_PLANT_SAPLING)) return;
         for (World world : Bukkit.getWorlds()) {
             for (Entity e : world.getEntities()) {
                 if (e instanceof Item) addSapling((Item) e);
@@ -62,7 +63,7 @@ public class SaplingPlanter implements EternalWorker {
 
     @Override
     public void start() {
-        if (!config.isAutoPlantSaplings()) return;
+        if (!config.isEnabled(ConfigOption.AUTO_PLANT_SAPLING)) return;
         if (task != null) throw new IllegalCallerException("start() cannot be called more than once.");
         plugin.getLogger().info("Started sapling spreader");
         findSaplings();

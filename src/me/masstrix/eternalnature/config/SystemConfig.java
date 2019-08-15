@@ -13,29 +13,6 @@ public class SystemConfig {
     private EternalNature plugin;
     private FileConfiguration config;
 
-    // General
-    private boolean checkForUpdates = true;
-
-    // Global
-    private boolean thirstFlash = true;
-    private boolean thirstDamage = true;
-    private boolean autoPlantSaplings = true;
-
-    // Render
-    private boolean tempFlash = true;
-    private boolean hydrationFlash = true;
-    private StatusRenderMethod thirstRenderMethod = StatusRenderMethod.ACTIONBAR;
-    private StatusRenderMethod tempRenderMethod = StatusRenderMethod.ACTIONBAR;
-
-    // Environment
-    private boolean waterfallsEnabled = true;
-    private boolean leafEffectsEnabled = true;
-
-    // Advanced
-    private int updateCalls = 10; // calls per second for updates
-    private int renderCalls = 20; // calls per second for renders
-    private int scanRadius = 10;
-
     public SystemConfig(EternalNature plugin) {
         this.plugin = plugin;
         loadConfig(false);
@@ -58,132 +35,44 @@ public class SystemConfig {
         if (!config.contains("version") || config.getInt("version") != configVersion) {
             rebuildConfig();
         }
-
-        checkForUpdates = config.getBoolean("general.check-for-updates", true);
-
-        waterfallsEnabled = config.getBoolean("global.waterfalls", true);
-        leafEffectsEnabled = config.getBoolean("global.falling-leaves", true);
-        autoPlantSaplings = config.getBoolean("global.auto-plant-saplings", true);
-
-        if (config.contains("render.hydration.style"))
-            thirstRenderMethod = StatusRenderMethod.getOr(
-                    config.getString("render.hydration.style"), StatusRenderMethod.ACTIONBAR);
-        if (config.contains("render.hydration.flash"))
-            thirstFlash = config.getBoolean("render.hydration.flash");
-        if (config.contains("global.hydration.cause-damage"))
-            thirstDamage = config.getBoolean("global-settings.hydration.cause-damage");
-
-        if (config.contains("render.temperature.style"))
-            tempRenderMethod = StatusRenderMethod.getOr(
-                    config.getString("render.temperature.style"), StatusRenderMethod.ACTIONBAR);
-
-        updateCalls = config.getInt("advanced.update-calls", 10);
-        renderCalls = config.getInt("advanced.render-calls", 10);
-        renderCalls = config.getInt("advanced.temperature.scan-radius", 10);
-
-        if (updateCalls > 20 || updateCalls < 0) updateCalls = 10;
-        if (renderCalls > 20 || renderCalls < 0) renderCalls = 20;
     }
 
-    public boolean checkForUpdates() {
-        return checkForUpdates;
+    public Object get(ConfigOption option) {
+        return config.get(option.key, option.def);
     }
 
-    public int getUpdateCalls() {
-        return 20 - updateCalls;
+    public boolean equals(ConfigOption option, Object o) {
+        return get(option).equals(o);
     }
 
-    public int getRenderCalls() {
-        return 20 - renderCalls;
+    public boolean isEnabled(ConfigOption option) {
+        return getBoolean(option);
     }
 
-    public int getScanRadius() {
-        return scanRadius;
+    public void set(ConfigOption option, Object o) {
+        config.set(option.key, o);
     }
 
-    public StatusRenderMethod getThirstRenderMethod() {
-        return thirstRenderMethod;
+    public boolean toggle(ConfigOption option) {
+        boolean b = !getBoolean(option);
+        config.set(option.key, b);
+        return b;
     }
 
-    public void setThirstRenderMethod(StatusRenderMethod method) {
-        this.thirstRenderMethod = method;
-        config.set("render.hydration.style", method.name());
+    public boolean getBoolean(ConfigOption option) {
+        return config.getBoolean(option.key, (Boolean) option.def);
     }
 
-    public StatusRenderMethod getTempRenderMethod() {
-        return tempRenderMethod;
+    public String getString(ConfigOption option) {
+        return config.getString(option.key, (String) option.def);
     }
 
-    public void setTempRenderMethod(StatusRenderMethod method) {
-        this.tempRenderMethod = method;
-        config.set("render.temperature.style", method.name());
+    public int getInt(ConfigOption option) {
+        return config.getInt(option.key, (Integer) option.def);
     }
 
-    public boolean isAutoPlantSaplings() {
-        return autoPlantSaplings;
-    }
-
-    public void setAutoPlantSaplings(boolean autoPlantSaplings) {
-        this.autoPlantSaplings = autoPlantSaplings;
-    }
-
-    public boolean isTempFlash() {
-        return tempFlash;
-    }
-
-    public boolean isThirstFlash() {
-        return thirstFlash;
-    }
-
-    public boolean isTempCatchFire() {
-        return (boolean) config.get("global.temperature.catch-fire", true);
-    }
-
-    public boolean isSweatEnabled() {
-        return (boolean) config.get("global.temperature.sweat", true);
-    }
-
-    public boolean tempCuaseDamage() {
-        return (boolean) config.get("global.temperature.cause-damage", true);
-    }
-
-    public boolean isHydrationEnabled() {
-        return (boolean) config.get("global.hydration.enabled", true);
-    }
-
-    public boolean isTempreatureEnabled() {
-        return (boolean) config.get("global.temperature.enabled", true);
-    }
-
-    public boolean isSprintingGains() {
-        return (boolean) config.get("global.temperature.sprinting", true);
-    }
-
-    public boolean isHydrationCauseDamage() {
-        return thirstDamage;
-    }
-
-    public void setHydrationCauseDamage(boolean b) {
-        this.thirstDamage = b;
-        config.set("global.hydration.cause-damage", b);
-    }
-
-    public boolean areWaterfallsEnabled() {
-        return waterfallsEnabled;
-    }
-
-    public void setWaterfallsEnabled(boolean b) {
-        waterfallsEnabled = b;
-        config.set("environment.waterfalls", waterfallsEnabled);
-    }
-
-    public boolean areFallingLeavesEnabled() {
-        return leafEffectsEnabled;
-    }
-
-    public void setLeafEffectsEnabled(boolean b) {
-        leafEffectsEnabled = b;
-        config.set("global.falling-leaves", leafEffectsEnabled);
+    public StatusRenderMethod getRenderMethod(ConfigOption option) {
+        return StatusRenderMethod.getOr(get(option).toString(), StatusRenderMethod.BOSSBAR);
     }
 
     public void save() {

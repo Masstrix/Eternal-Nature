@@ -1,5 +1,6 @@
 package me.masstrix.eternalnature.core.world;
 
+import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.core.TemperatureData;
 import me.masstrix.eternalnature.util.CuboidScanner;
 import me.masstrix.eternalnature.util.MathUtil;
@@ -55,7 +56,7 @@ public class ChunkData {
      * Renders all particles and effects within this chunk.
      */
     void render() {
-        if (worldData.plugin.getSystemConfig().areWaterfallsEnabled() && waterfallEmitters.size() > 0) {
+        if (worldData.plugin.getSystemConfig().isEnabled(ConfigOption.WATERFALLS) && waterfallEmitters.size() > 0) {
             Set<WaterfallEmitter> clean = null;
             for (WaterfallEmitter waterfall : waterfallEmitters) {
                 if (!waterfall.isValid()) {

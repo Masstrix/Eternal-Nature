@@ -24,7 +24,7 @@ public class Renderer implements EternalWorker {
             public void run() {
                 render();
             }
-        }.runTaskTimer(plugin, 0, plugin.getSystemConfig().getRenderCalls());
+        }.runTaskTimer(plugin, 0, 20);
     }
 
     /**

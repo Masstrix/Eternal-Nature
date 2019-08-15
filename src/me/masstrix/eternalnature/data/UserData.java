@@ -2,6 +2,7 @@ package me.masstrix.eternalnature.data;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.api.EternalUser;
+import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.core.TemperatureData;
 import me.masstrix.eternalnature.config.StatusRenderMethod;
 import me.masstrix.eternalnature.config.SystemConfig;
@@ -29,8 +30,8 @@ import java.util.UUID;
 
 public class UserData implements EternalUser {
 
-    private static final int dehyddrateChance = 500;
-    private static final int dehyddrateChanceRange = 50;
+    private static final int dehydrateChance = 500;
+    private static final int dehydrateChanceRange = 50;
 
     public static final float MAX_THIRST = 20;
     private SystemConfig config;
@@ -68,7 +69,7 @@ public class UserData implements EternalUser {
         this.tempExact = tempTo;
         this.hydration = hydration;
         config = plugin.getSystemConfig();
-        distanceNextThirst = MathUtil.randomInt(dehyddrateChance, dehyddrateChance + dehyddrateChanceRange);
+        distanceNextThirst = MathUtil.randomInt(dehydrateChance, dehydrateChance + dehydrateChanceRange);
     }
 
     /**
@@ -81,7 +82,7 @@ public class UserData implements EternalUser {
         WorldProvider provider = plugin.getEngine().getWorldProvider();
         WorldData data = provider.getWorld(player.getWorld());
         Location loc = player.getLocation();
-        if (data != null) {
+        if (data != null && config.isEnabled(ConfigOption.TEMP_ENABLED)) {
             ChunkData chunk = data.getChunk(loc.getChunk().getX(), loc.getChunk().getZ());
             data.loadNearby(loc.toVector());
 
@@ -111,14 +112,14 @@ public class UserData implements EternalUser {
         }
 
         // Sweat randomly. Becomes more common the warmer you are.
-        if (plugin.getSystemConfig().isSweatEnabled()) {
+        if (plugin.getSystemConfig().isEnabled(ConfigOption.TEMP_SWEAT)) {
             if (MathUtil.randomInt((int) (1000 * 1.5)) <= temperature * (temperature * 0.005)) {
                 dehydrate(0.25);
             }
         }
 
         // Handle damage tick if player is dehydrated or to hot/cold
-        if (hydration <= 0 && config.isHydrationCauseDamage()) {
+        if (hydration <= 0 && config.isEnabled(ConfigOption.HYDRATION_DAMAGE)) {
             damageTimer.startIfNew();
             if (damageTimer.hasPassed(3000)) {
                 damageTimer.start();
@@ -152,7 +153,7 @@ public class UserData implements EternalUser {
                 player.spawnParticle(Particle.REDSTONE, block.getLocation().add(0.5, 1.2, 0.5),
                         1, 0, 0, 0, new Particle.DustOptions(org.bukkit.Color.fromRGB(color.getRed(), color.getGreen(), color.getBlue()), 1));
             }
-        }).start();
+        });//.start();
     }
 
     /**
@@ -166,67 +167,79 @@ public class UserData implements EternalUser {
 
         // Render user info.
         StringBuilder actionBar = new StringBuilder();
-        if (config.getThirstRenderMethod() == StatusRenderMethod.BOSSBAR) {
-            if (hydrationBar == null) {
-                hydrationBar = Bukkit.createBossBar("h2-", BarColor.BLUE, BarStyle.SEGMENTED_12);
-                hydrationBar.addPlayer(player);
-            }
-            hydrationBar.setProgress(hydration / 20);
-            int percent = (int) ((hydration / 20F) * 100);
-            String flash = hydration <= 4 && config.isThirstFlash() && flicker.isEnabled() ?  "c" : "f";
-            hydrationBar.setTitle(StringUtil.color("H²O &" + flash + percent + "%"));
-        } else {
-            if (hydrationBar != null) {
-                hydrationBar.removeAll();
-                hydrationBar = null;
-            }
-            String flash = hydration <= 4 && config.isThirstFlash() && flicker.isEnabled() ?  "c" : "f";
-            StringBuilder h20 = new StringBuilder("\u00A7" + flash + "H²O ");
-            float mid = Math.round(hydration / 2);
-            for (int i = 0; i < 10; i++) {
-                if (i < mid) {
-                    h20.append("\u00A7b●");
-                } else if (i > mid) {
-                    h20.append("\u00A77◌");
-                } else {
-                    h20.append("\u00A7b◯");
+        if (config.isEnabled(ConfigOption.HYDRATION_ENABLED)) {
+            if (config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE) == StatusRenderMethod.BOSSBAR) {
+                if (hydrationBar == null) {
+                    hydrationBar = Bukkit.createBossBar("h2-", BarColor.BLUE, BarStyle.SEGMENTED_12);
+                    hydrationBar.addPlayer(player);
                 }
-            }
-            actionBar.append(h20);
-        }
-        if (config.getTempRenderMethod() == StatusRenderMethod.BOSSBAR) {
-            if (tempBar == null) {
-                tempBar = Bukkit.createBossBar("Temp", BarColor.GREEN, BarStyle.SOLID);
-                tempBar.addPlayer(player);
-            }
-            TemperatureData tempData = plugin.getEngine().getTemperatureData();
-            if (tempData.getMinBlockTemp() < 0) {
-                double padd = Math.abs(tempData.getMinBlockTemp());
-                tempBar.setProgress((temperature + padd) / (tempData.getMaxBlockTemp() + padd));
+                hydrationBar.setProgress(hydration / 20);
+                int percent = (int) ((hydration / 20F) * 100);
+                String flash = hydration <= 4 && config.getBoolean(ConfigOption.HYDRATION_BAR_FLASH)
+                        && flicker.isEnabled() ? "c" : "f";
+                hydrationBar.setTitle(StringUtil.color("H²O &" + flash + percent + "%"));
             } else {
-                tempBar.setProgress(temperature / tempData.getMaxBlockTemp());
+                if (hydrationBar != null) {
+                    hydrationBar.removeAll();
+                    hydrationBar = null;
+                }
+                String flash = hydration <= 4 && config.getBoolean(ConfigOption.HYDRATION_BAR_FLASH)
+                        && flicker.isEnabled() ? "c" : "f";
+                StringBuilder h20 = new StringBuilder("\u00A7" + flash + "H²O ");
+                float mid = Math.round(hydration / 2);
+                for (int i = 0; i < 10; i++) {
+                    if (i < mid) {
+                        h20.append("\u00A7b●");
+                    } else if (i > mid) {
+                        h20.append("\u00A77◌");
+                    } else {
+                        h20.append("\u00A7b◯");
+                    }
+                }
+                actionBar.append(h20);
             }
-
-            String title = "Temp: \u00A7"
-                    + ((temperature > 70 || temperature < -8)
-                    && config.isTempFlash() ? (flicker.isEnabled() ? "c" : "f")
-                    : temperature >= 30 ? "e" : temperature < 10 ? "f" : temperature < 0 ? "b" : "a") +
-                    String.format("%.1f°", temperature);
-            tempBar.setTitle(StringUtil.color(title));
-            if (temperature > 100) tempBar.setColor(BarColor.RED);
-            else tempBar.setColor(BarColor.GREEN);
-        } else {
-            if (tempBar != null) {
-                tempBar.removeAll();
-                tempBar = null;
-            }
-            String temp = "\u00A7f    Temp: \u00A7"
-                    + ((temperature > 70 || temperature < -8)
-                    && config.isTempFlash() ? (flicker.isEnabled() ? "c" : "f")
-                    : temperature >= 30 ? "e" : temperature < 10 ? "f" : temperature < 0 ? "b" : "a") +
-                    String.format("%.1f°", temperature);
-            actionBar.append(temp);
+        } else if (hydrationBar != null) {
+            hydrationBar.removeAll();
         }
+
+        if (config.isEnabled(ConfigOption.TEMP_ENABLED)) {
+            if (config.getRenderMethod(ConfigOption.TEMP_BAR_STYLE) == StatusRenderMethod.BOSSBAR) {
+                if (tempBar == null) {
+                    tempBar = Bukkit.createBossBar("Temp", BarColor.GREEN, BarStyle.SOLID);
+                    tempBar.addPlayer(player);
+                }
+                TemperatureData tempData = plugin.getEngine().getTemperatureData();
+                if (tempData.getMinBlockTemp() < 0) {
+                    double padd = Math.abs(tempData.getMinBlockTemp());
+                    tempBar.setProgress((temperature + padd) / (tempData.getMaxBlockTemp() + padd));
+                } else {
+                    tempBar.setProgress(temperature / tempData.getMaxBlockTemp());
+                }
+
+                String title = "Temp: \u00A7"
+                        + ((temperature > 70 || temperature < -8)
+                        && config.getBoolean(ConfigOption.TEMP_BAR_FLASH) ? (flicker.isEnabled() ? "c" : "f")
+                        : temperature >= 30 ? "e" : temperature < 10 ? "f" : temperature < 0 ? "b" : "a") +
+                        String.format("%.1f°", temperature);
+                tempBar.setTitle(StringUtil.color(title));
+                if (temperature > 100) tempBar.setColor(BarColor.RED);
+                else tempBar.setColor(BarColor.GREEN);
+            } else {
+                if (tempBar != null) {
+                    tempBar.removeAll();
+                    tempBar = null;
+                }
+                String temp = "\u00A7f    Temp: \u00A7"
+                        + ((temperature > 70 || temperature < -8)
+                        && config.isEnabled(ConfigOption.TEMP_BAR_FLASH) ? (flicker.isEnabled() ? "c" : "f")
+                        : temperature >= 30 ? "e" : temperature < 10 ? "f" : temperature < 0 ? "b" : "a") +
+                        String.format("%.1f°", temperature);
+                actionBar.append(temp);
+            }
+        } else if(tempBar != null) {
+            tempBar.removeAll();
+        }
+
         if (actionBar.length() > 0)
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(actionBar.toString()
                     + " \u00A76" + plugin.getEngine().getWorldProvider().getWorld(player.getWorld()).getChunksLoaded()
@@ -252,7 +265,7 @@ public class UserData implements EternalUser {
      * @param hydration hydration of player. Bound between 0 and 20.
      */
     public void setHydration(float hydration) {
-        this.hydration = hydration < 0 ? 0 : hydration > MAX_THIRST ? MAX_THIRST : hydration;
+        this.hydration = hydration < 0 ? 0 : Math.min(hydration, MAX_THIRST);
     }
 
     @Override
@@ -282,7 +295,7 @@ public class UserData implements EternalUser {
         distanceWalked += sprinting ? distance + 0.3 : distance;
         if (distanceWalked >= distanceNextThirst) {
             distanceWalked = 0;
-            distanceNextThirst = MathUtil.randomInt(dehyddrateChance, dehyddrateChance + dehyddrateChanceRange);
+            distanceNextThirst = MathUtil.randomInt(dehydrateChance, dehydrateChance + dehydrateChanceRange);
             dehydrate(0.5);
         }
     }

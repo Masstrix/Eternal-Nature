@@ -24,7 +24,7 @@ public class UserWorker implements EternalWorker {
             public void run() {
                 engine.getCashedUsers().forEach(UserData::tick);
             }
-        }.runTaskTimer(plugin, 0, plugin.getSystemConfig().getUpdateCalls());
+        }.runTaskTimer(plugin, 0, 10);
     }
 
     @Override

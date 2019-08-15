@@ -1,8 +1,10 @@
 package me.masstrix.eternalnature;
 
 import me.masstrix.eternalnature.command.*;
+import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.listeners.*;
+import me.masstrix.eternalnature.menus.SettingsMenu;
 import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.eternalnature.util.VersionChecker;
 import org.bukkit.Bukkit;
@@ -19,7 +21,7 @@ public class EternalNature extends JavaPlugin {
     private SystemConfig systemConfig;
     private EternalNatureAPI api;
     private VersionChecker.VersionMeta versionMeta = null;
-    private SettingsGUI settingsGUI;
+    private SettingsMenu settingsMenu;
 
     public SystemConfig getSystemConfig() {
         return systemConfig;
@@ -37,8 +39,8 @@ public class EternalNature extends JavaPlugin {
         return versionMeta;
     }
 
-    public SettingsGUI getSettingsGUI() {
-        return settingsGUI;
+    public SettingsMenu getSettingsMenu() {
+        return settingsMenu;
     }
 
     @Override
@@ -46,7 +48,7 @@ public class EternalNature extends JavaPlugin {
         systemConfig = new SystemConfig(this);
         engine = new EternalEngine(this);
         api = new EternalNatureAPI(this);
-        settingsGUI = new SettingsGUI(this);
+        settingsMenu = new SettingsMenu(this);
 
         engine.start();
 
@@ -59,10 +61,10 @@ public class EternalNature extends JavaPlugin {
         manager.registerEvents(new ChunkListener(this), this);
         manager.registerEvents(new BlockListener(this), this);
         manager.registerEvents(new ItemListener(this), this);
-        manager.registerEvents(settingsGUI, this);
+        manager.registerEvents(settingsMenu, this);
 
         // Only check for updates if enabled.
-        if (systemConfig.checkForUpdates()) {
+        if (systemConfig.isEnabled(ConfigOption.UPDATES_CHECK)) {
             new VersionChecker(PluginData.RESOURCE_ID, getDescription().getVersion()).run(s -> {
                 if (s.getState() == VersionChecker.PluginVersionState.UNKNOWN) {
                     getLogger().log(Level.WARNING, "Failed to check plugin version. Are you running offline?");
