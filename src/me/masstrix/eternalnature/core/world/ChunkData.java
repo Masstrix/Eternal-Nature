@@ -164,6 +164,13 @@ public class ChunkData {
         });
     }
 
+    /**
+     * Smooths a map of points out for the chunks temperature. Note this task can take
+     * a while to process if there are many points to be operated on so it is best to
+     * try and keep smoothing to a minimum.
+     *
+     * @param data points being smoothed.
+     */
     private void smooth(final Map<Vector, Float> data) {
         // Smooth emission values
         for (Map.Entry<Vector, Float> entry : data.entrySet()) {
@@ -187,14 +194,16 @@ public class ChunkData {
                     chunk = worldData.getChunk(chunkX, chunkZ);
                 }
 
-                chunk.temp.compute(v, (vec, t) -> {
-                    int distance = (int) Math.ceil(center.distance(v));
-                    double fallOffPercent = ((double) (falloff - distance)) / (double) falloff;
-                    float point = (float) (hotPoint * fallOffPercent);
+                if (chunk != null) {
+                    chunk.temp.compute(v, (vec, t) -> {
+                        int distance = (int) Math.ceil(center.distance(v));
+                        double fallOffPercent = ((double) (falloff - distance)) / (double) falloff;
+                        float point = (float) (hotPoint * fallOffPercent);
 
-                    if (t == null || t < point) return point;
-                    return t;
-                });
+                        if (t == null || t < point) return point;
+                        return t;
+                    });
+                }
             }).excludeCenter().start();
 
             temp.computeIfPresent(entry.getKey(), (vec, t) -> t + hotPoint);
