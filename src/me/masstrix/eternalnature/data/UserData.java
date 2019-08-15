@@ -201,7 +201,8 @@ public class UserData implements EternalUser {
             }
             TemperatureData tempData = plugin.getEngine().getTemperatureData();
             if (tempData.getMinBlockTemp() < 0) {
-                tempBar.setProgress(temperature + Math.abs(tempData.getMinBlockTemp()) / tempData.getMaxBlockTemp());
+                double padd = Math.abs(tempData.getMinBlockTemp());
+                tempBar.setProgress((temperature + padd) / (tempData.getMaxBlockTemp() + padd));
             } else {
                 tempBar.setProgress(temperature / tempData.getMaxBlockTemp());
             }
