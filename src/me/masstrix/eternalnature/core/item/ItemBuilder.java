@@ -1,10 +1,7 @@
 package me.masstrix.eternalnature.core.item;
 
 import me.masstrix.eternalnature.util.StringUtil;
-import net.minecraft.server.v1_14_R1.NBTTagCompound;
-import net.minecraft.server.v1_14_R1.NBTTagInt;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -66,18 +63,11 @@ public class ItemBuilder {
     public ItemStack build() {
         ItemStack item = stack == null ? new ItemStack(type) : stack;
 
-        if (item.getType() != Material.PLAYER_HEAD) {
-            net.minecraft.server.v1_14_R1.ItemStack stack = CraftItemStack.asNMSCopy(item);
-            NBTTagCompound tags = new NBTTagCompound();
-            tags.set("HideFlags", new NBTTagInt(63));
-            stack.setTag(tags);
-            item = CraftItemStack.asBukkitCopy(stack);
-        }
-
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(name);
         meta.setLore(lore);
-        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS,
+                ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_UNBREAKABLE);
         item.setItemMeta(meta);
         if (meta instanceof PotionMeta && potionType != null) {
             PotionMeta potionMeta = (PotionMeta) meta;
