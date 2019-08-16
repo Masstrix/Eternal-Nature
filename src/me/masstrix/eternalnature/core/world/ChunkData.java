@@ -2,15 +2,15 @@ package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.core.TemperatureData;
-import me.masstrix.eternalnature.util.CuboidScanner;
-import me.masstrix.eternalnature.util.MathUtil;
-import me.masstrix.eternalnature.util.SimpleThreadFactory;
-import me.masstrix.eternalnature.util.Stopwatch;
-import org.bukkit.*;
+import me.masstrix.eternalnature.util.*;
+import org.bukkit.Chunk;
+import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Levelled;
-import org.bukkit.util.Vector;
 
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -18,14 +18,15 @@ import java.util.concurrent.Executors;
 
 public class ChunkData {
 
+    private static final int VERSION = 1;
     private static ExecutorService threadPool = Executors.newFixedThreadPool(20,
             new SimpleThreadFactory("ChunkWorker"));
-
     private static final int sections = 16;
     private static final int sectionVolume = 4096;
-    private Map<Vector, Float> temp = new ConcurrentHashMap<>();
+
+    private Map<EVector, Float> temp = new ConcurrentHashMap<>();
     private Set<WaterfallEmitter> waterfallEmitters = new HashSet<>();
-    private Set<Vector> smokeEmitter = new HashSet<>();
+    private Set<EVector> smokeEmitter = new HashSet<>();
     private boolean[] sectionsLoaded = new boolean[sections];
     private WorldData worldData;
     private int x;
@@ -37,11 +38,48 @@ public class ChunkData {
         this.x = x;
         this.z = z;
         this.key = WorldData.pair(x, z);
-
-        worldData.plugin.getLogger().info("Loaded chunk " + x + ", " + z);
     }
 
-    void setValue(Vector pos, float val) {
+    /**
+     * Attempts to read in a chunks data. If the data is invalid or the version of it is
+     * not the latest version it will ignore the data and generate everything fresh.
+     *
+     * @param worldData world this chunk is for.
+     * @param x x cords of the chunk.
+     * @param z z cords of the chunk.
+     * @param data data of the chunk.
+     */
+    public ChunkData(WorldData worldData, int x, int z, byte[] data) {
+        this.worldData = worldData;
+        this.x = x;
+        this.z = z;
+
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
+        try {
+            ObjectInputStream in = new ObjectInputStream(inputStream);
+            int version = in.readInt();
+            if (version != VERSION) return; // Force regenerate chunk data
+            char[] loaded = in.readUTF().toCharArray();
+            for (int i = 0; i < loaded.length; i++) {
+                sectionsLoaded[i] = loaded[i] == '1';
+            }
+            Object points = in.readObject();
+            if (points instanceof Map) {
+                //noinspection unchecked
+                temp = (Map<EVector, Float>) points;
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    void setValue(EVector pos, float val) {
         this.temp.put(pos, val);
     }
 
@@ -121,12 +159,12 @@ public class ChunkData {
         // Run process on new thread
         threadPool.execute(() -> {
             Stopwatch time = new Stopwatch().start();
-            Map<Vector, Float> blockData = new HashMap<>();
+            Map<EVector, Float> blockData = new HashMap<>();
 
             int x = 0, y = section * 16, z = 0;
             for (int i = 0; i < sectionVolume; i++) {
 
-                Vector pos = new Vector(x, y, z);
+                EVector pos = new EVector(x, y, z);
 
                 Block block = chunk.getBlock(x, y, z);
 
@@ -162,6 +200,7 @@ public class ChunkData {
                     + this.x + ", " + this.z + " in " + time.stop() + "ms");
             time.start();
             smooth(blockData);
+            saveToFile();
         });
     }
 
@@ -172,19 +211,19 @@ public class ChunkData {
      *
      * @param data points being smoothed.
      */
-    private void smooth(final Map<Vector, Float> data) {
+    private void smooth(final Map<EVector, Float> data) {
         // Smooth emission values
-        for (Map.Entry<Vector, Float> entry : data.entrySet()) {
+        for (Map.Entry<EVector, Float> entry : data.entrySet()) {
             int xx = entry.getKey().getBlockX();
             int yy = entry.getKey().getBlockY();
             int zz = entry.getKey().getBlockZ();
-            Vector center = new Vector(xx, yy, zz);
+            EVector center = new EVector(xx, yy, zz);
 
             int falloff = 7;
             float hotPoint = entry.getValue() / 2;
 
             new CuboidScanner(falloff, xx, yy, zz, (CuboidScanner.CuboidTask) (x, y, z) -> {
-                Vector v = new Vector(x, y, z);
+                EVector v = new EVector(x, y, z);
 
                 int chunkX = worldData.asChunk(x);
                 int chunkZ = worldData.asChunk(z);
@@ -220,7 +259,7 @@ public class ChunkData {
         if (block.getType() != Material.LAVA) return;
         Levelled data = (Levelled) block.getBlockData();
         if (data.getLevel() == 6) {
-            smokeEmitter.add(new Vector(block.getX() + 0.5, block.getY(), block.getZ() + 0.5));
+            smokeEmitter.add(new EVector(block.getX() + 0.5, block.getY(), block.getZ() + 0.5));
         }
     }
 
@@ -253,20 +292,53 @@ public class ChunkData {
         if (!sectionsLoaded[section]) return;
     }
 
-    public boolean hasTemperatureData(Vector point) {
+    public boolean hasTemperatureData(EVector point) {
         return temp.containsKey(floor(point));
     }
 
-    public float getTemperature(Vector point) {
+    public float getTemperature(EVector point) {
         return temp.getOrDefault(point, Float.NEGATIVE_INFINITY);
     }
 
-    public static Vector floor(Vector vector) {
+    public static EVector floor(EVector vector) {
         return floor(vector.getX(), vector.getY(), vector.getZ());
     }
 
-    public static Vector floor(double x, double y, double z) {
-        return new Vector(Math.floor(x), Math.floor(y), Math.floor(z));
+    public static EVector floor(double x, double y, double z) {
+        return new EVector(Math.floor(x), Math.floor(y), Math.floor(z));
+    }
+
+    /**
+     * Saves the chunks data to file.
+     */
+    public void saveToFile() {
+        File worldsFile = new File(worldData.plugin.getDataFolder(), "worlds");
+        File worldFile = new File(worldsFile, worldData.getWorldUid().toString());
+        File chunkFile = new File(worldFile, WorldData.pair(x, z) + ".dat");
+        if (!worldFile.exists())
+            worldFile.mkdirs();
+        FileOutputStream fileOut = null;
+        try {
+            fileOut = new FileOutputStream(chunkFile);
+            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+            out.writeInt(VERSION);
+            StringBuilder loaded = new StringBuilder();
+            for (boolean b : sectionsLoaded) {
+                loaded.append(b ? 1 : 0);
+            }
+            out.writeUTF(loaded.toString());
+            out.writeObject(temp);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fileOut != null) {
+                try {
+                    fileOut.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     public static int getSection(double y) {
