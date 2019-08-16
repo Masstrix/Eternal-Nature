@@ -1,10 +1,13 @@
 package me.masstrix.eternalnature.core.render;
 
 import me.masstrix.eternalnature.util.MathUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.util.EulerAngle;
 
 public class LeafEffect {
@@ -26,6 +29,9 @@ public class LeafEffect {
         fallRate = MathUtil.random().nextDouble() / 10;
 
         leaf = loc.getWorld().spawn(loc.add(0, -0.5, 0), ArmorStand.class, a -> {
+            Plugin plugin = Bukkit.getPluginManager().getPlugin("EternalNature");
+            if (plugin != null)
+                a.setMetadata("EternalEntity", new FixedMetadataValue(plugin, true));
             a.setMarker(true);
             a.setSmall(true);
             a.setSmall(true);
