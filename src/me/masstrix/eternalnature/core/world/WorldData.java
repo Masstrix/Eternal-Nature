@@ -3,14 +3,12 @@ package me.masstrix.eternalnature.core.world;
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.api.EternalWorld;
 import me.masstrix.eternalnature.core.TemperatureData;
-import me.masstrix.eternalnature.util.CuboidScanner;
-import me.masstrix.eternalnature.util.MathUtil;
-import me.masstrix.eternalnature.util.SimpleThreadFactory;
-import me.masstrix.eternalnature.util.Stopwatch;
+import me.masstrix.eternalnature.util.*;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.util.Vector;
 
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,6 +26,10 @@ public class WorldData implements EternalWorld {
     public WorldData(EternalNature plugin, UUID world) {
         this.plugin = plugin;
         this.world = world;
+    }
+
+    public UUID getWorldUid() {
+        return world;
     }
 
     public void tick() {
@@ -60,7 +62,7 @@ public class WorldData implements EternalWorld {
 
     public float getTemperature(Vector loc) {
         ChunkData chunk = getChunkFromPosition(loc.getBlockX(), loc.getBlockZ());
-        return chunk != null ? chunk.getTemperature(new Vector(inChunk(loc.getBlockX()), loc.getBlockY(), inChunk(loc.getBlockZ()))) : 0;
+        return chunk != null ? chunk.getTemperature(new EVector(inChunk(loc.getBlockX()), loc.getBlockY(), inChunk(loc.getBlockZ()))) : 0;
     }
 
     /**
@@ -90,18 +92,6 @@ public class WorldData implements EternalWorld {
                 chunk = loadChunk(cx + x, cz + z);
             }
 
-//            World world = asBukkit();
-//            world.spawnParticle(Particle.FLAME, new Location(world,
-//                    (chunk.getX() * 16) + 16,
-//                    sectionY * 16 + 16,
-//                    (chunk.getZ() * 16) + 16),
-//                    5, 0.5, 0.5, 0.5, 0, null, true);
-//            world.spawnParticle(Particle.FLAME, new Location(world,
-//                            (chunk.getX() * 16),
-//                            sectionY * 16 + 16,
-//                            (chunk.getZ() * 16)),
-//                    5, 0.5, 0.5, 0.5, 0, null, true);
-
             chunk.calculateSection(sectionY);
 
             cx++;
@@ -116,76 +106,76 @@ public class WorldData implements EternalWorld {
         }
     }
 
-    public void calculateArea(final UUID task, final int posX, final int posY, final int posZ) {
-        if (computing.contains(task)) return; // Stop if task is already computing
-        computing.add(task);
-        World world = asBukkit();
-        if (world == null) return; // World not loaded
-
-        final int rad = 8;
-
-        final TemperatureData dataMap = plugin.getEngine().getTemperatureData();
-
-        threadPool.execute(() -> {
-            Stopwatch time = new Stopwatch().start();
-            Map<Vector, Float> blocks = new HashMap<>();
-
-            new CuboidScanner(rad, posX, posY, posZ, (CuboidScanner.CuboidLocalTask)
-                    (x, y, z, localX, localY, localZ) -> {
-
-                        // Local chunk position of block
-                        Vector pos = new Vector(inChunk(x), y, inChunk(z));
-
-                        Block block = world.getBlockAt(x, y, z);
-
-                        final float biomeTemp = dataMap.getEmissionValue(
-                                TemperatureData.DataTempType.BIOME,
-                                block.getBiome().name());
-
-                        ChunkData chunk = getChunkFromPosition(x, z);
-                        chunk.setValue(pos, biomeTemp);
-
-                        // Check if water for waterfall
-                        chunk.createWaterfallEmitter(block);
-                        chunk.createSmokeEmitter(block);
-
-                        float emissionTemp = dataMap.getEmissionValue(
-                                TemperatureData.DataTempType.BLOCK,
-                                block.getType().name());
-
-                        //temp.put(pos, biomeTemp);
-                        if (emissionTemp != 0) {
-                            blocks.put(pos, emissionTemp);
-                        }
-            }).start();
-
-            // Smooth block values
-            for (Map.Entry<Vector, Float> entry : blocks.entrySet()) {
-                int xx = entry.getKey().getBlockX();
-                int yy = entry.getKey().getBlockY();
-                int zz = entry.getKey().getBlockZ();
-                Vector center = new Vector(xx, yy, zz);
-
-                float hotPoint = entry.getValue() / 2;
-
-                new CuboidScanner(rad, xx, yy, zz, (CuboidScanner.CuboidTask) (x, y, z) -> {
-                    Vector v = new Vector(x, y, z);
-                    ChunkData chunk = getChunkFromPosition(x, z);
-
-                    int distance = (int) Math.ceil(center.distance(v));
-                    double fallOffPercent = ((double) (rad - distance)) / (double) rad;
-                    float point = (float) (hotPoint * fallOffPercent);
-
-                    if (chunk.getTemperature(v) < point)
-                        chunk.setValue(v, point);
-                }).excludeCenter().start();
-            }
-
-            computing.remove(task);
-            plugin.getLogger().info("Generated area " + Arrays.toString(new int[] {posX, posY, posZ})
-                    + " in " + time.stop() + "ms");
-        });
-    }
+//    public void calculateArea(final UUID task, final int posX, final int posY, final int posZ) {
+//        if (computing.contains(task)) return; // Stop if task is already computing
+//        computing.add(task);
+//        World world = asBukkit();
+//        if (world == null) return; // World not loaded
+//
+//        final int rad = 8;
+//
+//        final TemperatureData dataMap = plugin.getEngine().getTemperatureData();
+//
+//        threadPool.execute(() -> {
+//            Stopwatch time = new Stopwatch().start();
+//            Map<Vector, Float> blocks = new HashMap<>();
+//
+//            new CuboidScanner(rad, posX, posY, posZ, (CuboidScanner.CuboidLocalTask)
+//                    (x, y, z, localX, localY, localZ) -> {
+//
+//                        // Local chunk position of block
+//                        Vector pos = new Vector(inChunk(x), y, inChunk(z));
+//
+//                        Block block = world.getBlockAt(x, y, z);
+//
+//                        final float biomeTemp = dataMap.getEmissionValue(
+//                                TemperatureData.DataTempType.BIOME,
+//                                block.getBiome().name());
+//
+//                        ChunkData chunk = getChunkFromPosition(x, z);
+//                        chunk.setValue(pos, biomeTemp);
+//
+//                        // Check if water for waterfall
+//                        chunk.createWaterfallEmitter(block);
+//                        chunk.createSmokeEmitter(block);
+//
+//                        float emissionTemp = dataMap.getEmissionValue(
+//                                TemperatureData.DataTempType.BLOCK,
+//                                block.getType().name());
+//
+//                        //temp.put(pos, biomeTemp);
+//                        if (emissionTemp != 0) {
+//                            blocks.put(pos, emissionTemp);
+//                        }
+//            }).start();
+//
+//            // Smooth block values
+//            for (Map.Entry<Vector, Float> entry : blocks.entrySet()) {
+//                int xx = entry.getKey().getBlockX();
+//                int yy = entry.getKey().getBlockY();
+//                int zz = entry.getKey().getBlockZ();
+//                Vector center = new Vector(xx, yy, zz);
+//
+//                float hotPoint = entry.getValue() / 2;
+//
+//                new CuboidScanner(rad, xx, yy, zz, (CuboidScanner.CuboidTask) (x, y, z) -> {
+//                    Vector v = new Vector(x, y, z);
+//                    ChunkData chunk = getChunkFromPosition(x, z);
+//
+//                    int distance = (int) Math.ceil(center.distance(v));
+//                    double fallOffPercent = ((double) (rad - distance)) / (double) rad;
+//                    float point = (float) (hotPoint * fallOffPercent);
+//
+//                    if (chunk.getTemperature(v) < point)
+//                        chunk.setValue(v, point);
+//                }).excludeCenter().start();
+//            }
+//
+//            computing.remove(task);
+//            plugin.getLogger().info("Generated area " + Arrays.toString(new int[] {posX, posY, posZ})
+//                    + " in " + time.stop() + "ms");
+//        });
+//    }
 
     int inChunk(int v) {
         int val = v % 16;
@@ -213,7 +203,32 @@ public class WorldData implements EternalWorld {
      *         the chunk.
      */
     public ChunkData getChunk(int x, int z) {
-        return chunks.get(pair(x, z));
+        long pair = pair(x, z);
+        if (chunks.containsKey(pair)) return chunks.get(pair);
+        ChunkData chunkData = null;
+        File worldsFile = new File(plugin.getDataFolder(), "worlds");
+        File worldFile = new File(worldsFile, getWorldUid().toString());
+        File chunkFile = new File(worldFile, WorldData.pair(x, z) + ".dat");
+        if (chunkFile.exists()) {
+            FileInputStream in = null;
+            try {
+                in = new FileInputStream(chunkFile);
+                chunkData = new ChunkData(this, x, z, in.readAllBytes());
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (in != null) {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            if (chunkData == null) chunkData = new ChunkData(this, x, z);
+            chunks.put(pair, chunkData);
+        }
+        return chunkData;
     }
 
     /**
