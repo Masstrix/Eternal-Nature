@@ -1,4 +1,4 @@
-<img src="https://i.imgur.com/s5nIk8g.png" align="center">
+<img src="https://i.imgur.com/8zlezgy.jpg" align="center">
 
 Spigot plugin to make your server more realistic with an H²O bar, temperature and more.
 
