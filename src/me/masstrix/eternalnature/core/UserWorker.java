@@ -29,7 +29,7 @@ public class UserWorker implements EternalWorker {
 
     @Override
     public void end() {
-        task.cancel();
+        if (task != null) task.cancel();
 
         // End everyone's session and save it.
         for (UserData user : engine.getCashedUsers()) {

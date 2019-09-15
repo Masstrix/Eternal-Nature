@@ -2,6 +2,8 @@ package me.masstrix.eternalnature.util;
 
 import org.bukkit.ChatColor;
 
+import java.util.List;
+
 public class StringUtil {
 
     public static String color(String s) {
@@ -20,5 +22,16 @@ public class StringUtil {
             if (stringArray[i] != compareArray[i]) diff++;
         }
         return diff;
+    }
+
+    public static String fromStringArray(List<String> list, String separator) {
+        if (list == null || list.size() == 0) return "";
+        StringBuilder builder = new StringBuilder();
+        for (String s : list) {
+            if (builder.length() > 0)
+                builder.append(separator);
+            builder.append(s);
+        }
+        return builder.toString();
     }
 }

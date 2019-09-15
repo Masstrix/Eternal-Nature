@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ChunkData {
 
@@ -63,12 +64,18 @@ public class ChunkData {
             for (int i = 0; i < loaded.length; i++) {
                 sectionsLoaded[i] = loaded[i] == '1';
             }
-            Object points = in.readObject();
-            if (points instanceof Map) {
+            //noinspection unchecked
+            temp = (Map<EVector, Float>) in.readObject();
+            Object waterfalls = in.readObject();
+            if (waterfalls instanceof Set) {
                 //noinspection unchecked
-                temp = (Map<EVector, Float>) points;
+                waterfallEmitters = (Set<WaterfallEmitter>) waterfalls;
             }
-        } catch (IOException | ClassNotFoundException e) {
+        }
+        catch (EOFException ignored) {
+            worldData.plugin.getLogger().warning("Failed to load chunk " + x + ", " + z + " data");
+        }
+        catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         } finally {
             try {
@@ -134,10 +141,6 @@ public class ChunkData {
         return key;
     }
 
-    public void load() {
-
-    }
-
     /**
      * Generates a section of the chunks data. Rather than generating the entire chunk
      * each chunk is generated in sections of 16 stopping any un-needed data being
@@ -154,53 +157,82 @@ public class ChunkData {
         if (world == null) return; // World not loaded
         final Chunk chunk = world.getChunkAt(x, z);
 
-        final TemperatureData dataMap = worldData.plugin.getEngine().getTemperatureData();
-
         // Run process on new thread
         threadPool.execute(() -> {
             Stopwatch time = new Stopwatch().start();
             Map<EVector, Float> blockData = new HashMap<>();
+            TemperatureData dataMap = worldData.plugin.getEngine().getTemperatureData();
 
-            int x = 0, y = section * 16, z = 0;
-            for (int i = 0; i < sectionVolume; i++) {
+            AtomicInteger operations = new AtomicInteger();
 
+            new CuboidScanner(15, 0, section * 16, 0, (CuboidScanner.CuboidTask) (x, y, z) -> {
                 EVector pos = new EVector(x, y, z);
 
                 Block block = chunk.getBlock(x, y, z);
+                //createWaterfallEmitter(block);
+//                createSmokeEmitter(block);
 
-                final float biomeTemp = dataMap.getEmissionValue(
-                        TemperatureData.DataTempType.BIOME,
-                        block.getBiome().name());
+//                final float biomeTemp = dataMap.getEmissionValue(
+//                        TemperatureData.DataTempType.BIOME,
+//                        block.getBiome().name());
 
-                this.temp.put(pos, biomeTemp);
+                this.temp.put(pos, 13F);
 
-                createWaterfallEmitter(block);
-                createSmokeEmitter(block);
-
-                float emissionTemp = dataMap.getEmissionValue(
+                float emissionTemp = 13; /*dataMap.getEmissionValue(
                         TemperatureData.DataTempType.BLOCK,
-                        block.getType().name());
+                        block.getType().name());*/
+                emissionTemp = dataMap.getExactBlockEmission(block.getType());
 
                 if (emissionTemp != 0) {
-                    blockData.put(pos, emissionTemp);
+                    //blockData.put(pos, emissionTemp);
                 }
+                operations.incrementAndGet();
+            }).center(false).start();
 
-                x++;
-                if (x >= 16) {
-                    x = 0;
-                    z++;
-                }
-                if (z >= 16) {
-                    z = 0;
-                    y++;
-                }
+            // Smooth the chunks data out.
+            for (Map.Entry<EVector, Float> entry : blockData.entrySet()) {
+                int xx = entry.getKey().getBlockX();
+                int yy = entry.getKey().getBlockY();
+                int zz = entry.getKey().getBlockZ();
+                EVector center = new EVector(xx, yy, zz);
+
+                int falloff = 4;
+                float hotPoint = entry.getValue() / 2;
+
+                new CuboidScanner(falloff, xx, yy, zz, (CuboidScanner.CuboidTask) (x, y, z) -> {
+                    EVector v = new EVector(x, y, z);
+                    operations.incrementAndGet();
+
+                    int chunkX = worldData.asChunk(x);
+                    int chunkZ = worldData.asChunk(z);
+
+                    ChunkData local = this;
+
+                    if (chunkX != this.x || chunkZ != this.z) {
+                        local = worldData.getChunk(chunkX, chunkZ);
+                    }
+
+                    if (local != null) {
+                        local.temp.compute(v, (vec, t) -> {
+                            int distance = (int) Math.ceil(center.distance(v));
+                            double fallOffPercent = ((double) (falloff - distance)) / (double) falloff;
+                            float point = (float) (hotPoint * fallOffPercent);
+
+                            if (t == null || t < point) return point;
+                            return t;
+                        });
+                    }
+                }).excludeCenter().start();
+
+                temp.computeIfPresent(entry.getKey(), (vec, t) -> t + hotPoint);
             }
 
-            worldData.plugin.getLogger().info("Generated section " + section + " in chunk "
-                    + this.x + ", " + this.z + " in " + time.stop() + "ms");
-            time.start();
-            smooth(blockData);
+            //temp.putAll(blockData);
+            //smooth(blockData);
             saveToFile();
+
+            worldData.plugin.getLogger().info("Generated section " + section + " in chunk "
+                    + this.x + ", " + this.z + " in " + time.stop() + "ms   (" + operations.get() + " operations)");
         });
     }
 
@@ -312,6 +344,7 @@ public class ChunkData {
      * Saves the chunks data to file.
      */
     public void saveToFile() {
+        if (!worldData.plugin.getSystemConfig().isEnabled(ConfigOption.TEMP_SAVE_DATA)) return;
         File worldsFile = new File(worldData.plugin.getDataFolder(), "worlds");
         File worldFile = new File(worldsFile, worldData.getWorldUid().toString());
         File chunkFile = new File(worldFile, WorldData.pair(x, z) + ".dat");
@@ -328,6 +361,7 @@ public class ChunkData {
             }
             out.writeUTF(loaded.toString());
             out.writeObject(temp);
+            out.writeObject(waterfallEmitters);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {

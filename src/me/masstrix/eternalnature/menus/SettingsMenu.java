@@ -1,9 +1,17 @@
 package me.masstrix.eternalnature.menus;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
+import me.masstrix.eternalnature.util.StringUtil;
+import me.masstrix.eternalnature.util.VersionChecker;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -36,6 +44,44 @@ public class SettingsMenu implements Listener {
         ItemStack backIcon = new ItemBuilder(Material.ARROW).setName("&aGo Back").build();
 
         // Main Menu buttons
+        buttons.add(new Button(main, asSlot(0, 4), () -> {
+            VersionChecker.VersionMeta versionMeta = plugin.getVersionMeta();
+            return new ItemBuilder(Material.FERN)
+                .setName("&aEternal Nature")
+                .addLore("&8Making things more lively.",
+                        "",
+                        "Developed by &f" + StringUtil.fromStringArray(plugin.getDescription().getAuthors(), ", "),
+                        "Version: " +
+                                (versionMeta != null ? (versionMeta.getState() == VersionChecker.PluginVersionState.BEHIND ?
+                                        String.format("&c%s &6(%s)", versionMeta.getCurrentVersion(),
+                                                versionMeta.getLatestVersion())
+                                        : versionMeta.getState() == VersionChecker.PluginVersionState.DEV_BUILD ?
+                                        String.format("&6%s (Dev Build)", versionMeta.getCurrentVersion())
+                                        : "&a" + versionMeta.getCurrentVersion()) : "&7Loading..."))
+                .addLore("", "&eClick to get help", "&elinks to the project.")
+                .build();
+        }).onClick(player -> {
+            player.closeInventory();
+            ComponentBuilder builder = new ComponentBuilder("");
+            builder.append("\n    [Eternal Nature]\n").color(ChatColor.GREEN);
+            builder.append("    Download Page ", ComponentBuilder.FormatRetention.NONE).color(ChatColor.WHITE);
+            builder.append("VISIT").color(ChatColor.GOLD).bold(true).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                    TextComponent.fromLegacyText("\u00A7eClick to visit the plugins download page\non spigotmc.org.")))
+                    .event(new ClickEvent(ClickEvent.Action.OPEN_URL, PluginData.PLUGIN_PAGE));
+            builder.append("\n");
+            builder.append("    Plugin Wiki ", ComponentBuilder.FormatRetention.NONE).color(ChatColor.WHITE);
+            builder.append("VISIT").color(ChatColor.AQUA).bold(true).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                    TextComponent.fromLegacyText("\u00A7eClick to get help on the plugins wiki.")))
+                    .event(new ClickEvent(ClickEvent.Action.OPEN_URL, PluginData.WIKI_PAGE));
+            builder.append("\n");
+            builder.append("    Submit a bug report ", ComponentBuilder.FormatRetention.NONE).color(ChatColor.WHITE);
+            builder.append("HERE").color(ChatColor.AQUA).bold(true).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                    TextComponent.fromLegacyText("\u00A7eClick to submit a issue/bug report.")))
+                    .event(new ClickEvent(ClickEvent.Action.OPEN_URL, PluginData.ISSUES_PAGE));
+            builder.append("\n");
+
+            player.spigot().sendMessage(builder.create());
+        }));
         buttons.add(new Button(main, asSlot(1, 3), () -> new ItemBuilder(Material.POTION)
                 .setPotionType(PotionType.JUMP)
                 .setName("&aHydration Settings")
@@ -55,7 +101,7 @@ public class SettingsMenu implements Listener {
             player.openInventory(temp);
             player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1, 1);
         }));
-        buttons.add(new Button(main, asSlot(3, 2), () -> new ItemBuilder(Material.WATER_BUCKET)
+        buttons.add(new Button(main, asSlot(3, 1), () -> new ItemBuilder(Material.WATER_BUCKET)
                 .setName("&aWaterfalls")
                 .addLore("", "Set if waterfalls are enabled.", "")
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.WATERFALLS))
@@ -65,7 +111,7 @@ public class SettingsMenu implements Listener {
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
-        buttons.add(new Button(main, asSlot(3, 3), () -> new ItemBuilder(Material.KELP)
+        buttons.add(new Button(main, asSlot(3, 2), () -> new ItemBuilder(Material.KELP)
                 .setName("&aFalling Leaves")
                 .addLore("", "Set if leave blocks will emmit", "a leaf particle randomly.", "")
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.LEAF_EFFECT))
@@ -75,13 +121,23 @@ public class SettingsMenu implements Listener {
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
-        buttons.add(new Button(main, asSlot(3, 4), () -> new ItemBuilder(Material.OAK_SAPLING)
+        buttons.add(new Button(main, asSlot(3, 3), () -> new ItemBuilder(Material.OAK_SAPLING)
                 .setName("&aAuto Plant Saplings")
                 .addLore("", "Set if saplings have a chance to", "auto plant them self.", "")
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.LEAF_EFFECT))
                 .build()).setToggle("Auto Plant Saplings", () -> config.isEnabled(ConfigOption.AUTO_PLANT_SAPLING))
                 .onClick(player -> {
                     config.toggle(ConfigOption.AUTO_PLANT_SAPLING);
+                    config.save();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
+        buttons.add(new Button(main, asSlot(3, 5), () -> new ItemBuilder(Material.PAPER)
+                .setName("&aUpdate Notifications")
+                .addLore("", "Notify's admins and ops on join", "if there is a newer version", "available.", "")
+                .addSwitch("Currently:", config.isEnabled(ConfigOption.UPDATES_NOTIFY))
+                .build()).setToggle("Update Checks", () -> config.isEnabled(ConfigOption.UPDATES_NOTIFY))
+                .onClick(player -> {
+                    config.toggle(ConfigOption.UPDATES_NOTIFY);
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
@@ -95,13 +151,14 @@ public class SettingsMenu implements Listener {
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
-        buttons.add(new Button(main, asSlot(3, 7), () -> new ItemBuilder(Material.NAME_TAG)
-                .setName("&aUpdate Notifications")
-                .addLore("", "Toggle if you are notified of updates.", "")
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.UPDATES_NOTIFY))
-                .build()).setToggle("Update Notifications", () -> config.isEnabled(ConfigOption.UPDATES_NOTIFY))
+        buttons.add(new Button(main, asSlot(3, 7), () -> new ItemBuilder(Material.WRITABLE_BOOK)
+                .setName("&aSave Data")
+                .addLore("", "Set if chunk data is saved to disk/database.", "Having it saved saves time",
+                        "regenerating the chunk reducing", "load on the server", "")
+                .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMP_SAVE_DATA))
+                .build()).setToggle("Update Notifications", () -> config.isEnabled(ConfigOption.TEMP_SAVE_DATA))
                 .onClick(player -> {
-                    config.toggle(ConfigOption.UPDATES_NOTIFY);
+                    config.toggle(ConfigOption.TEMP_SAVE_DATA);
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
@@ -117,30 +174,42 @@ public class SettingsMenu implements Listener {
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.HYDRATION_ENABLED))
                 .build()).setToggle("Enabled", () -> config.isEnabled(ConfigOption.HYDRATION_ENABLED))
                 .onClick(player -> {
-            config.toggle(ConfigOption.HYDRATION_ENABLED);
-            config.save();
-            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
-        }));
+                    config.toggle(ConfigOption.HYDRATION_ENABLED);
+                    config.save();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
         buttons.add(new Button(hydration, asSlot(1, 4), () -> new ItemBuilder(Material.IRON_SWORD)
                 .setName("&aHydration Damage")
                 .addLore("", "Set if players will be hurt if", "there hydration is empty.", "")
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.HYDRATION_DAMAGE))
                 .build()).setToggle("Cause Damage", () -> config.isEnabled(ConfigOption.HYDRATION_DAMAGE))
                 .onClick(player -> {
-            config.toggle(ConfigOption.HYDRATION_DAMAGE);
-            config.save();
-            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
-        }));
+                    config.toggle(ConfigOption.HYDRATION_DAMAGE);
+                    config.save();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
         buttons.add(new Button(hydration, asSlot(1, 5), () -> new ItemBuilder(Material.RABBIT_FOOT)
                 .setName("&aHydration Walking")
                 .addLore("", "Set if hydration will be lost from", "waling and other movements.", "")
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.HYDRATION_WALKING))
                 .build()).setToggle("Walking", () -> config.isEnabled(ConfigOption.HYDRATION_WALKING))
                 .onClick(player -> {
-            config.toggle(ConfigOption.HYDRATION_WALKING);
-            config.save();
-            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
-        }));
+                    config.toggle(ConfigOption.HYDRATION_WALKING);
+                    config.save();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
+        buttons.add(new Button(hydration, asSlot(4, 4), () -> new ItemBuilder(Material.JUNGLE_SIGN)
+                .setName("&aDisplay Mode")
+                .addLore("", "Set how how hydration is displayed", "to players.", "")
+                .addLore("Currently: &f" + config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE).getSimple(),
+                        config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE).getDescription())
+                .addLore("&eClick to switch to &7" + config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE).opposite().getSimple())
+                .build())
+                .onClick(player -> {
+                    config.set(ConfigOption.HYDRATION_BAR_STYLE, config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE).opposite().name());
+                    config.save();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
 
         // Temperature Menu buttons
         buttons.add(new Button(temp, 0, backIcon).onClick(player -> {
@@ -153,32 +222,42 @@ public class SettingsMenu implements Listener {
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMP_ENABLED))
                 .build()).setToggle("Enabled", () -> config.isEnabled(ConfigOption.TEMP_ENABLED))
                 .onClick(player -> {
-            config.toggle(ConfigOption.TEMP_ENABLED);
-            config.save();
-            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
-        }));
+                    config.toggle(ConfigOption.TEMP_ENABLED);
+                    config.save();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
         buttons.add(new Button(temp, asSlot(1, 4), () -> new ItemBuilder(Material.IRON_SWORD)
                 .setName("&aTemperature Damage")
                 .addLore("", "Set if players will be hurt if", "there temperature is to high or low.", "")
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMP_DAMAGE))
                 .build()).setToggle("Cause Damage", () -> config.isEnabled(ConfigOption.TEMP_DAMAGE))
                 .onClick(player -> {
-            config.toggle(ConfigOption.TEMP_DAMAGE);
-            config.save();
-            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
-        }));
+                    config.toggle(ConfigOption.TEMP_DAMAGE);
+                    config.save();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
         buttons.add(new Button(temp, asSlot(1, 5), () -> new ItemBuilder(Material.POTION)
                 .setName("&aSweating")
                 .addLore("", "If enabled players will sweat and lose", "hydration faster in higher temperatures.", "")
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMP_SWEAT))
                 .build()).setToggle("Sweat", () -> config.isEnabled(ConfigOption.TEMP_SWEAT))
                 .onClick(player -> {
-            config.toggle(ConfigOption.TEMP_SWEAT);
-            config.save();
-            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
-        }));
-
-        update(); // Adds all the items to the inventories
+                    config.toggle(ConfigOption.TEMP_SWEAT);
+                    config.save();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
+        buttons.add(new Button(temp, asSlot(4, 4), () -> new ItemBuilder(Material.JUNGLE_SIGN)
+                .setName("&aDisplay Mode")
+                .addLore("", "Set how how temperature is displayed", "to players.", "")
+                .addLore("Currently: &f" + config.getRenderMethod(ConfigOption.TEMP_BAR_STYLE).getSimple(),
+                        config.getRenderMethod(ConfigOption.TEMP_BAR_STYLE).getDescription())
+                .addLore("&eClick to switch to &7" + config.getRenderMethod(ConfigOption.TEMP_BAR_STYLE).opposite().getSimple())
+                .build())
+                .onClick(player -> {
+                    config.set(ConfigOption.TEMP_BAR_STYLE, config.getRenderMethod(ConfigOption.TEMP_BAR_STYLE).opposite().name());
+                    config.save();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
 //        new BukkitRunnable() {
 //            @Override
 //            public void run() {
@@ -228,6 +307,7 @@ public class SettingsMenu implements Listener {
 
     public void open(Player player) {
         player.openInventory(main);
+        update();
     }
 
     private boolean isValidMenu(Inventory inventory) {

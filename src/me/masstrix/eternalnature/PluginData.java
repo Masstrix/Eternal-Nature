@@ -6,5 +6,7 @@ public class PluginData {
     public static final int RESOURCE_ID = 43290;
 
     public static final String PREFIX = "&2[" + NAME + "]&f ";
-
+    public static final String PLUGIN_PAGE = "https://www.spigotmc.org/resources/eternal-nature.43290/";
+    public static final String ISSUES_PAGE = "https://github.com/Masstrix/Eternal-Nature/issues";
+    public static final String WIKI_PAGE = "https://github.com/Masstrix/Eternal-Nature/wiki";
 }

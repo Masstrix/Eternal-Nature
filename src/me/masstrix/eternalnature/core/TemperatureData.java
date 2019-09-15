@@ -1,7 +1,9 @@
 package me.masstrix.eternalnature.core;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.util.Stopwatch;
 import me.masstrix.eternalnature.util.StringUtil;
+import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -15,6 +17,7 @@ public class TemperatureData {
     private EternalNature plugin;
     private Map<String, Float> biomes = new HashMap<>();
     private Map<String, Float> blocks = new HashMap<>();
+    private Map<Material, Float> blocksExact = new HashMap<>();
     private Map<String, Float> armor = new HashMap<>();
     private Map<String, Float> weather = new HashMap<>();
 
@@ -36,6 +39,8 @@ public class TemperatureData {
             plugin.saveResource("temperature-config.yml", false);
         }
         YamlConfiguration config = new YamlConfiguration();
+        Stopwatch timer = new Stopwatch().start();
+        plugin.getLogger().info("Loading temperature data...");
         try {
             config.load(file);
             for (String s : config.getKeys(true)) {
@@ -50,7 +55,6 @@ public class TemperatureData {
                         maxBlock = val;
                     if (val < minBlock)
                         minBlock = val;
-
                 }
                 else if (s.startsWith("armor")) {
                     armor.put(keys[keys.length - 1].toLowerCase(), (float) config.getDouble(s));
@@ -60,9 +64,16 @@ public class TemperatureData {
                 }
             }
 
+            for (Material m : Material.values()) {
+                float v = getEmissionValue(DataTempType.BIOME, m.name());
+                if (v != 0)
+                    blocksExact.put(m, v);
+            }
+
         } catch (IOException | InvalidConfigurationException e) {
             e.printStackTrace();
         }
+        plugin.getLogger().info("Loaded temperature data in " + timer.stop() + "ms");
     }
 
     public enum DataTempType {
@@ -75,6 +86,10 @@ public class TemperatureData {
 
     public double getMinBlockTemp() {
         return minBlock;
+    }
+
+    public float getExactBlockEmission(Material material) {
+        return blocksExact.getOrDefault(material, 0F);
     }
 
     /**

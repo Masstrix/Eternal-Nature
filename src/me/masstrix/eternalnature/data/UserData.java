@@ -146,6 +146,25 @@ public class UserData implements EternalUser {
                     Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), hsbVals);
                     // Shift the hue around by 25%
                     color = new Color(Color.HSBtoRGB(0.25f - (0.25f * colorRotate), hsbVals[1], hsbVals[2]));
+
+                    if (temp > 20) {
+                        color = new Color(0, 132, 21);
+                    }
+                    else if (temp > 40) {
+                        color = new Color(53, 255, 0);
+                    }
+                    else if (temp > 40) {
+                        color = new Color(255, 240, 0);
+                    }
+                    else if (temp > 60) {
+                        color = new Color(255, 65, 0);
+                    }
+                    else if (temp > 100) {
+                        color = new Color(255, 149, 140);
+                    }
+                    else if (temp > 200) {
+                        color = new Color(255, 255, 255);
+                    }
                 } else {
                     color = new Color(255, 0, 206); // Unloaded
                 }

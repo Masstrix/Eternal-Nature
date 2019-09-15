@@ -6,6 +6,7 @@ public class CuboidScanner {
     private int x, y, z;
     private CuboidRuntime task;
     private boolean excludeCenter = false;
+    private boolean center = true;
 
     public CuboidScanner(int radius, CuboidRuntime task) {
         this(radius, 0, 0, 0, task);
@@ -19,15 +20,29 @@ public class CuboidScanner {
         this.task = task;
     }
 
+    public CuboidScanner center(boolean b) {
+        this.center = b;
+        return this;
+    }
+
     public CuboidScanner excludeCenter() {
         excludeCenter = true;
         return this;
     }
 
     public final void start() {
-        for (int y = -radius; y <= radius; y++) {
-            for (int x = -radius; x <= radius; x++) {
-                for (int z = -radius; z <= radius; z++) {
+        if (radius <= 0) {
+            if (task instanceof CuboidTask)
+                ((CuboidTask) task).run(x, y, z);
+            else if (task instanceof CuboidLocalTask) {
+                ((CuboidLocalTask) task).run(x, y, z, x, y, z);
+            }
+            return;
+        }
+        int start = center ? -radius : 0;
+        for (int y = start; y <= radius; y++) {
+            for (int x = start; x <= radius; x++) {
+                for (int z = start; z <= radius; z++) {
                     if (excludeCenter && x == this.x && y == this.y && z == this.z) continue;
                     if (task instanceof CuboidTask)
                         ((CuboidTask) task).run(x + this.x, y + this.y, z + this.z);
