@@ -7,8 +7,15 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Keeps a reference of the config.yml and implements methods to more safely access
+ * those values.
+ */
 public class SystemConfig {
 
+    /**
+     * Version of the config. Maybe invalid?
+     */
     private static final int configVersion = 2;
     private EternalNature plugin;
     private FileConfiguration config;
@@ -18,25 +25,43 @@ public class SystemConfig {
         loadConfig(false);
     }
 
+    /**
+     * Reloads the config.
+     */
     public void reload() {
         loadConfig(true);
     }
 
+    /**
+     * Loads the config. Also sets it to copy default values across making
+     * sure no options are missing from the config.
+     *
+     * @param reload is this a reload of the config.
+     */
     private void loadConfig(boolean reload) {
         if (reload) plugin.reloadConfig();
 
         // Save config if none is present.
         File file = new File(plugin.getDataFolder(), "config.yml");
         if (!file.exists())
-            plugin.saveResource("config.yml", false);
+            plugin.saveDefaultConfig();
 
         // Validate config file.
         this.config = plugin.getConfig();
+        this.config.options().copyDefaults(true);
+        this.config.options().copyHeader(true);
+        this.plugin.saveConfig();
         if (!config.contains("version") || config.getInt("version") != configVersion) {
             rebuildConfig();
         }
     }
 
+    /**
+     * Returns a value from the config as an object.
+     *
+     * @param option option to get the value of.
+     * @return the config value as an object.
+     */
     public Object get(ConfigOption option) {
         return config.get(option.key, option.def);
     }
@@ -45,40 +70,86 @@ public class SystemConfig {
         return get(option).equals(o);
     }
 
+    /**
+     * Returns if a boolean option is true.
+     *
+     * @param option option to check.
+     * @return is option enabled.
+     */
     public boolean isEnabled(ConfigOption option) {
         return getBoolean(option);
     }
 
+    /**
+     * Sets a value in the config.
+     *
+     * @param option option to set.
+     * @param o object to set as the value.
+     */
     public void set(ConfigOption option, Object o) {
         config.set(option.key, o);
     }
 
+    /**
+     * Toggles a boolean in the config.
+     *
+     * @param option option to toggle.
+     * @return the inverted value for the option.
+     */
     public boolean toggle(ConfigOption option) {
         boolean b = !getBoolean(option);
         config.set(option.key, b);
         return b;
     }
 
+    /**
+     * Return a boolean value from the config.
+     *
+     * @param option option to get.
+     * @return true or false.
+     */
     public boolean getBoolean(ConfigOption option) {
         return config.getBoolean(option.key, (Boolean) option.def);
     }
 
+    /**
+     * Return a string value from the config.
+     *
+     * @param option option to get.
+     * @return a string.
+     */
     public String getString(ConfigOption option) {
         return config.getString(option.key, (String) option.def);
     }
 
+    /**
+     * Return a integer from the config.
+     *
+     * @param option option to get.
+     * @return a integer.
+     */
     public int getInt(ConfigOption option) {
         return config.getInt(option.key, (Integer) option.def);
     }
 
+    /**
+     * Return a render method from a config value.
+     *
+     * @param option option to get.
+     * @return a render method. defaults to {@link StatusRenderMethod#BOSSBAR}.
+     */
     public StatusRenderMethod getRenderMethod(ConfigOption option) {
         return StatusRenderMethod.getOr(get(option).toString(), StatusRenderMethod.BOSSBAR);
     }
 
+    /**
+     * Saves the config.
+     */
     public void save() {
         plugin.saveConfig();
     }
 
+    @Deprecated
     public void rebuildConfig() {
         plugin.getLogger().info("Invalid config! Rebuilding config and copying data...");
         // Cache and reset old config
