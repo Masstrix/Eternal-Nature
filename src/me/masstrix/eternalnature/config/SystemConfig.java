@@ -133,6 +133,16 @@ public class SystemConfig {
     }
 
     /**
+     * Returns a double value from the config.
+     *
+     * @param option option to get.
+     * @return a double.
+     */
+    public double getDouble(ConfigOption option) {
+        return config.getDouble(option.key, (Double) option.def);
+    }
+
+    /**
      * Return a render method from a config value.
      *
      * @param option option to get.

@@ -4,7 +4,7 @@ import me.masstrix.eternalnature.core.Renderer;
 import me.masstrix.eternalnature.core.TemperatureData;
 import me.masstrix.eternalnature.core.UserWorker;
 import me.masstrix.eternalnature.core.world.LeafEmitter;
-import me.masstrix.eternalnature.core.world.SaplingPlanter;
+import me.masstrix.eternalnature.core.world.AutoPlanter;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.data.UserData;
 import me.masstrix.eternalnature.util.Stopwatch;
@@ -25,7 +25,7 @@ public class EternalEngine {
     private UserWorker userWorker;
     private WorldProvider worldProvider;
     private TemperatureData temperatureData;
-    private SaplingPlanter saplingPlanter;
+    private AutoPlanter autoPlanter;
     private LeafEmitter leafEmitter;
 
     private Map<UUID, UserData> users = new HashMap<>();
@@ -45,7 +45,7 @@ public class EternalEngine {
         userWorker = new UserWorker(plugin, this);
         renderer = new Renderer(plugin, this);
         worldProvider = new WorldProvider(plugin);
-        saplingPlanter = new SaplingPlanter(plugin);
+        autoPlanter = new AutoPlanter(plugin);
         leafEmitter = new LeafEmitter(plugin);
     }
 
@@ -54,7 +54,7 @@ public class EternalEngine {
         userWorker.start();
         renderer.start();
         worldProvider.start();
-        saplingPlanter.start();
+        autoPlanter.start();
         leafEmitter.start();
     }
 
@@ -106,8 +106,8 @@ public class EternalEngine {
         return worldProvider;
     }
 
-    public SaplingPlanter getSaplingPlanter() {
-        return saplingPlanter;
+    public AutoPlanter getAutoPlanter() {
+        return autoPlanter;
     }
 
     /**
@@ -118,7 +118,7 @@ public class EternalEngine {
         renderer.end();
         userWorker.end();
         worldProvider.end();
-        saplingPlanter.end();
+        autoPlanter.end();
         leafEmitter.end();
     }
 

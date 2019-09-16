@@ -20,9 +20,21 @@ general:
 
 # Global settings across all worlds.
 global:
-  auto-plant-saplings: true
   waterfalls: true
   falling-leaves: true
+  auto-plant:
+    play-sound: true
+    enabled: true
+    replant-crops: true
+    saplings: 0.6
+    wheet: 1.0
+    carrot: 1.0
+    potato: 1.0
+    melon: 0.8
+    pumpkin: 0.8
+    beetroot: 1.0
+    sweet_berry: 1.0
+    flowers: 0.2
   hydration:
     enabled: true
     lose-from-walking: true

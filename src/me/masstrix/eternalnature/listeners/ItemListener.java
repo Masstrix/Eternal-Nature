@@ -17,6 +17,6 @@ public class ItemListener implements Listener {
     @EventHandler
     public void on(ItemSpawnEvent event) {
         Item item = event.getEntity();
-        plugin.getEngine().getSaplingPlanter().addSapling(item);
+        plugin.getEngine().getAutoPlanter().attemptToAddItem(item);
     }
 }

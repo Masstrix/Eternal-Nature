@@ -10,6 +10,11 @@ public class MathUtil {
         return random;
     }
 
+    public static boolean chance(double percent) {
+        if (percent >= 1) return true;
+        return random.nextDouble() <= percent;
+    }
+
     public static boolean chance(int val) {
         return randomInt(val) == 1;
     }
