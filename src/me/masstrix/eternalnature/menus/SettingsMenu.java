@@ -74,7 +74,7 @@ public class SettingsMenu implements Listener {
             builder.append("    Official Discord ", ComponentBuilder.FormatRetention.NONE).color(ChatColor.WHITE);
             builder.append("JOIN").color(ChatColor.AQUA).bold(true).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
                     TextComponent.fromLegacyText("\u00A7eClick to join the official discord.")))
-                    .event(new ClickEvent(ClickEvent.Action.OPEN_URL, PluginData.WIKI_PAGE));
+                    .event(new ClickEvent(ClickEvent.Action.OPEN_URL, PluginData.DISCORD));
             builder.append("\n");
             builder.append("    Plugin Wiki ", ComponentBuilder.FormatRetention.NONE).color(ChatColor.WHITE);
             builder.append("VISIT").color(ChatColor.AQUA).bold(true).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,

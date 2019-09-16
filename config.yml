@@ -1,24 +1,29 @@
-#
+# 
 #  ___  _                          _    _  _        _
 # | __|| |_  ___  _ _  _ _   __ _ | |  | \| | __ _ | |_  _  _  _ _  ___
 # | _| |  _|/ -_)| '_|| ' \ / _` || |  | .` |/ _` ||  _|| || || '_|/ -_)
 # |___| \__|\___||_|  |_||_|\__,_||_|  |_|\_|\__,_| \__| \_,_||_|  \___|
 #                   version 2.0  (supports 1.14*)
 #                        created by Masstrix
-#
+# 
 #      A plugin to enhance the survival gameplay aspect and bring
 #           new elements into the game for players to enjoy.
-#
-# Do not remove this. If removed the config will be rebuilt. If
-# a new version of the plugin has changes the plugin will automatically
-# rebuild it with your settings.
+# 
+# Join the offical discord to recieve updates, suggest ideas and give feedback
+# at https://discord.gg/Uk3M9Y6
+# 
+# Visit the wiki here https://github.com/Masstrix/Eternal-Nature/wiki for more help.
+# 
+# Auto Plant
+#   set any value to 0 to disable auto planting for a specific item.
+# Render
+#  style - sets where the item is displayed. This can be set to ACTIONBAR or BOSSBAR.
+#  flash - sets if the value will flash when critical.
+# 
 version: 2
-
 general:
   check-for-updates: true
   notify-update-join: true
-
-# Global settings across all worlds.
 global:
   waterfalls: true
   falling-leaves: true
@@ -43,26 +48,17 @@ global:
   temperature:
     enabled: true
     cause-damage: true
-    sprinting: true     # Gains heat when sprinting.
-    catch-fire: true    # Catch on fire when to hot.
-    sweat: true         # Lose hydration from heat
-    # If enabled the generated temperature map will be saved out to disk to save
-    # on processing time. This can increase performance but also calculateSection more local
-    # data.
+    sprinting: true
+    catch-fire: true
+    sweat: true
     save-data: false
-
-# Render settings for how to display things to players.
-# styles: ACTIONBAR (text above hotbar), BOSSBAR (top of screen)
 render:
   hydration:
-    style: ACTIONBAR   # Type of display.
-    flash: true        # Flash red if low
+    style: ACTIONBAR
+    flash: true
   temperature:
-    style: ACTIONBAR   # Type of display.
-    flash: true        # Flash red if temperature is dangerous
-
-# Do not touch unless you understand what these values do. These
-# values are set to give the best mid-range performance.
+    style: ACTIONBAR
+    flash: true
 advanced:
   update-calls: 10
   render-calls: 20
@@ -70,8 +66,6 @@ advanced:
     scan-radius: 10
     dynamic: true
     precision: 1
-
-# messages used in global chat
 messages:
   death-heat: "%name% burnt to a crisp"
   death-cold: "%name% died of hypothermia"
