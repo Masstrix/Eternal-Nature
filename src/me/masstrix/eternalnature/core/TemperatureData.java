@@ -25,6 +25,7 @@ public class TemperatureData {
     @Deprecated
     private Map<String, Float> weather = new HashMap<>();
 
+    private Map<Material, Float> armorMap = new HashMap<>();
     private Map<Material, Float> blocksExact = new HashMap<>();
     private Map<Biome, Float> biomeExact = new HashMap<>();
 
@@ -76,13 +77,19 @@ public class TemperatureData {
             // Assign temperature to all biomes.
             for (Biome b : Biome.values()) {
                 float v = getEmissionValue(DataTempType.BIOME, b.name());
-                System.out.println(b.name() + ": " + v);
                 biomeExact.put(b, v);
+            }
+
+            // Assign temperature to all equipment
+            for (Material m : Material.values()) {
+                float v = getEmissionValue(DataTempType.ARMOR, m.name());
+                if (v != 0)
+                    armorMap.put(m, v);
             }
 
             // Assign temperature to all materials
             for (Material m : Material.values()) {
-                float v = getEmissionValue(DataTempType.BIOME, m.name());
+                float v = getEmissionValue(DataTempType.BLOCK, m.name());
                 if (v != 0)
                     blocksExact.put(m, v);
             }
@@ -117,6 +124,16 @@ public class TemperatureData {
      */
     public float getExactBiomeTemp(Biome biome) {
         return biomeExact.getOrDefault(biome, 13F);
+    }
+
+    /**
+     * Return the emission value for an armor item.
+     *
+     * @param material material to get.
+     * @return the emission value of the armor or 0 if it has no armor emission.
+     */
+    public float getArmorEmission(Material material) {
+        return armorMap.getOrDefault(material, 0F);
     }
 
     /**

@@ -33,7 +33,7 @@ biome:
   ice: -10
   end: -5
   river: 12
-  nether: 40
+  nether: 50
 
 weather:
   clear: 0

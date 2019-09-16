@@ -22,6 +22,7 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.awt.Color;
 import java.io.File;
@@ -83,6 +84,7 @@ public class UserData implements EternalUser {
         WorldProvider provider = plugin.getEngine().getWorldProvider();
         WorldData data = provider.getWorld(player.getWorld());
         Location loc = player.getLocation();
+        TemperatureData tempData = plugin.getEngine().getTemperatureData();
 
         // Handle temperature ticking.
         if (data != null && config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) {
@@ -99,6 +101,13 @@ public class UserData implements EternalUser {
 //            }
 
             emission += data.getBiomeTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+
+            // Add armor to temp.
+            ItemStack[] armor =  player.getEquipment().getArmorContents();
+            for (ItemStack i : armor) {
+                if (i == null) continue;
+                emission += tempData.getArmorEmission(i.getType());
+            }
 
             if (emission != Float.NEGATIVE_INFINITY) {
                 this.tempExact = emission;

@@ -123,14 +123,14 @@ public class SettingsMenu implements Listener {
         }));
         buttons.add(new Button(main, asSlot(3, 1), () -> new ItemBuilder(Material.WATER_BUCKET)
                 .setName("&aWaterfalls")
-                .addLore("", "Set if waterfalls are enabled.", "")
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.WATERFALLS))
-                .build()).setToggle("Waterfalls", () -> config.isEnabled(ConfigOption.WATERFALLS))
-                .onClick(player -> {
+                .addLore("", "&cFeature currently disabled in", "&cthis build. Will be added soon.")
+                //.addSwitch("Currently:", config.isEnabled(ConfigOption.WATERFALLS))
+                .build()).setToggle("Waterfalls", () -> false /*() -> config.isEnabled(ConfigOption.WATERFALLS)*/)
+                /*.onClick(player -> {
                     config.toggle(ConfigOption.WATERFALLS);
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
-                }));
+                })*/);
         buttons.add(new Button(main, asSlot(3, 2), () -> new ItemBuilder(Material.KELP)
                 .setName("&aFalling Leaves")
                 .addLore("", "Set if leave blocks will emmit", "a leaf particle randomly.", "")
@@ -276,8 +276,8 @@ public class SettingsMenu implements Listener {
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
-        buttons.add(new Button(temp, asSlot(1, 4), () -> new ItemBuilder(Material.IRON_SWORD)
-                .setName("&aTemperature Damage")
+        buttons.add(new Button(temp, asSlot(1, 3), () -> new ItemBuilder(Material.IRON_SWORD)
+                .setName("&aDamage")
                 .addLore("", "Set if players will be hurt if", "there temperature is to high or low.", "")
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_DAMAGE))
                 .build()).setToggle("Cause Damage", () -> config.isEnabled(ConfigOption.TEMPERATURE_DAMAGE))
@@ -286,7 +286,7 @@ public class SettingsMenu implements Listener {
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
-        buttons.add(new Button(temp, asSlot(1, 5), () -> new ItemBuilder(Material.POTION)
+        buttons.add(new Button(temp, asSlot(1, 4), () -> new ItemBuilder(Material.POTION)
                 .setName("&aSweating")
                 .setPotionType(PotionType.WATER)
                 .addLore("", "If enabled players will sweat and lose", "hydration faster in higher temperatures.", "")
@@ -297,14 +297,23 @@ public class SettingsMenu implements Listener {
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
-        buttons.add(new Button(temp, asSlot(1, 6), () -> new ItemBuilder(Material.FLINT_AND_STEEL)
+        buttons.add(new Button(temp, asSlot(1, 5), () -> new ItemBuilder(Material.FLINT_AND_STEEL)
                 .setName("&aBurn")
-                .setPotionType(PotionType.WATER)
                 .addLore("", "If enabled and a player gets too hot", "they will ignite.", "")
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_BURN))
                 .build()).setToggle("Burn", () -> config.isEnabled(ConfigOption.TEMPERATURE_BURN))
                 .onClick(player -> {
                     config.toggle(ConfigOption.TEMPERATURE_BURN);
+                    config.save();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
+        buttons.add(new Button(temp, asSlot(1, 6), () -> new ItemBuilder(Material.ICE)
+                .setName("&aFreeze")
+                .addLore("", "If a player gets to cold they", "will begin to get damaged.", "")
+                .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_FREEZE))
+                .build()).setToggle("Freeze", () -> config.isEnabled(ConfigOption.TEMPERATURE_FREEZE))
+                .onClick(player -> {
+                    config.toggle(ConfigOption.TEMPERATURE_FREEZE);
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
