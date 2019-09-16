@@ -6,6 +6,7 @@ public enum ConfigOption {
 
     WATERFALLS("global.waterfalls", true),
     LEAF_EFFECT("global.falling-leaves", true),
+    RANDOM_TREE_SPREAD("global.randomly-spread-trees", true),
 
     AUTO_PLANT("global.auto-plant.enabled", true),
     AUTO_REPLANT("global.auto-plant.replant-crops", true),

@@ -1,10 +1,12 @@
 package me.masstrix.eternalnature;
 
+import me.masstrix.eternalnature.core.EternalWorker;
 import me.masstrix.eternalnature.core.Renderer;
 import me.masstrix.eternalnature.core.TemperatureData;
 import me.masstrix.eternalnature.core.UserWorker;
 import me.masstrix.eternalnature.core.world.LeafEmitter;
 import me.masstrix.eternalnature.core.world.AutoPlanter;
+import me.masstrix.eternalnature.core.world.TreeSpreader;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.data.UserData;
 import me.masstrix.eternalnature.util.Stopwatch;
@@ -27,7 +29,9 @@ public class EternalEngine {
     private TemperatureData temperatureData;
     private AutoPlanter autoPlanter;
     private LeafEmitter leafEmitter;
+    private TreeSpreader treeSpreader;
 
+    private List<EternalWorker> workers = new ArrayList<>();
     private Map<UUID, UserData> users = new HashMap<>();
 
     private EternalEngine() {}
@@ -42,20 +46,17 @@ public class EternalEngine {
         enabled  = true;
         this.plugin = plugin;
         temperatureData = new TemperatureData(plugin);
-        userWorker = new UserWorker(plugin, this);
-        renderer = new Renderer(plugin, this);
-        worldProvider = new WorldProvider(plugin);
-        autoPlanter = new AutoPlanter(plugin);
-        leafEmitter = new LeafEmitter(plugin);
+        registerWorkers(userWorker = new UserWorker(plugin, this),
+                renderer = new Renderer(plugin, this),
+                worldProvider = new WorldProvider(plugin),
+                autoPlanter = new AutoPlanter(plugin),
+                leafEmitter = new LeafEmitter(plugin),
+                treeSpreader = new TreeSpreader(plugin));
     }
 
     void start() {
         loadPlayerData();
-        userWorker.start();
-        renderer.start();
-        worldProvider.start();
-        autoPlanter.start();
-        leafEmitter.start();
+        workers.forEach(EternalWorker::start);
     }
 
     private void loadPlayerData() {
@@ -115,11 +116,16 @@ public class EternalEngine {
      * run by the plugin.
      */
     void shutdown() {
-        renderer.end();
-        userWorker.end();
-        worldProvider.end();
-        autoPlanter.end();
-        leafEmitter.end();
+        workers.forEach(EternalWorker::end);
+    }
+
+    /**
+     * Registers all the workers into a list to be started and shutdown.
+     *
+     * @param workers list of workers.
+     */
+    private void registerWorkers(EternalWorker... workers) {
+        Collections.addAll(this.workers, workers);
     }
 
     /**

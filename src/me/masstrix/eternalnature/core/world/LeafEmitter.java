@@ -2,6 +2,7 @@ package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.ConfigOption;
+import me.masstrix.eternalnature.core.EternalWorker;
 import me.masstrix.eternalnature.core.render.LeafEffect;
 import me.masstrix.eternalnature.util.CuboidScanner;
 import me.masstrix.eternalnature.util.MathUtil;
@@ -17,7 +18,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.HashSet;
 import java.util.Set;
 
-public class LeafEmitter {
+public class LeafEmitter implements EternalWorker {
 
     private final int DEFAULT_SCAN_DELAY = 20 * 5;
     private EternalNature plugin;
@@ -29,6 +30,7 @@ public class LeafEmitter {
         this.plugin = plugin;
     }
 
+    @Override
     public void start() {
         if (updater != null)
             updater.cancel();
@@ -94,6 +96,7 @@ public class LeafEmitter {
     /**
      * Clears all effects and ends all running tasks.
      */
+    @Override
     public void end() {
         updater.cancel();
         spawner.cancel();

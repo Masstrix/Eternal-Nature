@@ -162,6 +162,16 @@ public class SettingsMenu implements Listener {
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
+        buttons.add(new Button(main, asSlot(3, 5), () -> new ItemBuilder(Material.OAK_LEAVES)
+                .setName("&aRandom Tree Spread")
+                .addLore("", "Set if trees randomly", "drop saplings making forests", "very slowly grow over time.", "")
+                .addSwitch("Currently:", config.isEnabled(ConfigOption.RANDOM_TREE_SPREAD))
+                .build()).setToggle("Random Tree Spread", () -> config.isEnabled(ConfigOption.RANDOM_TREE_SPREAD))
+                .onClick(player -> {
+                    config.toggle(ConfigOption.RANDOM_TREE_SPREAD);
+                    config.save();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
 
         // Other Menu buttons
         buttons.add(new Button(other, 0, backIcon).onClick(player -> {
