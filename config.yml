@@ -21,9 +21,11 @@
 #  flash - sets if the value will flash when critical.
 # 
 version: 2
+
 general:
   check-for-updates: true
   notify-update-join: true
+  
 global:
   waterfalls: true
   falling-leaves: true
@@ -48,20 +50,36 @@ global:
     enabled: true
     lose-from-walking: true
     cause-damage: true
-  temperature:
-    enabled: true
-    cause-damage: true
-    sprinting: true
-    catch-fire: true
-    sweat: true
-    save-data: false
-render:
-  hydration:
-    style: ACTIONBAR
-    flash: true
-  temperature:
-    style: ACTIONBAR
-    flash: true
+    
+hydration:
+  enabled: true
+  increase-from-activity: true
+  damage-when-empty: true
+  display:
+    style: BOSSBAR
+    warning-flash: true
+
+temperature:
+  enabled: true
+  cause-damage: true
+  increase-from-sprinting: true
+  burn: true
+  freeze: true
+  sweat: true
+  cold-damage: -5
+  heat-damage: 90
+  display:
+    style: BOSSBAR
+    warning-flash: true
+  advanced:
+    use-blocks: false
+    use-biomes: true
+    use-envronment: true
+    block-generate-method: chunk
+    save-chunk-data: false
+    thread-limit: 20
+    chunk-pool-cap: 20
+    
 advanced:
   update-calls: 10
   render-calls: 20
@@ -69,6 +87,7 @@ advanced:
     scan-radius: 10
     dynamic: true
     precision: 1
+    
 messages:
   death-heat: "%name% burnt to a crisp"
   death-cold: "%name% died of hypothermia"

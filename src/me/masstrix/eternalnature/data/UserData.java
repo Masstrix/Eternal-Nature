@@ -9,6 +9,7 @@ import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.world.ChunkData;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
+import me.masstrix.eternalnature.listeners.DeathListener;
 import me.masstrix.eternalnature.util.*;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -82,9 +83,11 @@ public class UserData implements EternalUser {
         WorldProvider provider = plugin.getEngine().getWorldProvider();
         WorldData data = provider.getWorld(player.getWorld());
         Location loc = player.getLocation();
-        if (data != null && config.isEnabled(ConfigOption.TEMP_ENABLED)) {
+
+        // Handle temperature ticking.
+        if (data != null && config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) {
             //ChunkData chunk = data.getChunk(loc.getChunk().getX(), loc.getChunk().getZ());
-            data.loadNearby(loc.toVector());
+            //data.loadNearby(loc.toVector());
 
             float emission = 0;
 
@@ -113,22 +116,41 @@ public class UserData implements EternalUser {
                 if (this.tempExact > this.temperature) this.temperature += toAdd;
                 else this.temperature -= toAdd;
             }
-        }
 
-        // Sweat randomly. Becomes more common the warmer you are.
-        if (plugin.getSystemConfig().isEnabled(ConfigOption.TEMP_SWEAT)) {
-            if (MathUtil.randomInt((int) (1000 * 1.5)) <= temperature * (temperature * 0.005)) {
-                dehydrate(0.25);
+            if (this.temperature >= config.getInt(ConfigOption.TEMPERATURE_BURN_DMG)
+                    && config.isEnabled(ConfigOption.TEMPERATURE_BURN)) {
+                damageTimer.startIfNew();
+                if (damageTimer.hasPassed((long) (3000 - (temperature * 2)))) {
+                    damageTimer.start();
+                    damageCustom(player, 1, config.getString(ConfigOption.MSG_DEATH_HEAT));
+                }
+            }
+            else if (this.temperature <= config.getInt(ConfigOption.TEMPERATURE_COLD_DMG)
+                    && config.isEnabled(ConfigOption.TEMPERATURE_FREEZE)) {
+                damageTimer.startIfNew();
+                if (damageTimer.hasPassed(3000)) {
+                    damageTimer.start();
+                    damageCustom(player, 1, config.getString(ConfigOption.MSG_DEATH_COLD));
+                }
             }
         }
 
-        // Handle damage tick if player is dehydrated or to hot/cold
-        if (hydration <= 0 && config.isEnabled(ConfigOption.HYDRATION_DAMAGE)) {
-            damageTimer.startIfNew();
-            if (damageTimer.hasPassed(3000)) {
-                damageTimer.start();
-                player.damage(1);
-                player.setLastDamageCause(new EntityDamageEvent(player, EntityDamageEvent.DamageCause.CUSTOM, 0.5));
+        // Handle hydration ticking.
+        if (config.isEnabled(ConfigOption.HYDRATION_ENABLED)) {
+            // Sweat randomly. Becomes more common the warmer you are.
+            if (plugin.getSystemConfig().isEnabled(ConfigOption.TEMPERATURE_SWEAT)) {
+                if (MathUtil.randomInt((int) (1000 * 1.5)) <= temperature * (temperature * 0.005)) {
+                    dehydrate(0.25);
+                }
+            }
+
+            // Handle damage tick if player is dehydrated or to hot/cold
+            if (hydration <= 0 && config.isEnabled(ConfigOption.HYDRATION_DAMAGE)) {
+                damageTimer.startIfNew();
+                if (damageTimer.hasPassed(3000)) {
+                    damageTimer.start();
+                    damageCustom(player, 1, config.getString(ConfigOption.MSG_DEATH_WATER));
+                }
             }
         }
 
@@ -196,7 +218,7 @@ public class UserData implements EternalUser {
                     hydrationBar = Bukkit.createBossBar("h2-", BarColor.BLUE, BarStyle.SEGMENTED_12);
                     hydrationBar.addPlayer(player);
                 }
-                hydrationBar.setProgress(hydration / 20);
+                hydrationBar.setProgress(Math.abs(hydration / 20));
                 int percent = (int) ((hydration / 20F) * 100);
                 String flash = hydration <= 4 && config.getBoolean(ConfigOption.HYDRATION_BAR_FLASH)
                         && flicker.isEnabled() ? "c" : "f";
@@ -225,8 +247,8 @@ public class UserData implements EternalUser {
             hydrationBar.removeAll();
         }
 
-        if (config.isEnabled(ConfigOption.TEMP_ENABLED)) {
-            if (config.getRenderMethod(ConfigOption.TEMP_BAR_STYLE) == StatusRenderMethod.BOSSBAR) {
+        if (config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) {
+            if (config.getRenderMethod(ConfigOption.TEMPERATURE_BAR_STYLE) == StatusRenderMethod.BOSSBAR) {
                 if (tempBar == null) {
                     tempBar = Bukkit.createBossBar("Temp", BarColor.GREEN, BarStyle.SOLID);
                     tempBar.addPlayer(player);
@@ -234,14 +256,14 @@ public class UserData implements EternalUser {
                 TemperatureData tempData = plugin.getEngine().getTemperatureData();
                 if (tempData.getMinBlockTemp() < 0) {
                     double padd = Math.abs(tempData.getMinBlockTemp());
-                    tempBar.setProgress((temperature + padd) / (tempData.getMaxBlockTemp() + padd));
+                    tempBar.setProgress(Math.abs(temperature + padd) / (tempData.getMaxBlockTemp() + padd));
                 } else {
-                    tempBar.setProgress(temperature / tempData.getMaxBlockTemp());
+                    tempBar.setProgress(Math.abs(temperature / tempData.getMaxBlockTemp()));
                 }
 
                 String title = "Temp: \u00A7"
                         + ((temperature > 70 || temperature < -8)
-                        && config.getBoolean(ConfigOption.TEMP_BAR_FLASH) ? (flicker.isEnabled() ? "c" : "f")
+                        && config.getBoolean(ConfigOption.TEMPERATURE_BAR_FLASH) ? (flicker.isEnabled() ? "c" : "f")
                         : temperature >= 30 ? "e" : temperature < 10 ? "f" : temperature < 0 ? "b" : "a") +
                         String.format("%.1f°", temperature);
                 tempBar.setTitle(StringUtil.color(title));
@@ -252,9 +274,11 @@ public class UserData implements EternalUser {
                     tempBar.removeAll();
                     tempBar = null;
                 }
-                String temp = "\u00A7f    Temp: \u00A7"
+                if (actionBar.length() > 0)
+                    actionBar.append("    ");
+                String temp = "\u00A7fTemp: \u00A7"
                         + ((temperature > 70 || temperature < -8)
-                        && config.isEnabled(ConfigOption.TEMP_BAR_FLASH) ? (flicker.isEnabled() ? "c" : "f")
+                        && config.isEnabled(ConfigOption.TEMPERATURE_BAR_FLASH) ? (flicker.isEnabled() ? "c" : "f")
                         : temperature >= 30 ? "e" : temperature < 10 ? "f" : temperature < 0 ? "b" : "a") +
                         String.format("%.1f°", temperature);
                 actionBar.append(temp);
@@ -264,9 +288,7 @@ public class UserData implements EternalUser {
         }
 
         if (actionBar.length() > 0)
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(actionBar.toString()
-                    + " \u00A76" + plugin.getEngine().getWorldProvider().getWorld(player.getWorld()).getChunksLoaded()
-                    + " - " + String.format("%.1f°", tempExact) + " " + nulled));
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(actionBar.toString()));
     }
 
     @Override
@@ -320,6 +342,25 @@ public class UserData implements EternalUser {
             distanceWalked = 0;
             distanceNextThirst = MathUtil.randomInt(dehydrateChance, dehydrateChance + dehydrateChanceRange);
             dehydrate(0.5);
+        }
+    }
+
+    /**
+     * Damages the player for an amount and applies a custom death message if the
+     * damage results in them dying.
+     *
+     * @param player player to damage.
+     * @param amount amount to damage for.
+     * @param deathMsg custom death message. All %name% is replaced for their name.
+     */
+    private void damageCustom(Player player, double amount, String deathMsg) {
+        if (player.getHealth() - amount <= 0) {
+            player.setLastDamageCause(new EntityDamageEvent(player, EntityDamageEvent.DamageCause.CUSTOM, amount));
+            DeathListener.logCustomReason(player, deathMsg.replaceAll("%name%", player.getDisplayName()));
+            player.setHealth(0.0);
+        } else {
+            player.damage(amount);
+            player.setLastDamageCause(new EntityDamageEvent(player, EntityDamageEvent.DamageCause.CUSTOM, amount));
         }
     }
 

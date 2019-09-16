@@ -201,8 +201,6 @@ public class WorldData implements EternalWorld {
     public void unloadChunk(int x, int z) {
         long pair = pair(x, z);
         Object valid = chunks.remove(pair);
-        if (valid != null)
-            plugin.getLogger().info("Unloaded chunk " + x + ", " + z + " in world " + worldName);
     }
 
     public boolean isChunkLoaded(int x, int z) {

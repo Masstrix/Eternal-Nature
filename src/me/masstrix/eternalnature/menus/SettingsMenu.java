@@ -105,7 +105,7 @@ public class SettingsMenu implements Listener {
                 .addLore("",
                         (config.isEnabled(ConfigOption.UPDATES_NOTIFY) ? "&a" : "&c") + " ▪&7 Update Notifications",
                         (config.isEnabled(ConfigOption.UPDATES_CHECK) ? "&a" : "&c") + " ▪&7 Update Checking",
-                        (config.isEnabled(ConfigOption.TEMP_SAVE_DATA) ? "&a" : "&c") + " ▪&7 Save Data",
+                        (config.isEnabled(ConfigOption.TEMPERATURE_SAVE_DATA) ? "&a" : "&c") + " ▪&7 Save Data",
                         "",
                         "&eClick to view & edit")
                 .build()).onClick(player -> {
@@ -115,7 +115,7 @@ public class SettingsMenu implements Listener {
         buttons.add(new Button(main, asSlot(1, 6), () -> new ItemBuilder(Material.CAMPFIRE)
                 .setName("&aTemperature Settings")
                 .addLore("", "Change the settings for how", "temperature works.", "")
-                .addSwitchView("Currently:", config.isEnabled(ConfigOption.TEMP_ENABLED))
+                .addSwitchView("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_ENABLED))
                 .addLore("", "&eClick to view & edit")
                 .build()).onClick(player -> {
             player.openInventory(temp);
@@ -203,10 +203,10 @@ public class SettingsMenu implements Listener {
                 .setName("&aSave Data")
                 .addLore("", "Set if chunk data is saved to disk/database.", "Having it saved saves time",
                         "regenerating the chunk reducing", "load on the server", "")
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMP_SAVE_DATA))
-                .build()).setToggle("Update Notifications", () -> config.isEnabled(ConfigOption.TEMP_SAVE_DATA))
+                .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_SAVE_DATA))
+                .build()).setToggle("Update Notifications", () -> config.isEnabled(ConfigOption.TEMPERATURE_SAVE_DATA))
                 .onClick(player -> {
-                    config.toggle(ConfigOption.TEMP_SAVE_DATA);
+                    config.toggle(ConfigOption.TEMPERATURE_SAVE_DATA);
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
@@ -238,7 +238,9 @@ public class SettingsMenu implements Listener {
                 }));
         buttons.add(new Button(hydration, asSlot(1, 5), () -> new ItemBuilder(Material.RABBIT_FOOT)
                 .setName("&aHydration Walking")
-                .addLore("", "Set if hydration will be lost from", "waling and other movements.", "")
+                .addLore("", "Sets if players hydration",
+                        "usage will increase while doing",
+                        "activities such as sprinting.", "")
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.HYDRATION_WALKING))
                 .build()).setToggle("Walking", () -> config.isEnabled(ConfigOption.HYDRATION_WALKING))
                 .onClick(player -> {
@@ -264,23 +266,23 @@ public class SettingsMenu implements Listener {
             player.openInventory(main);
             player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1, 1);
         }));
-        buttons.add(new Button(temp, asSlot(1, 3), () -> new ItemBuilder(Material.REDSTONE_TORCH)
+        buttons.add(new Button(temp, asSlot(1, 2), () -> new ItemBuilder(Material.REDSTONE_TORCH)
                 .setName("&aTemperature Enabled")
                 .addLore("", "Set if temperature is enabled", "")
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMP_ENABLED))
-                .build()).setToggle("Enabled", () -> config.isEnabled(ConfigOption.TEMP_ENABLED))
+                .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_ENABLED))
+                .build()).setToggle("Enabled", () -> config.isEnabled(ConfigOption.TEMPERATURE_ENABLED))
                 .onClick(player -> {
-                    config.toggle(ConfigOption.TEMP_ENABLED);
+                    config.toggle(ConfigOption.TEMPERATURE_ENABLED);
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
         buttons.add(new Button(temp, asSlot(1, 4), () -> new ItemBuilder(Material.IRON_SWORD)
                 .setName("&aTemperature Damage")
                 .addLore("", "Set if players will be hurt if", "there temperature is to high or low.", "")
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMP_DAMAGE))
-                .build()).setToggle("Cause Damage", () -> config.isEnabled(ConfigOption.TEMP_DAMAGE))
+                .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_DAMAGE))
+                .build()).setToggle("Cause Damage", () -> config.isEnabled(ConfigOption.TEMPERATURE_DAMAGE))
                 .onClick(player -> {
-                    config.toggle(ConfigOption.TEMP_DAMAGE);
+                    config.toggle(ConfigOption.TEMPERATURE_DAMAGE);
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
@@ -288,22 +290,33 @@ public class SettingsMenu implements Listener {
                 .setName("&aSweating")
                 .setPotionType(PotionType.WATER)
                 .addLore("", "If enabled players will sweat and lose", "hydration faster in higher temperatures.", "")
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMP_SWEAT))
-                .build()).setToggle("Sweat", () -> config.isEnabled(ConfigOption.TEMP_SWEAT))
+                .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_SWEAT))
+                .build()).setToggle("Sweat", () -> config.isEnabled(ConfigOption.TEMPERATURE_SWEAT))
                 .onClick(player -> {
-                    config.toggle(ConfigOption.TEMP_SWEAT);
+                    config.toggle(ConfigOption.TEMPERATURE_SWEAT);
+                    config.save();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
+        buttons.add(new Button(temp, asSlot(1, 6), () -> new ItemBuilder(Material.FLINT_AND_STEEL)
+                .setName("&aBurn")
+                .setPotionType(PotionType.WATER)
+                .addLore("", "If enabled and a player gets too hot", "they will ignite.", "")
+                .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_BURN))
+                .build()).setToggle("Burn", () -> config.isEnabled(ConfigOption.TEMPERATURE_BURN))
+                .onClick(player -> {
+                    config.toggle(ConfigOption.TEMPERATURE_BURN);
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
         buttons.add(new Button(temp, asSlot(4, 4), () -> new ItemBuilder(Material.JUNGLE_SIGN)
                 .setName("&aDisplay Mode")
                 .addLore("", "Set how how temperature is displayed", "to players.", "")
-                .addLore("Currently: &f" + config.getRenderMethod(ConfigOption.TEMP_BAR_STYLE).getSimple(),
-                        config.getRenderMethod(ConfigOption.TEMP_BAR_STYLE).getDescription())
-                .addLore("&eClick to switch to &7" + config.getRenderMethod(ConfigOption.TEMP_BAR_STYLE).opposite().getSimple())
+                .addLore("Currently: &f" + config.getRenderMethod(ConfigOption.TEMPERATURE_BAR_STYLE).getSimple(),
+                        config.getRenderMethod(ConfigOption.TEMPERATURE_BAR_STYLE).getDescription())
+                .addLore("&eClick to switch to &7" + config.getRenderMethod(ConfigOption.TEMPERATURE_BAR_STYLE).opposite().getSimple())
                 .build())
                 .onClick(player -> {
-                    config.set(ConfigOption.TEMP_BAR_STYLE, config.getRenderMethod(ConfigOption.TEMP_BAR_STYLE).opposite().name());
+                    config.set(ConfigOption.TEMPERATURE_BAR_STYLE, config.getRenderMethod(ConfigOption.TEMPERATURE_BAR_STYLE).opposite().name());
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));

@@ -23,20 +23,32 @@ public enum ConfigOption {
     AUTO_PLANT_SWEET_BERRY("global.auto-plant.sweet_berry", 1.0),
     AUTO_PLANT_FLOWERS("global.auto-plant.flowers", 0.2),
 
-    TEMP_ENABLED("global.temperature.enabled", true),
-    TEMP_DAMAGE("global.temperature.cause-damage", true),
-    TEMP_SPRINTING("global.temperature.sprinting", true),
-    TEMP_FIRE("global.temperature.catch-fire", true),
-    TEMP_SWEAT("global.temperature.sweat", true),
-    TEMP_SAVE_DATA("global.temperature.save-data", true),
-    TEMP_BAR_STYLE("render.temperature.style", StatusRenderMethod.BOSSBAR.name()),
-    TEMP_BAR_FLASH("render.temperature.flash", true),
+    TEMPERATURE_ENABLED("temperature.enabled", true),
+    TEMPERATURE_DAMAGE("temperature.cause-damage", true),
+    TEMPERATURE_SPRINTING("temperature.increase-from-sprinting", true),
+    TEMPERATURE_BURN("temperature.burn", true),
+    TEMPERATURE_FREEZE("temperature.freeze", true),
+    TEMPERATURE_SWEAT("temperature.sweat", true),
+    TEMPERATURE_BURN_DMG("temperature.head-damage", 90),
+    TEMPERATURE_COLD_DMG("temperature.cold-damage", -5),
+    TEMPERATURE_BAR_STYLE("temperature.display.style", StatusRenderMethod.BOSSBAR.name()),
+    TEMPERATURE_BAR_FLASH("temperature.display.warning-flash", true),
+    TEMPERATURE_USE_BLOCKS("temperature.advanced.use-blocks", true),
+    TEMPERATURE_USE_BIOMES("temperature.advanced.use-biomes", true),
+    TEMPERATURE_USE_ENVIRO("temperature.advanced.use-environment", true),
+    TEMPERATURE_THREADS("temperature.advanced.thread-limit", 20),
+    TEMPERATURE_POOL_SIZE("temperature.advanced.chunk-pool-size", 20),
+    TEMPERATURE_SAVE_DATA("temperature.advanced.save-chunk-data", true),
 
-    HYDRATION_ENABLED("global.hydration.enabled", true),
-    HYDRATION_WALKING("global.hydration.lose-from-walking", true),
-    HYDRATION_DAMAGE("global.hydration.cause-damage", true),
-    HYDRATION_BAR_FLASH("render.hydration.flash", true),
-    HYDRATION_BAR_STYLE("render.hydration.style", StatusRenderMethod.BOSSBAR.name());
+    HYDRATION_ENABLED("hydration.enabled", true),
+    HYDRATION_WALKING("hydration.increase-from-activity", true),
+    HYDRATION_DAMAGE("hydration.damage-when-empty", true),
+    HYDRATION_BAR_STYLE("hydration.display.style", StatusRenderMethod.BOSSBAR.name()),
+    HYDRATION_BAR_FLASH("hydration.display.warning-flash", true),
+
+    MSG_DEATH_HEAT("messages.death-heat", "%name% burnt to a crisp"),
+    MSG_DEATH_COLD("messages.death-cold", "%name% died of hypothermia"),
+    MSG_DEATH_WATER("messages.death-dehydrate", "%name% died of dehydration");
 
     String key;
     Object def;

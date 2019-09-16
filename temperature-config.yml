@@ -11,29 +11,35 @@
 # Biome specific atmosphere ground level temperature.
 # Biome names do not need to be exact and will match to the closest name.
 biome:
-  base: 13 # Fallback value if not match is found.
+  base: 13
   ocean: 10
+  frozen_ocean: -10
   cold_ocean: 2
+  warm_ocean: 18
   plains: 13
   beach: 10
   swamp: 17
-  mountain: 5
-  savanna: 20
-  jungle: 25
-  lukewarm_ocean: 20
-  dessert: 30
-  dessert_hills: 35
+  snowy_mountains: -5
+  mountain: 2
+  mountain_edge: 6
+  savanna: 30
+  jungle: 35
+  jungle_edge: 28
+  desert: 40
+  desert_hills: 42
   frozen: -3
   tiga: -5
   snowy: -10
   ice: -10
-  end: -2
-  nether: 35
+  end: -5
+  river: 12
+  nether: 40
 
 weather:
   clear: 0
-
-# Block emission temperatures.
+  rain: -5
+  thunder: -8
+  
 blocks:
   lava: 500
   fire: 100

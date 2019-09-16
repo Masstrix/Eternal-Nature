@@ -349,7 +349,7 @@ public class ChunkData implements EternalChunk {
      * Saves the chunks data to file.
      */
     public void saveToFile() {
-        if (!worldData.plugin.getSystemConfig().isEnabled(ConfigOption.TEMP_SAVE_DATA)) return;
+        if (!worldData.plugin.getSystemConfig().isEnabled(ConfigOption.TEMPERATURE_SAVE_DATA)) return;
         File worldsFile = new File(worldData.plugin.getDataFolder(), "worlds");
         File worldFile = new File(worldsFile, worldData.getWorldUid().toString());
         File chunkFile = new File(worldFile, WorldData.pair(x, z) + ".dat");

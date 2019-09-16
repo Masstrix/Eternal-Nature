@@ -76,6 +76,7 @@ public class TemperatureData {
             // Assign temperature to all biomes.
             for (Biome b : Biome.values()) {
                 float v = getEmissionValue(DataTempType.BIOME, b.name());
+                System.out.println(b.name() + ": " + v);
                 biomeExact.put(b, v);
             }
 
@@ -164,20 +165,23 @@ public class TemperatureData {
     }
 
     private float getValue(Map<String, Float> data, String key, float def) {
+        key = key.toLowerCase();
         int diff = -1;
-        float val = Float.NEGATIVE_INFINITY;
+        float val = 0;
         for (Map.Entry<String, Float> entry : data.entrySet()) {
+            String check = entry.getKey().toLowerCase();
             if (key.equalsIgnoreCase(entry.getKey())) {
                 return entry.getValue();
             }
-            if (key.contains(entry.getKey())) {
-                int dis = StringUtil.distance(entry.getKey(), key);
-                if (diff == Float.NEGATIVE_INFINITY || dis < diff) {
-                    diff = dis;
-                    val = entry.getValue();
-                }
+            if (!key.contains(check)) {
+                continue;
+            }
+            int dis = StringUtil.distance(check, key);
+            if (diff == -1 || dis < diff) {
+                diff = dis;
+                val = entry.getValue();
             }
         }
-        return val == Float.NEGATIVE_INFINITY ? def : val;
+        return diff == -1 ? def : val;
     }
 }
