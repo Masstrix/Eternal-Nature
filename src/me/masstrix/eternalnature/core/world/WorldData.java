@@ -2,8 +2,10 @@ package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.api.EternalWorld;
+import me.masstrix.eternalnature.core.TemperatureData;
 import me.masstrix.eternalnature.util.*;
 import org.bukkit.*;
+import org.bukkit.block.Biome;
 import org.bukkit.util.Vector;
 
 import java.io.*;
@@ -20,10 +22,12 @@ public class WorldData implements EternalWorld {
     private static ExecutorService threadPool = Executors.newFixedThreadPool(20,
             new SimpleThreadFactory("ChunkWorker"));
     private List<UUID> computing = new ArrayList<>(); // List of all tasks currently executing.
+    private TemperatureData temperatureData;
 
     public WorldData(EternalNature plugin, UUID world) {
         this.plugin = plugin;
         this.world = world;
+        temperatureData = plugin.getEngine().getTemperatureData();
     }
 
     public UUID getWorldUid() {
@@ -46,12 +50,31 @@ public class WorldData implements EternalWorld {
         return Bukkit.getWorld(world);
     }
 
+    @Deprecated
     public void loadNearby(Vector vec) {
         loadNearby((int) Math.floor(vec.getX()), (int) Math.floor(vec.getY()), (int) Math.floor(vec.getZ()));
     }
 
     public int getChunksLoaded() {
         return chunks.size();
+    }
+
+    /**
+     * Returns the biome temperature for a block.
+     *
+     * @param x x block position.
+     * @param y y block position.
+     * @param z z block position.
+     * @return the blocks biome temperature or <i>NEGATIVE_INFINITY</i> if there was
+     *         an error.
+     */
+    public double getBiomeTemperature(int x, int y, int z) {
+        World world = Bukkit.getWorld(this.world);
+        if (world != null) {
+            Biome biome = world.getBlockAt(x, y, z).getBiome();
+            return temperatureData.getExactBiomeTemp(biome);
+        }
+        return Double.NEGATIVE_INFINITY;
     }
 
     public double getTemperature(int x, int y, int z) {
@@ -71,6 +94,7 @@ public class WorldData implements EternalWorld {
      * @param y y position to load from.
      * @param z z position to load from.
      */
+    @Deprecated
     public void loadNearby(int x, int y, int z) {
         x /= 16;
         y /= 16;
@@ -79,7 +103,7 @@ public class WorldData implements EternalWorld {
 
         ChunkData chunk = getChunk(x, z);
         if (chunk == null) chunk = loadChunk(x, z);
-        chunk.calculateSection(y);
+        //chunk.calculateSection(y);
 
 //        new CuboidScanner(1, x, y, z, (CuboidScanner.CuboidTask) (x1, section, z1) -> {
 //            if (section > 16 || section < 0) return;

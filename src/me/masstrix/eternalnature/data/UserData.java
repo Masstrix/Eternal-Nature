@@ -83,31 +83,35 @@ public class UserData implements EternalUser {
         WorldData data = provider.getWorld(player.getWorld());
         Location loc = player.getLocation();
         if (data != null && config.isEnabled(ConfigOption.TEMP_ENABLED)) {
-            ChunkData chunk = data.getChunk(loc.getChunk().getX(), loc.getChunk().getZ());
+            //ChunkData chunk = data.getChunk(loc.getChunk().getX(), loc.getChunk().getZ());
             data.loadNearby(loc.toVector());
 
-            if (chunk != null) {
-                float emission = data.getTemperature(loc.toVector());
-                //emission += plugin.getEngine().getTemperatureData().getEmissionValue(TemperatureData.DataTempType.BIOME, loc.getBlock().getBiome().name());
+            float emission = 0;
 
-                if (emission != Float.NEGATIVE_INFINITY) {
-                    this.tempExact = emission;
-                    nulled = false;
-                }
-                else {
-                    nulled = true;
-                    //data.calculateArea(id, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-                }
+//            if (chunk != null) {
+//                float emission = data.getTemperature(loc.toVector());
+//                //emission += plugin.getEngine().getTemperatureData().getEmissionValue(TemperatureData.DataTempType.BIOME, loc.getBlock().getBiome().name());
+//            } else {
+//                //data.calculateArea(id, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+//            }
 
-                // Change players temperature gradually
-                float diff = MathUtil.diff(this.tempExact, this.temperature);
-                if (diff > 0.09) {
-                    float toAdd = diff / 10;
-                    if (this.tempExact > this.temperature) this.temperature += toAdd;
-                    else this.temperature -= toAdd;
-                }
-            } else {
+            emission += data.getBiomeTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+
+            if (emission != Float.NEGATIVE_INFINITY) {
+                this.tempExact = emission;
+                nulled = false;
+            }
+            else {
+                nulled = true;
                 //data.calculateArea(id, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+            }
+
+            // Change players temperature gradually
+            float diff = MathUtil.diff(this.tempExact, this.temperature);
+            if (diff > 0.09) {
+                float toAdd = diff / 10;
+                if (this.tempExact > this.temperature) this.temperature += toAdd;
+                else this.temperature -= toAdd;
             }
         }
 
@@ -130,49 +134,49 @@ public class UserData implements EternalUser {
 
         World world = player.getWorld();
 
-        new CuboidScanner(4, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(),
-                (CuboidScanner.CuboidTask) (x, y, z) -> {
-            Block block = world.getBlockAt(x, y, z);
-            if (!block.isPassable() && block.getType().isSolid() || block.getType() == Material.TORCH) {
-
-                double max = plugin.getEngine().getTemperatureData().getMaxBlockTemp();
-                double temp = provider.getWorld(world).getTemperature(x, y, z);
-                Color color = new Color(126, 255, 0);
-
-                if (temp != Float.NEGATIVE_INFINITY) {
-                    float colorRotate = (float) temp / (float) max;
-
-                    float[] hsbVals = new float[3];
-                    Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), hsbVals);
-                    // Shift the hue around by 25%
-                    color = new Color(Color.HSBtoRGB(0.25f - (0.25f * colorRotate), hsbVals[1], hsbVals[2]));
-
-                    if (temp > 20) {
-                        color = new Color(0, 132, 21);
-                    }
-                    else if (temp > 40) {
-                        color = new Color(53, 255, 0);
-                    }
-                    else if (temp > 40) {
-                        color = new Color(255, 240, 0);
-                    }
-                    else if (temp > 60) {
-                        color = new Color(255, 65, 0);
-                    }
-                    else if (temp > 100) {
-                        color = new Color(255, 149, 140);
-                    }
-                    else if (temp > 200) {
-                        color = new Color(255, 255, 255);
-                    }
-                } else {
-                    color = new Color(255, 0, 206); // Unloaded
-                }
-
-                player.spawnParticle(Particle.REDSTONE, block.getLocation().add(0.5, 1.2, 0.5),
-                        1, 0, 0, 0, new Particle.DustOptions(org.bukkit.Color.fromRGB(color.getRed(), color.getGreen(), color.getBlue()), 1));
-            }
-        });//.start();
+//        new CuboidScanner(4, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(),
+//                (CuboidScanner.CuboidTask) (x, y, z) -> {
+//            Block block = world.getBlockAt(x, y, z);
+//            if (!block.isPassable() && block.getType().isSolid() || block.getType() == Material.TORCH) {
+//
+//                double max = plugin.getEngine().getTemperatureData().getMaxBlockTemp();
+//                double temp = provider.getWorld(world).getTemperature(x, y, z);
+//                Color color = new Color(126, 255, 0);
+//
+//                if (temp != Float.NEGATIVE_INFINITY) {
+//                    float colorRotate = (float) temp / (float) max;
+//
+//                    float[] hsbVals = new float[3];
+//                    Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), hsbVals);
+//                    // Shift the hue around by 25%
+//                    color = new Color(Color.HSBtoRGB(0.25f - (0.25f * colorRotate), hsbVals[1], hsbVals[2]));
+//
+//                    if (temp > 20) {
+//                        color = new Color(0, 132, 21);
+//                    }
+//                    else if (temp > 40) {
+//                        color = new Color(53, 255, 0);
+//                    }
+//                    else if (temp > 40) {
+//                        color = new Color(255, 240, 0);
+//                    }
+//                    else if (temp > 60) {
+//                        color = new Color(255, 65, 0);
+//                    }
+//                    else if (temp > 100) {
+//                        color = new Color(255, 149, 140);
+//                    }
+//                    else if (temp > 200) {
+//                        color = new Color(255, 255, 255);
+//                    }
+//                } else {
+//                    color = new Color(255, 0, 206); // Unloaded
+//                }
+//
+//                player.spawnParticle(Particle.REDSTONE, block.getLocation().add(0.5, 1.2, 0.5),
+//                        1, 0, 0, 0, new Particle.DustOptions(org.bukkit.Color.fromRGB(color.getRed(), color.getGreen(), color.getBlue()), 1));
+//            }
+//        });//.start();
     }
 
     /**

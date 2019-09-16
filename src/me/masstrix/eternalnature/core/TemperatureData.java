@@ -4,6 +4,7 @@ import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.util.Stopwatch;
 import me.masstrix.eternalnature.util.StringUtil;
 import org.bukkit.Material;
+import org.bukkit.block.Biome;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -15,11 +16,17 @@ import java.util.Map;
 public class TemperatureData {
 
     private EternalNature plugin;
+    @Deprecated
     private Map<String, Float> biomes = new HashMap<>();
+    @Deprecated
     private Map<String, Float> blocks = new HashMap<>();
-    private Map<Material, Float> blocksExact = new HashMap<>();
+    @Deprecated
     private Map<String, Float> armor = new HashMap<>();
+    @Deprecated
     private Map<String, Float> weather = new HashMap<>();
+
+    private Map<Material, Float> blocksExact = new HashMap<>();
+    private Map<Biome, Float> biomeExact = new HashMap<>();
 
     private double maxBlock = 0;
     private double minBlock = 0;
@@ -39,6 +46,8 @@ public class TemperatureData {
             plugin.saveResource("temperature-config.yml", false);
         }
         YamlConfiguration config = new YamlConfiguration();
+        config.options().copyDefaults(true);
+        config.options().copyHeader(true);
         Stopwatch timer = new Stopwatch().start();
         plugin.getLogger().info("Loading temperature data...");
         try {
@@ -64,6 +73,13 @@ public class TemperatureData {
                 }
             }
 
+            // Assign temperature to all biomes.
+            for (Biome b : Biome.values()) {
+                float v = getEmissionValue(DataTempType.BIOME, b.name());
+                biomeExact.put(b, v);
+            }
+
+            // Assign temperature to all materials
             for (Material m : Material.values()) {
                 float v = getEmissionValue(DataTempType.BIOME, m.name());
                 if (v != 0)
@@ -90,6 +106,16 @@ public class TemperatureData {
 
     public float getExactBlockEmission(Material material) {
         return blocksExact.getOrDefault(material, 0F);
+    }
+
+    /**
+     * Return a biomes temperatures.
+     *
+     * @param biome biome to get the temperature for.
+     * @return the biomes assigned temperature.
+     */
+    public float getExactBiomeTemp(Biome biome) {
+        return biomeExact.getOrDefault(biome, 13F);
     }
 
     /**
