@@ -22,6 +22,7 @@ general:
 global:
   waterfalls: true
   falling-leaves: true
+  randomly-spread-trees: true
   auto-plant:
     play-sound: true
     enabled: true
