@@ -1,5 +1,6 @@
 package me.masstrix.eternalnature.core.world;
 
+import me.masstrix.eternalnature.api.EternalChunk;
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.core.TemperatureData;
 import me.masstrix.eternalnature.util.*;
@@ -17,7 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ChunkData {
+public class ChunkData implements EternalChunk {
 
     private static final int VERSION = 1;
     private static ExecutorService threadPool = Executors.newFixedThreadPool(20,
@@ -116,7 +117,8 @@ public class ChunkData {
         }
     }
 
-    public Set<WaterfallEmitter> getWaterfallEmitters() {
+    @Override
+    public Set<WaterfallEmitter> getWaterfalls() {
         return waterfallEmitters;
     }
 
@@ -129,14 +131,17 @@ public class ChunkData {
         });
     }
 
+    @Override
     public int getX() {
         return x;
     }
 
+    @Override
     public int getZ() {
         return z;
     }
 
+    @Override
     public long getKey() {
         return key;
     }
