@@ -3,6 +3,7 @@ package me.masstrix.eternalnature;
 import me.masstrix.eternalnature.command.*;
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.core.metric.Metrics;
 import me.masstrix.eternalnature.listeners.*;
 import me.masstrix.eternalnature.menus.SettingsMenu;
 import me.masstrix.eternalnature.util.StringUtil;
@@ -83,6 +84,9 @@ public class EternalNature extends JavaPlugin {
                 this.versionMeta = s;
             });
         }
+        
+        // Enable metrics
+        new Metrics(this);
     }
 
     @Override
