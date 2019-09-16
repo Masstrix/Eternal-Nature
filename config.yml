@@ -27,7 +27,10 @@ general:
 global:
   waterfalls: true
   falling-leaves: true
-  randomly-spread-trees: true
+  randomly-spread-trees:
+    enabled: true
+    range: 20
+    scans: 2
   auto-plant:
     play-sound: true
     enabled: true

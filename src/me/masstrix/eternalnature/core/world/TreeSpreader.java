@@ -6,9 +6,11 @@ import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.EternalWorker;
 import me.masstrix.eternalnature.util.MathUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Leaves;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -31,20 +33,22 @@ public class TreeSpreader implements EternalWorker {
     @Override
     public void start() {
         if (!config.isEnabled(ConfigOption.RANDOM_TREE_SPREAD) || task != null) return;
-        final int delay = (20 * 60);
-        final int rangeOut = 20;
+        plugin.getLogger().info("Started Tree Spreader");
+        final int delay = (20 * 30);
         final int rangeHeight = 5;
-        final int scans = 2;
         task = new BukkitRunnable() {
             @Override
             public void run() {
+                final int rangeOut = config.getInt(ConfigOption.RANDOM_TREE_SPREAD_RANGE);
+                final int scans = config.getInt(ConfigOption.RANDOM_TREE_SPREAD_SCANS);
+
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     Block s = player.getLocation().getBlock();
 
                     for (int i = 0; i < scans; i++) {
                         int x = MathUtil.randomInt(rangeOut * 2) - rangeOut;
                         int z = MathUtil.randomInt(rangeOut * 2) - rangeOut;
-                        int y = MathUtil.randomInt(rangeHeight * 2) - rangeHeight;
+                        int y = MathUtil.randomInt(rangeHeight * 3) - rangeHeight;
 
                         Block block = s.getWorld().getBlockAt(x + s.getX(), y + s.getY(), z + s.getZ());
                         BlockData data = block.getBlockData();
@@ -55,8 +59,10 @@ public class TreeSpreader implements EternalWorker {
 
                         // Drop sapling if air is underneath leaf block
                         if (block.getRelative(0, -1, 0).isPassable()) {
-                            ItemStack drop = (ItemStack) block.getDrops().toArray()[0];
-                            block.getWorld().dropItem(block.getLocation().add(0.5, -0.3, 0.5), drop);
+                            Material product = TreeProduct.SAPLING.convert(block.getType());
+                            ItemStack drop = new ItemStack(product);
+                            Item item = block.getWorld().dropItem(block.getLocation().add(0.5, -0.3, 0.5), drop);
+                            item.setGlowing(true);
                         }
                     }
                 }

@@ -28,8 +28,6 @@ public class EternalEngine {
     private WorldProvider worldProvider;
     private TemperatureData temperatureData;
     private AutoPlanter autoPlanter;
-    private LeafEmitter leafEmitter;
-    private TreeSpreader treeSpreader;
 
     private List<EternalWorker> workers = new ArrayList<>();
     private Map<UUID, UserData> users = new HashMap<>();
@@ -50,8 +48,10 @@ public class EternalEngine {
                 renderer = new Renderer(plugin, this),
                 worldProvider = new WorldProvider(plugin),
                 autoPlanter = new AutoPlanter(plugin),
-                leafEmitter = new LeafEmitter(plugin),
-                treeSpreader = new TreeSpreader(plugin));
+                new LeafEmitter(plugin),
+                new TreeSpreader(plugin));
+
+        getWorker(TreeSpreader.class);
     }
 
     void start() {
@@ -97,6 +97,21 @@ public class EternalEngine {
         if (user == null) user = new UserData(plugin, uuid);
         users.put(uuid, user);
         return user;
+    }
+
+    /**
+     * Gets a worker class.
+     *
+     * @param clazz class to get.
+     * @return the loaded worker class or null if it's not a valid worker.
+     */
+    public EternalWorker getWorker(Class<? extends EternalWorker> clazz) {
+        for (EternalWorker e : workers) {
+            if (e.getClass().getCanonicalName().equals(clazz.getCanonicalName())) {
+                return e;
+            }
+        }
+        return null;
     }
 
     public TemperatureData getTemperatureData() {
