@@ -46,10 +46,6 @@ global:
     beetroot: 1.0
     sweet_berry: 1.0
     flowers: 0.2
-  hydration:
-    enabled: true
-    lose-from-walking: true
-    cause-damage: true
     
 hydration:
   enabled: true
@@ -79,14 +75,6 @@ temperature:
     save-chunk-data: false
     thread-limit: 20
     chunk-pool-cap: 20
-    
-advanced:
-  update-calls: 10
-  render-calls: 20
-  temprature:
-    scan-radius: 10
-    dynamic: true
-    precision: 1
     
 messages:
   death-heat: "%name% burnt to a crisp"
