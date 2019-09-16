@@ -44,7 +44,7 @@ public class NatureCommand extends EternalCommand {
             msg("&aReloaded config files");
         }
 
-        else if (args[0].equalsIgnoreCase("setting")) {
+        else if (args[0].equalsIgnoreCase("settings")) {
             if (wasPlayer()) plugin.getSettingsMenu().open((Player) getSender());
         }
 
@@ -112,7 +112,7 @@ public class NatureCommand extends EternalCommand {
     @Override
     public List<String> tabComplete(String[] args) {
         if (args.length == 1) {
-            return Arrays.asList("reload", "stats", "version", "setting");
+            return Arrays.asList("reload", "stats", "version", "settings");
         }
         return super.tabComplete(args);
     }
