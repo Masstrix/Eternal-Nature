@@ -11,14 +11,17 @@ public class Renderer implements EternalWorker {
     private EternalNature plugin;
     private EternalEngine engine;
     private BukkitTask renderTask;
+    private EntityCleanup entityCleanup;
 
     public Renderer(EternalNature plugin, EternalEngine engine) {
         this.plugin = plugin;
         this.engine = engine;
+        this.entityCleanup = new EntityCleanup();
     }
 
     @Override
     public void start() {
+        entityCleanup.run();
         renderTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -41,5 +44,6 @@ public class Renderer implements EternalWorker {
     public void end() {
         if (renderTask != null)
             renderTask.cancel();
+        entityCleanup.run();
     }
 }

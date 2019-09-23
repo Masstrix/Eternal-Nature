@@ -159,7 +159,7 @@ public class WorldData implements EternalWorld {
             FileInputStream in = null;
             try {
                 in = new FileInputStream(chunkFile);
-                chunkData = new ChunkData(this, x, z, in.readAllBytes());
+                //chunkData = new ChunkData(this, x, z, in.readAllBytes());
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {

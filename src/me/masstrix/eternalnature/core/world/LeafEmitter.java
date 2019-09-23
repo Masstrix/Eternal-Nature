@@ -66,7 +66,7 @@ public class LeafEmitter implements EternalWorker {
                 if (!plugin.getSystemConfig().isEnabled(ConfigOption.LEAF_EFFECT)) return;
                 for (Location loc : locations) {
                     if (MathUtil.chance(300)) {
-                        effects.add(new LeafEffect(loc));
+                        effects.add(new LeafEffect(plugin, loc));
                     }
                 }
             }

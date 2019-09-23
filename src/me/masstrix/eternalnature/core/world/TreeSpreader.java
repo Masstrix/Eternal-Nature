@@ -10,7 +10,6 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Leaves;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -61,8 +60,7 @@ public class TreeSpreader implements EternalWorker {
                         if (block.getRelative(0, -1, 0).isPassable()) {
                             Material product = TreeProduct.SAPLING.convert(block.getType());
                             ItemStack drop = new ItemStack(product);
-                            Item item = block.getWorld().dropItem(block.getLocation().add(0.5, -0.3, 0.5), drop);
-                            item.setGlowing(true);
+                            block.getWorld().dropItem(block.getLocation().add(0.5, -0.3, 0.5), drop);
                         }
                     }
                 }

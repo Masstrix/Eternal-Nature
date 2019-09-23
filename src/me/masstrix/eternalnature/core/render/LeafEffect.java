@@ -1,16 +1,20 @@
 package me.masstrix.eternalnature.core.render;
 
+import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.core.CleanableEntity;
+import me.masstrix.eternalnature.core.EntityCleanup;
 import me.masstrix.eternalnature.util.MathUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.EulerAngle;
 
-public class LeafEffect {
+public class LeafEffect implements CleanableEntity {
 
     private ArmorStand leaf;
     private boolean alive;
@@ -24,14 +28,11 @@ public class LeafEffect {
      *
      * @param loc location to spawn the effect at.
      */
-    public LeafEffect(Location loc) {
+    public LeafEffect(EternalNature plugin, Location loc) {
         lifeTime = MathUtil.randomInt(60, 120);
         fallRate = MathUtil.random().nextDouble() / 10;
 
         leaf = loc.getWorld().spawn(loc.add(0, -0.5, 0), ArmorStand.class, a -> {
-            Plugin plugin = Bukkit.getPluginManager().getPlugin("EternalNature");
-            if (plugin != null)
-                a.setMetadata("EternalEntity", new FixedMetadataValue(plugin, true));
             a.setMarker(true);
             a.setSmall(true);
             a.setSmall(true);
@@ -45,6 +46,8 @@ public class LeafEffect {
                     getAngle(MathUtil.randomInt(90))));
         });
         alive = true;
+        // Cleans up the entity at start and stop of plugin
+        new EntityCleanup(plugin, this);
     }
 
     public boolean isAlive() {
@@ -79,4 +82,8 @@ public class LeafEffect {
         return (v / 180) * Math.PI;
     }
 
+    @Override
+    public Entity[] getEntities() {
+        return new Entity[] {leaf};
+    }
 }
