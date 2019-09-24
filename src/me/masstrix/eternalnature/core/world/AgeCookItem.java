@@ -1,7 +1,9 @@
 package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.events.ItemBakeEvent;
 import me.masstrix.eternalnature.util.MathUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Item;
@@ -71,6 +73,11 @@ public class AgeCookItem implements AgeItem {
 
         // Bake the item if it has become hot enough.
         if (totalTemp >= 100) {
+            ItemBakeEvent event = new ItemBakeEvent(item);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                return AgeProcessState.COMPLETE;
+            }
             baked = true;
             ItemStack stack = item.getItemStack();
             Material product = AgingItemWorker.getCookedProduct(stack.getType());

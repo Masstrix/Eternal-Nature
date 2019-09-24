@@ -2,7 +2,9 @@ package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNatureAPI;
 import me.masstrix.eternalnature.config.ConfigOption;
+import me.masstrix.eternalnature.events.ItemPlantEvent;
 import me.masstrix.eternalnature.util.MathUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -96,6 +98,13 @@ public class Plant {
     public boolean plant() {
         if (++ticks >= plantTime) {
             ItemStack stack = item.getItemStack();
+
+            ItemPlantEvent event = new ItemPlantEvent(item.getLocation(), plantType, stack.getType());
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                return false;
+            }
+
             boolean remove = true;
             if (stack.getAmount() > 1) {
                 remove = false;

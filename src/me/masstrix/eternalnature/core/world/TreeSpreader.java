@@ -4,8 +4,10 @@ import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.EternalWorker;
+import me.masstrix.eternalnature.events.SaplingSpreadEvent;
 import me.masstrix.eternalnature.util.MathUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
@@ -58,9 +60,14 @@ public class TreeSpreader implements EternalWorker {
 
                         // Drop sapling if air is underneath leaf block
                         if (block.getRelative(0, -1, 0).isPassable()) {
+                            Location loc = block.getLocation().add(0.5, -0.3, 0.5);
+                            SaplingSpreadEvent event = new SaplingSpreadEvent(loc);
+                            Bukkit.getPluginManager().callEvent(event);
+                            if (event.isCancelled()) continue;
+                            loc = event.getLocation();
                             Material product = TreeProduct.SAPLING.convert(block.getType());
                             ItemStack drop = new ItemStack(product);
-                            block.getWorld().dropItem(block.getLocation().add(0.5, -0.3, 0.5), drop);
+                            block.getWorld().dropItem(loc, drop);
                         }
                     }
                 }

@@ -1,7 +1,9 @@
 package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.events.ItemRotEvent;
 import me.masstrix.eternalnature.util.MathUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Particle;
 import org.bukkit.entity.Item;
@@ -45,6 +47,10 @@ public class AgeRotItem implements AgeItem {
         if (!isValid()) return AgeProcessState.INVALID;
         if (rotted) return AgeProcessState.COMPLETE;
         if (++ticks < ticksRandom) return AgeProcessState.AGING;
+        ItemRotEvent event = new ItemRotEvent(item);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled())
+            return AgeProcessState.COMPLETE;
         rotted = true;
         ItemStack stack = item.getItemStack();
         stack.setType(AgingItemWorker.getWasteProduct(stack.getType()));
