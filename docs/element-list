@@ -1,0 +1,15 @@
+me.masstrix.eternalnature
+me.masstrix.eternalnature.api
+me.masstrix.eternalnature.command
+me.masstrix.eternalnature.config
+me.masstrix.eternalnature.core
+me.masstrix.eternalnature.core.block
+me.masstrix.eternalnature.core.item
+me.masstrix.eternalnature.core.metric
+me.masstrix.eternalnature.core.render
+me.masstrix.eternalnature.core.world
+me.masstrix.eternalnature.data
+me.masstrix.eternalnature.events
+me.masstrix.eternalnature.listeners
+me.masstrix.eternalnature.menus
+me.masstrix.eternalnature.util
