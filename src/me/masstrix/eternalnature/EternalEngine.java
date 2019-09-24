@@ -4,10 +4,7 @@ import me.masstrix.eternalnature.core.EternalWorker;
 import me.masstrix.eternalnature.core.Renderer;
 import me.masstrix.eternalnature.core.TemperatureData;
 import me.masstrix.eternalnature.core.UserWorker;
-import me.masstrix.eternalnature.core.world.LeafEmitter;
-import me.masstrix.eternalnature.core.world.AutoPlanter;
-import me.masstrix.eternalnature.core.world.TreeSpreader;
-import me.masstrix.eternalnature.core.world.WorldProvider;
+import me.masstrix.eternalnature.core.world.*;
 import me.masstrix.eternalnature.data.UserData;
 import me.masstrix.eternalnature.util.Stopwatch;
 import org.bukkit.Bukkit;
@@ -48,6 +45,7 @@ public class EternalEngine {
                 renderer = new Renderer(plugin, this),
                 worldProvider = new WorldProvider(plugin),
                 autoPlanter = new AutoPlanter(plugin),
+                new AgingItemWorker(plugin),
                 new LeafEmitter(plugin),
                 new TreeSpreader(plugin));
 

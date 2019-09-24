@@ -1,6 +1,7 @@
 package me.masstrix.eternalnature.listeners;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.core.world.AgingItemWorker;
 import org.bukkit.entity.Item;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -17,6 +18,10 @@ public class ItemListener implements Listener {
     @EventHandler
     public void on(ItemSpawnEvent event) {
         Item item = event.getEntity();
-        plugin.getEngine().getAutoPlanter().attemptToAddItem(item);
+        boolean plant = plugin.getEngine().getAutoPlanter().attemptToAddItem(item);
+        if (!plant) {
+            AgingItemWorker worker = (AgingItemWorker) plugin.getEngine().getWorker(AgingItemWorker.class);
+            worker.attemptToAddItem(item);
+        }
     }
 }

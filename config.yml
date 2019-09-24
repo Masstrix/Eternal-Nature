@@ -33,6 +33,7 @@ global:
     enabled: true
     range: 20
     scans: 2
+  age-items: true
   auto-plant:
     play-sound: true
     enabled: true
