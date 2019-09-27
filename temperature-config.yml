@@ -10,6 +10,10 @@
 #
 # Biome specific atmosphere ground level temperature.
 # Biome names do not need to be exact and will match to the closest name.
+options:
+  direct-sun-amplifier: 1.3
+  cave-modifier: 0.7
+  time-modifier: true
 biome:
   base: 13
   ocean: 10
@@ -29,9 +33,9 @@ biome:
   desert_hills: 42
   frozen: -3
   tiga: -5
-  snowy: -10
+  snowy: -8
   ice: -10
-  end: -5
+  end: -10
   river: 12
   nether: 50
 

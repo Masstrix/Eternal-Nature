@@ -30,7 +30,7 @@ public class StringUtil {
         if (compare == null && string != null) return string.length();
         if (string == null && compare != null) return compare.length();
         if (string == null) return 0;
-        int diff = 0;
+        int diff = Math.abs(string.length() - compare.length());
         boolean comparer = compare.length() > string.length();
         int runFor = comparer ? string.length() : compare.length();
         char[] stringArray = string.toCharArray(), compareArray = compare.toCharArray();

@@ -22,6 +22,7 @@ import me.masstrix.eternalnature.core.TemperatureData;
 import me.masstrix.eternalnature.util.*;
 import org.bukkit.*;
 import org.bukkit.block.Biome;
+import org.bukkit.block.Block;
 import org.bukkit.util.Vector;
 
 import java.io.*;
@@ -88,9 +89,69 @@ public class WorldData implements EternalWorld {
         World world = Bukkit.getWorld(this.world);
         if (world != null) {
             Biome biome = world.getBlockAt(x, y, z).getBiome();
-            return temperatureData.getExactBiomeTemp(biome);
+            return temperatureData.getBiomeModifier(biome);
         }
         return Double.NEGATIVE_INFINITY;
+    }
+
+    /**
+     * Scans around the location and includes the center for the average
+     * temperate value for surrounding biomes.
+     *
+     * @param x x block position.
+     * @param y y block position.
+     * @param z z block position.
+     * @return the ambient temperature.
+     */
+    public double getAverageAmbientTemp(int x, int y, int z) {
+        double total = getBiomeTemperature(x, y, z);
+        int amount = 5;
+        int radius = 15;
+        double increment = (2 * Math.PI) / amount;
+        for (int i = 0; i < amount; i++) {
+            double angle = i * increment;
+            int blockX = (int) (x + (radius * Math.cos(angle)));
+            int blockZ = (int) (z + (radius * Math.sin(angle)));
+
+            double temp = getBiomeTemperature(blockX, y, blockZ);
+            total += temp;
+        }
+        return total / (amount + 1);
+    }
+
+    /**
+     * Returns the current temperature of a block. This will vary depending on the biome,
+     * sky light.
+     *
+     * @param x x block position.
+     * @param y y block position.
+     * @param z z block position.
+     * @return the blocks temperature or <i>INFINITY</i> if there was an error.
+     */
+    public double getBlockTemperature(int x, int y, int z) {
+        World world = Bukkit.getWorld(this.world);
+        if (world == null) return Double.NEGATIVE_INFINITY;
+        Block block = world.getBlockAt(x, y, z);
+        double temp = getAverageAmbientTemp(x, y, z);
+
+        // Apply modifier if block has sunlight.
+        if (block.getLightFromSky() > 0) {
+            double directSunAmplifier = temperatureData.getDirectSunAmplifier() - 1;
+            byte skyLight = block.getLightFromSky();
+            double percent = skyLight / 15D;
+            temp *= directSunAmplifier * percent + 1;
+        }
+
+        // Apply modifier if block is in a "cave"
+        if (((block.getLightFromSky() <= 6 && block.getLightLevel() < 6)
+                || block.getType() == Material.CAVE_AIR)
+                && block.getLightLevel() != 15) {
+            double amp = temperatureData.getCaveModifier() - 1;
+            byte light = block.getLightLevel();
+            double percent = (15D - light) / 15D;
+            temp *= amp * percent + 1;
+        }
+        return temp;
     }
 
     public double getTemperature(int x, int y, int z) {

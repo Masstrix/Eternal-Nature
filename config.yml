@@ -64,8 +64,9 @@ temperature:
   freeze: true
   sweat: true
   cold-damage: -5
-  heat-damage: 90
+  heat-damage: 50
   display:
+    text: "%temperature% %temp_icon% %temp_simple%"
     style: BOSSBAR
     warning-flash: true
   advanced:

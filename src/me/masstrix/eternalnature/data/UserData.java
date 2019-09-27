@@ -22,7 +22,6 @@ import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.core.TemperatureData;
 import me.masstrix.eternalnature.config.StatusRenderMethod;
 import me.masstrix.eternalnature.config.SystemConfig;
-import me.masstrix.eternalnature.core.world.ChunkData;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.listeners.DeathListener;
@@ -31,6 +30,7 @@ import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.Waterlogged;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -40,7 +40,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -64,8 +63,7 @@ public class UserData implements EternalUser {
     private float hydration = 20; // max is 20
     private float distanceWalked;
     private int distanceNextThirst;
-
-    private boolean nulled = false;
+    private boolean debugEnabled = false;
 
     public UserData(EternalNature plugin, UUID id) {
         this.id = id;
@@ -80,11 +78,10 @@ public class UserData implements EternalUser {
         }
     }
 
-    public UserData(EternalNature plugin, UUID id, float temperature, float tempTo, float hydration) {
+    public UserData(EternalNature plugin, UUID id, float temperature, float hydration) {
         this.id = id;
         this.plugin = plugin;
         this.temperature = temperature;
-        this.tempExact = tempTo;
         this.hydration = hydration;
         config = plugin.getSystemConfig();
         distanceNextThirst = MathUtil.randomInt(dehydrateChance, dehydrateChance + dehydrateChanceRange);
@@ -104,45 +101,52 @@ public class UserData implements EternalUser {
 
         // Handle temperature ticking.
         if (data != null && config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) {
-            //ChunkData chunk = data.getChunk(loc.getChunk().getX(), loc.getChunk().getZ());
-            //data.loadNearby(loc.toVector());
-
             float emission = 0;
+            boolean inWater = isBlockWater(loc.getBlock());
+            emission += data.getBlockTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
 
-//            if (chunk != null) {
-//                float emission = data.getTemperature(loc.toVector());
-//                //emission += plugin.getEngine().getTemperatureData().getEmissionValue(TemperatureData.DataTempType.BIOME, loc.getBlock().getBiome().name());
-//            } else {
-//                //data.calculateArea(id, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-//            }
-
-            emission += data.getBiomeTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+            // If the player is swimming, subtract temperature from depth.
+            if (inWater) {
+                int height = 0;
+                for (int i = 1; i < 30; i++) {
+                    if (!isBlockWater(loc.getBlock().getRelative(0, i, 0))) break;
+                    height++;
+                }
+                double depthSub = (double) height / 30D * 4;
+                emission -= depthSub;
+            }
 
             // Add armor to temp.
             ItemStack[] armor =  player.getEquipment().getArmorContents();
             for (ItemStack i : armor) {
                 if (i == null) continue;
-                emission += tempData.getArmorEmission(i.getType());
+                emission += tempData.getArmorModifier(i.getType());
             }
 
-            if (emission != Float.NEGATIVE_INFINITY) {
+            if (!Float.isInfinite(emission) && !Float.isNaN(emission)) {
                 this.tempExact = emission;
-                nulled = false;
+                tempData.updateMinMaxTempCache(tempExact);
             }
-            else {
-                nulled = true;
-                //data.calculateArea(id, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-            }
+
+            // Reset the players temperature to the exact temp if it is invalid.
+            temperature = MathUtil.fix(temperature, tempExact);
 
             // Change players temperature gradually
             float diff = MathUtil.diff(this.tempExact, this.temperature);
             if (diff > 0.09) {
-                float toAdd = diff / 10;
+                int division = 30;
+                if (inWater && tempExact < temperature) {
+                    division = 10;
+                }
+                float toAdd = diff / division;
                 if (this.tempExact > this.temperature) this.temperature += toAdd;
                 else this.temperature -= toAdd;
+            } else if (diff < 0.1) {
+                temperature = tempExact;
             }
 
-            if (this.temperature >= config.getInt(ConfigOption.TEMPERATURE_BURN_DMG)
+            // Damage the player if they are to hot or cold or are dehydrated.
+            if (this.temperature >= tempData.getBurningPoint()
                     && config.isEnabled(ConfigOption.TEMPERATURE_BURN)) {
                 damageTimer.startIfNew();
                 if (damageTimer.hasPassed((long) (3000 - (temperature * 2)))) {
@@ -150,7 +154,7 @@ public class UserData implements EternalUser {
                     damageCustom(player, 1, config.getString(ConfigOption.MSG_DEATH_HEAT));
                 }
             }
-            else if (this.temperature <= config.getInt(ConfigOption.TEMPERATURE_COLD_DMG)
+            else if (this.temperature <= tempData.getFreezingPoint()
                     && config.isEnabled(ConfigOption.TEMPERATURE_FREEZE)) {
                 damageTimer.startIfNew();
                 if (damageTimer.hasPassed(3000)) {
@@ -161,7 +165,7 @@ public class UserData implements EternalUser {
         }
 
         // Handle hydration ticking.
-        if (config.isEnabled(ConfigOption.HYDRATION_ENABLED)) {
+        if (config.isEnabled(ConfigOption.HYDRATION_ENABLED) && player.getGameMode() != GameMode.CREATIVE) {
             // Sweat randomly. Becomes more common the warmer you are.
             if (plugin.getSystemConfig().isEnabled(ConfigOption.TEMPERATURE_SWEAT)) {
                 if (MathUtil.randomInt((int) (1000 * 1.5)) <= temperature * (temperature * 0.005)) {
@@ -179,51 +183,46 @@ public class UserData implements EternalUser {
             }
         }
 
+        if (!config.isEnabled(ConfigOption.TEMPERATURE_ENABLED) || !debugEnabled) return;
         World world = player.getWorld();
+        final double MAX = tempData.getMaxBiomeTemp();
+        final double MIN = tempData.getMinBiomeTemp();
+        /*
+        * Scans around the player and projects the temperature above blocks.
+        * */
+        new CuboidScanner(4, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(),
+                (CuboidScanner.CuboidTask) (x, y, z) -> {
+            Block block = world.getBlockAt(x, y, z);
+            if (!block.isPassable() && block.getType().isSolid() || block.getType() == Material.TORCH) {
 
-//        new CuboidScanner(4, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(),
-//                (CuboidScanner.CuboidTask) (x, y, z) -> {
-//            Block block = world.getBlockAt(x, y, z);
-//            if (!block.isPassable() && block.getType().isSolid() || block.getType() == Material.TORCH) {
-//
-//                double max = plugin.getEngine().getTemperatureData().getMaxBlockTemp();
-//                double temp = provider.getWorld(world).getTemperature(x, y, z);
-//                Color color = new Color(126, 255, 0);
-//
-//                if (temp != Float.NEGATIVE_INFINITY) {
-//                    float colorRotate = (float) temp / (float) max;
-//
-//                    float[] hsbVals = new float[3];
-//                    Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), hsbVals);
-//                    // Shift the hue around by 25%
-//                    color = new Color(Color.HSBtoRGB(0.25f - (0.25f * colorRotate), hsbVals[1], hsbVals[2]));
-//
-//                    if (temp > 20) {
-//                        color = new Color(0, 132, 21);
-//                    }
-//                    else if (temp > 40) {
-//                        color = new Color(53, 255, 0);
-//                    }
-//                    else if (temp > 40) {
-//                        color = new Color(255, 240, 0);
-//                    }
-//                    else if (temp > 60) {
-//                        color = new Color(255, 65, 0);
-//                    }
-//                    else if (temp > 100) {
-//                        color = new Color(255, 149, 140);
-//                    }
-//                    else if (temp > 200) {
-//                        color = new Color(255, 255, 255);
-//                    }
-//                } else {
-//                    color = new Color(255, 0, 206); // Unloaded
-//                }
-//
-//                player.spawnParticle(Particle.REDSTONE, block.getLocation().add(0.5, 1.2, 0.5),
-//                        1, 0, 0, 0, new Particle.DustOptions(org.bukkit.Color.fromRGB(color.getRed(), color.getGreen(), color.getBlue()), 1));
-//            }
-//        });//.start();
+                double temp = provider.getWorld(world).getBlockTemperature(x, y, z);
+                java.awt.Color color;
+
+                if (temp != Float.NEGATIVE_INFINITY) {
+                    float[] hsbVals = new float[3];
+                    java.awt.Color.RGBtoHSB(126, 255, 0, hsbVals);
+
+                    float colorRotate;
+                    if (temp > 0) {
+                        colorRotate = (float) (temp / MAX);
+                        // Shift the hue clockwise by 25% (from green to red).
+                        color = new java.awt.Color(java.awt.Color.HSBtoRGB(0.25f - (0.25f * colorRotate),
+                                hsbVals[1], hsbVals[2]));
+                    } else {
+                        colorRotate = (float) (Math.abs(temp) / MIN);
+                        // Shift the hue counter clockwise by 30% (from green to blue).
+                        color = new java.awt.Color(java.awt.Color.HSBtoRGB(0.30f * colorRotate,
+                                hsbVals[1], hsbVals[2]));
+                    }
+                } else {
+                    color = new java.awt.Color(255, 0, 206); // Invalid color
+                }
+
+                player.spawnParticle(Particle.REDSTONE, block.getLocation().add(0.5, 1.2, 0.5),
+                        1, 0, 0, 0, new Particle.DustOptions(org.bukkit.Color.fromRGB(
+                                color.getRed(), color.getGreen(), color.getBlue()), 1));
+            }
+        }).start();
     }
 
     /**
@@ -259,11 +258,11 @@ public class UserData implements EternalUser {
                 float mid = Math.round(hydration / 2);
                 for (int i = 0; i < 10; i++) {
                     if (i < mid) {
-                        h20.append("\u00A7b●");
+                        h20.append("\u00A7b⭘");
                     } else if (i > mid) {
-                        h20.append("\u00A77◌");
+                        h20.append("\u00A78⭘");
                     } else {
-                        h20.append("\u00A7b◯");
+                        h20.append("\u00A73⭘");
                     }
                 }
                 actionBar.append(h20);
@@ -273,27 +272,42 @@ public class UserData implements EternalUser {
         }
 
         if (config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) {
+            TemperatureData tempData = plugin.getEngine().getTemperatureData();
+            TemperatureData.TemperatureIcon icon = tempData.getClosestIconName(temperature);
+
+            String text = config.getString(ConfigOption.TEMPERATURE_TEXT);
+            text = text.replaceAll("%temp_simple%", icon.getColor() + icon.getName() + "&f");
+            text = text.replaceAll("%temp_icon%", icon.getColor() + icon.getIcon() + "&f");
+
+            String tempInfoColor = icon.getColor().toString();
+
+            if (config.isEnabled(ConfigOption.TEMPERATURE_BAR_FLASH)) {
+                int burn = tempData.getBurningPoint();
+                int freeze = tempData.getFreezingPoint();
+                boolean flash = this.temperature <= freeze + 2 || this.temperature >= burn - 4;
+                if (flash) {
+                    tempInfoColor = flicker.isEnabled() ? "&c" : "&f";
+                }
+            }
+
+            text = text.replaceAll("%temperature%", tempInfoColor + String.format("%.1f°", temperature) + "&f");
+
             if (config.getRenderMethod(ConfigOption.TEMPERATURE_BAR_STYLE) == StatusRenderMethod.BOSSBAR) {
                 if (tempBar == null) {
-                    tempBar = Bukkit.createBossBar("Temp", BarColor.GREEN, BarStyle.SOLID);
+                    tempBar = Bukkit.createBossBar("Loading...", BarColor.GREEN, BarStyle.SOLID);
                     tempBar.addPlayer(player);
                 }
-                TemperatureData tempData = plugin.getEngine().getTemperatureData();
-                if (tempData.getMinBlockTemp() < 0) {
-                    double padd = Math.abs(tempData.getMinBlockTemp());
-                    tempBar.setProgress(Math.abs(temperature + padd) / (tempData.getMaxBlockTemp() + padd));
-                } else {
-                    tempBar.setProgress(Math.abs(temperature / tempData.getMaxBlockTemp()));
-                }
+                // Update the bars progress
+                double min = Math.abs(tempData.getMinTemp());
+                double max = tempData.getMaxTemp() + min;
+                double temp = this.temperature + min;
+                double progress = temp / max;
+                if (progress >= 0D && progress <= 1)
+                    tempBar.setProgress(progress);
 
-                String title = "Temp: \u00A7"
-                        + ((temperature > 70 || temperature < -8)
-                        && config.getBoolean(ConfigOption.TEMPERATURE_BAR_FLASH) ? (flicker.isEnabled() ? "c" : "f")
-                        : temperature >= 30 ? "e" : temperature < 10 ? "f" : temperature < 0 ? "b" : "a") +
-                        String.format("%.1f°", temperature);
-                tempBar.setTitle(StringUtil.color(title));
-                if (temperature > 100) tempBar.setColor(BarColor.RED);
-                else tempBar.setColor(BarColor.GREEN);
+                // Set its color and title
+                tempBar.setTitle(StringUtil.color(text));
+                tempBar.setColor(BossBarUtil.fromBukkitColor(icon.getColor()));
             } else {
                 if (tempBar != null) {
                     tempBar.removeAll();
@@ -301,12 +315,7 @@ public class UserData implements EternalUser {
                 }
                 if (actionBar.length() > 0)
                     actionBar.append("    ");
-                String temp = "\u00A7fTemp: \u00A7"
-                        + ((temperature > 70 || temperature < -8)
-                        && config.isEnabled(ConfigOption.TEMPERATURE_BAR_FLASH) ? (flicker.isEnabled() ? "c" : "f")
-                        : temperature >= 30 ? "e" : temperature < 10 ? "f" : temperature < 0 ? "b" : "a") +
-                        String.format("%.1f°", temperature);
-                actionBar.append(temp);
+                actionBar.append(StringUtil.color("&f" + text));
             }
         } else if(tempBar != null) {
             tempBar.removeAll();
@@ -314,6 +323,25 @@ public class UserData implements EternalUser {
 
         if (actionBar.length() > 0)
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(actionBar.toString()));
+    }
+
+    /**
+     * Sets if debug mode is enabled for this player. When debug mode is enabled
+     * the local temperatures will be displayed around them along with extra info.
+     *
+     * @param enabled should debug mode be enabled.
+     * @return the state of debug mode.
+     */
+    public boolean setDebug(boolean enabled) {
+        this.debugEnabled = enabled;
+        return debugEnabled;
+    }
+
+    /**
+     * @return if debug mode is enabled.
+     */
+    public boolean isDebugEnabled() {
+        return debugEnabled;
     }
 
     @Override
@@ -371,6 +399,26 @@ public class UserData implements EternalUser {
     }
 
     /**
+     * Returns if a block is representable as water. If a block is waterlogged or
+     * is a block that always has water in it such as kelp and sea grass, true
+     * will be returned.
+     *
+     * @param block block to check if it is "water".
+     * @return if the player is in water.
+     */
+    private boolean isBlockWater(Block block) {
+        switch (block.getType()) {
+            case WATER:
+            case SEAGRASS:
+            case TALL_SEAGRASS:
+            case KELP_PLANT:
+                return true;
+        }
+        return block.getBlockData() instanceof Waterlogged
+                && ((((Waterlogged) block.getBlockData()).isWaterlogged()));
+    }
+
+    /**
      * Damages the player for an amount and applies a custom death message if the
      * damage results in them dying.
      *
@@ -405,8 +453,7 @@ public class UserData implements EternalUser {
         YamlConfiguration config = new YamlConfiguration();
         try {
             config.load(file);
-            config.set(id + ".temperature", temperature);
-            config.set(id + ".temperature-to", tempExact);
+            config.set(id + ".temp", temperature);
             config.set(id + ".hydration", hydration);
             config.save(file);
         } catch (IOException | InvalidConfigurationException e) {

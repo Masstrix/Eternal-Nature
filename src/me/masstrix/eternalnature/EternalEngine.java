@@ -100,8 +100,7 @@ public class EternalEngine {
                 config.load(file);
                 if (config.contains(uuid.toString())) {
                     user = new UserData(plugin, uuid,
-                            (float) config.getDouble(uuid + ".temperature", 0),
-                            (float) config.getDouble(uuid + ".temperature-to", 0),
+                            (float) config.getDouble(uuid + ".temp", 0),
                             (float) config.getDouble(uuid+ ".hydration", 0));
                 }
             } catch (IOException | InvalidConfigurationException e) {

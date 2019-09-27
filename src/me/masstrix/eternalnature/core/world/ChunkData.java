@@ -202,7 +202,7 @@ public class ChunkData implements EternalChunk {
                 float emissionTemp = 13; /*dataMap.getEmissionValue(
                         TemperatureData.DataTempType.BLOCK,
                         block.getType().name());*/
-                emissionTemp = dataMap.getExactBlockEmission(block.getType());
+                emissionTemp = dataMap.getBlockEmission(block.getType());
 
                 if (emissionTemp != 0) {
                     //blockData.put(pos, emissionTemp);

@@ -17,11 +17,17 @@
 package me.masstrix.eternalnature.core;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.config.ConfigOption;
+import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.util.Stopwatch;
 import me.masstrix.eternalnature.util.StringUtil;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.WeatherType;
 import org.bukkit.block.Biome;
+import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
@@ -31,22 +37,68 @@ import java.util.Map;
 
 public class TemperatureData {
 
+    public static final String ICON_HOT = "☀";
+    public static final String ICON_NORMAL = "✿";
+    public static final String ICON_COLD = "❈";
+    public static final String ICON_WET = "☁";
+
+    public enum TemperatureIcon {
+        BURNING(ICON_HOT, "burning", 100, ChatColor.RED),
+        HOT(ICON_HOT, "hot", 30, ChatColor.GOLD),
+        WARM(ICON_HOT, "warm", 20, ChatColor.YELLOW),
+        NORMAL(ICON_NORMAL, "pleasant", 13, ChatColor.GREEN),
+        COOL(ICON_COLD, "cool", 5, ChatColor.DARK_AQUA),
+        COLD(ICON_COLD, "cold", 0, ChatColor.AQUA),
+        FREEZING(ICON_COLD, "freezing", -4, ChatColor.WHITE);
+
+        private String icon;
+        private String name;
+        private float temp;
+        private ChatColor color;
+
+        TemperatureIcon(String icon, String name, float temp, ChatColor color) {
+            this.icon = icon;
+            this.name = name.toUpperCase();
+            this.temp = temp;
+            this.color = color;
+        }
+
+        public String getIcon() {
+            return icon;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public float getTemp() {
+            return temp;
+        }
+
+        public ChatColor getColor() {
+            return color;
+        }
+    }
+
     private EternalNature plugin;
-    @Deprecated
-    private Map<String, Float> biomes = new HashMap<>();
-    @Deprecated
-    private Map<String, Float> blocks = new HashMap<>();
-    @Deprecated
-    private Map<String, Float> armor = new HashMap<>();
-    @Deprecated
-    private Map<String, Float> weather = new HashMap<>();
 
-    private Map<Material, Float> armorMap = new HashMap<>();
-    private Map<Material, Float> blocksExact = new HashMap<>();
-    private Map<Biome, Float> biomeExact = new HashMap<>();
+    private Map<Material, Float> armorData = new HashMap<>();
+    private Map<Material, Float> blocksData = new HashMap<>();
+    private Map<Biome, Float> biomeData = new HashMap<>();
+    private Map<WeatherType, Float> weatherData = new HashMap<>();
 
-    private double maxBlock = 0;
-    private double minBlock = 0;
+    private double maxBlock;
+    private double minBlock;
+    private double maxBiome;
+    private double minBiome;
+
+    private double directSunAmplifier;
+    private double caveModifier;
+
+    private int freezingPoint;
+    private int burningPoint;
+    private double maxTemp = 0;
+    private double minTemp = 0;
 
     public TemperatureData(EternalNature plugin) {
         this.plugin = plugin;
@@ -54,25 +106,61 @@ public class TemperatureData {
     }
 
     /**
+     * Finds the most relevant name for the given temperature.
+     *
+     * @param temp temperature to evaluate.
+     * @return the most relevant icon.
+     */
+    public TemperatureIcon getClosestIconName(float temp) {
+        if (temp >= burningPoint - 4) return TemperatureIcon.BURNING;
+        if (temp <= freezingPoint + 2) return TemperatureIcon.FREEZING;
+        if (temp <= TemperatureIcon.COLD.temp) return TemperatureIcon.COLD;
+        TemperatureIcon icon = TemperatureIcon.FREEZING;
+        for (TemperatureIcon i : TemperatureIcon.values()) {
+            if (temp >= i.temp && icon.temp < i.temp)
+                icon = i;
+        }
+        return icon;
+    }
+
+    /**
      * Loads the temperature-config.yml into cache.
      */
     public void loadConfigData() {
+        SystemConfig systemConfig = plugin.getSystemConfig();
+        freezingPoint = systemConfig.getInt(ConfigOption.TEMPERATURE_COLD_DMG);
+        burningPoint = systemConfig.getInt(ConfigOption.TEMPERATURE_BURN_DMG);
+
         File file = new File(plugin.getDataFolder(), "temperature-config.yml");
         if (!file.exists()) {
             file.getParentFile().mkdirs();
             plugin.saveResource("temperature-config.yml", false);
         }
-        YamlConfiguration config = new YamlConfiguration();
+        FileConfiguration config = new YamlConfiguration();
         config.options().copyDefaults(true);
         config.options().copyHeader(true);
+
         Stopwatch timer = new Stopwatch().start();
         plugin.getLogger().info("Loading temperature data...");
+
+        Map<String, Float> biomes = new HashMap<>();
+        Map<String, Float> blocks = new HashMap<>();
+        Map<String, Float> armor = new HashMap<>();
+        Map<String, Float> weather = new HashMap<>();
+
         try {
             config.load(file);
+
+            caveModifier = config.getDouble("options.cave-modifier", 0.7);
+            directSunAmplifier = config.getDouble("options.direct-sun-amplifier", 1.3);
             for (String s : config.getKeys(true)) {
+                if (s.equalsIgnoreCase("options")) continue;
                 String[] keys = s.split("\\.");
                 if (s.startsWith("biome")) {
-                    biomes.put(keys[keys.length - 1].toLowerCase(), (float) config.getDouble(s));
+                    double val = config.getDouble(s);
+                    biomes.put(keys[keys.length - 1].toLowerCase(), (float) val);
+                    if (val > maxBiome) maxBiome = val;
+                    if (val < minBiome) minBiome = val;
                 }
                 else if (s.startsWith("blocks")) {
                     double val = config.getDouble(s);
@@ -90,25 +178,37 @@ public class TemperatureData {
                 }
             }
 
+            float biomeBase = biomes.getOrDefault("base", 13F);
+
             // Assign temperature to all biomes.
             for (Biome b : Biome.values()) {
-                float v = getEmissionValue(DataTempType.BIOME, b.name());
-                biomeExact.put(b, v);
+                float v = getValue(biomes, b.name(), biomeBase);
+                biomeData.put(b, v);
             }
 
             // Assign temperature to all equipment
             for (Material m : Material.values()) {
-                float v = getEmissionValue(DataTempType.ARMOR, m.name());
+                float v = getValue(armor, m.name(), 0);
                 if (v != 0)
-                    armorMap.put(m, v);
+                    armorData.put(m, v);
             }
 
             // Assign temperature to all materials
             for (Material m : Material.values()) {
-                float v = getEmissionValue(DataTempType.BLOCK, m.name());
+                float v = getValue(blocks, m.name(), 0);
                 if (v != 0)
-                    blocksExact.put(m, v);
+                    blocksData.put(m, v);
             }
+
+            // Assign temperature to all weather situations
+            for (WeatherType w : WeatherType.values()) {
+                float v = getValue(weather, w.name(), 0);
+                if (v != 0)
+                    weatherData.put(w, v);
+            }
+
+            minTemp = getMinBiomeTemp();
+            maxTemp = getMaxBiomeTemp();
 
         } catch (IOException | InvalidConfigurationException e) {
             e.printStackTrace();
@@ -120,6 +220,28 @@ public class TemperatureData {
         BIOME, BLOCK, ARMOR, WEATHER
     }
 
+    public int getFreezingPoint() {
+        return freezingPoint;
+    }
+
+    public int getBurningPoint() {
+        return burningPoint;
+    }
+
+    /**
+     * Returns the amplifier used when a block is in direct sun light. This
+     * will make standing outside warmer during the day.
+     *
+     * @return the direct sun amplifier.
+     */
+    public double getDirectSunAmplifier() {
+        return directSunAmplifier;
+    }
+
+    public double getCaveModifier() {
+        return caveModifier;
+    }
+
     public double getMaxBlockTemp() {
         return maxBlock;
     }
@@ -128,8 +250,39 @@ public class TemperatureData {
         return minBlock;
     }
 
-    public float getExactBlockEmission(Material material) {
-        return blocksExact.getOrDefault(material, 0F);
+    public double getMaxBiomeTemp() {
+        return maxBiome;
+    }
+
+    public double getMinBiomeTemp() {
+        return minBiome;
+    }
+
+    /**
+     * Updates the cache for the min and max temperature for a player to reach. This
+     * is calculated live due to some factors not being completely known such as armor
+     * when loading in the values. THe min and max values are used to determine things
+     * such as the boss bars percentage.
+     *
+     * @param temp temperature value to check for a cache update against.
+     */
+    public void updateMinMaxTempCache(float temp) {
+        if (maxTemp < temp)
+            maxTemp = temp;
+        else if (temp < minTemp)
+            minTemp = temp;
+    }
+
+    public double getMaxTemp() {
+        return maxTemp;
+    }
+
+    public double getMinTemp() {
+        return minTemp;
+    }
+
+    public float getBlockEmission(Material material) {
+        return blocksData.getOrDefault(material, 0F);
     }
 
     /**
@@ -138,8 +291,12 @@ public class TemperatureData {
      * @param biome biome to get the temperature for.
      * @return the biomes assigned temperature.
      */
-    public float getExactBiomeTemp(Biome biome) {
-        return biomeExact.getOrDefault(biome, 13F);
+    public float getBiomeModifier(Biome biome) {
+        return biomeData.getOrDefault(biome, 13F);
+    }
+
+    public float getWeatherModifier(WeatherType type) {
+        return weatherData.getOrDefault(type, 0F);
     }
 
     /**
@@ -148,53 +305,8 @@ public class TemperatureData {
      * @param material material to get.
      * @return the emission value of the armor or 0 if it has no armor emission.
      */
-    public float getArmorEmission(Material material) {
-        return armorMap.getOrDefault(material, 0F);
-    }
-
-    /**
-     * Return the emission value of a given item.
-     *
-     * @param type type of data to look for.
-     * @param key the key of the item to match for.
-     * @return the emission value of the key and type or 0 if no match was found.
-     */
-    public float getEmissionValue(DataTempType type, String key) {
-        key = key.toLowerCase();
-        switch (type) {
-            case BIOME: {
-                float val = getValue(biomes, key);
-                if (val == Float.NEGATIVE_INFINITY)
-                    return biomes.getOrDefault("base", 13F);
-                else return val;
-            }
-            case BLOCK: return getValue(blocks, key, 0);
-            case ARMOR: return getValue(armor, key, 0);
-            case WEATHER: return getValue(weather, key, 0);
-        }
-        return 0;
-    }
-
-    /**
-     * Return if there are any matching emitters to that type.
-     *
-     * @param type type to search for.
-     * @param key key to match against.
-     * @return if there is a matching key that has an emission value.
-     */
-    public boolean doesEmit(DataTempType type, String key) {
-        key = key.toLowerCase();
-        switch (type) {
-            case BIOME: return getValue(biomes, key, 0) != 0;
-            case BLOCK: return getValue(blocks, key, 0) != 0;
-            case ARMOR: return getValue(armor, key, 0) != 0;
-            case WEATHER: return getValue(weather, key, 0) != 0;
-        }
-        return false;
-    }
-
-    private float getValue(Map<String, Float> data, String key) {
-        return getValue(data, key, Float.NEGATIVE_INFINITY);
+    public float getArmorModifier(Material material) {
+        return armorData.getOrDefault(material, 0F);
     }
 
     private float getValue(Map<String, Float> data, String key, float def) {
@@ -203,12 +315,9 @@ public class TemperatureData {
         float val = 0;
         for (Map.Entry<String, Float> entry : data.entrySet()) {
             String check = entry.getKey().toLowerCase();
-            if (key.equalsIgnoreCase(entry.getKey())) {
+            if (key.equalsIgnoreCase(check))
                 return entry.getValue();
-            }
-            if (!key.contains(check)) {
-                continue;
-            }
+            if (!key.contains(check)) continue;
             int dis = StringUtil.distance(check, key);
             if (diff == -1 || dis < diff) {
                 diff = dis;
