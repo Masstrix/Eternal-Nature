@@ -19,6 +19,7 @@ package me.masstrix.eternalnature.data;
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.api.EternalUser;
 import me.masstrix.eternalnature.config.ConfigOption;
+import me.masstrix.eternalnature.core.HeightGradient;
 import me.masstrix.eternalnature.core.TemperatureData;
 import me.masstrix.eternalnature.config.StatusRenderMethod;
 import me.masstrix.eternalnature.config.SystemConfig;
@@ -104,6 +105,12 @@ public class UserData implements EternalUser {
             float emission = 0;
             boolean inWater = isBlockWater(loc.getBlock());
             emission += data.getBlockTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+
+            // If the world has a height gradient add it to the temperature
+            HeightGradient gradient = HeightGradient.getGradient(loc.getWorld().getEnvironment());
+            if (gradient != null) {
+                emission += gradient.getModifier(loc.getBlockY());
+            }
 
             // If the player is swimming, subtract temperature from depth.
             if (inWater) {
@@ -389,7 +396,8 @@ public class UserData implements EternalUser {
      * @param sprinting is the player currently sprinting.
      */
     public void addWalkDistance(float distance, boolean sprinting) {
-        //if (isOnline() && Bukkit.getPlayer(id).getGameMode() == GameMode.CREATIVE) return;
+        if (isOnline() && Bukkit.getPlayer(id).getGameMode() == GameMode.CREATIVE) return;
+        if (!config.isEnabled(ConfigOption.HYDRATION_ENABLED)) return;
         distanceWalked += sprinting ? distance + 0.3 : distance;
         if (distanceWalked >= distanceNextThirst) {
             distanceWalked = 0;

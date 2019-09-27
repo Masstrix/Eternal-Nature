@@ -59,8 +59,23 @@ blocks:
   nether_portal: 25
 
 armor:
-  leather_helmet: 1
-  leather_chestplate: 3
-  leather_leggings: 2
-  leather_boots: 1
   turtle_helmet: 1
+  leather_helmet: 2
+  leather_chestplate: 3
+  leather_leggings: 3
+  leather_boots: 1
+  
+  iron_helmet: 1
+  iron_chestplate: 2
+  iron_leggings: 1
+  iron_boots: 0
+  
+  gold_helmet: 1
+  gold_chestplate: 3
+  gold_leggings: 2
+  gold_boots: 1
+  
+  diamond_helmet: 1
+  diamond_chestplate: 2
+  diamond_leggings: 2
+  diamond_boots: 1

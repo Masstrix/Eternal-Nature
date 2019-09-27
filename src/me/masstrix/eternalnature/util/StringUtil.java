@@ -50,4 +50,18 @@ public class StringUtil {
         }
         return builder.toString();
     }
+
+    public static boolean isInteger(String s) {
+        if (s == null) return false;
+        boolean negative = s.startsWith("-");
+        int lgth = s.length();
+        for (int i = negative ? 1 : 0; i < lgth; ++i) {
+            if (!isNumber(s.charAt(i))) return false;
+        }
+        return true;
+    }
+
+    private static boolean isNumber(char c) {
+        return c >= '0' && c <= '9';
+    }
 }
