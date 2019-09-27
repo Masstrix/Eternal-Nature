@@ -129,39 +129,15 @@ public class BlockListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void on(BlockFromToEvent event) {
         if (event.isCancelled()) return;
-        //calculateArea(event.getToBlock());
+        World world = event.getToBlock().getWorld();
 
         if (event.getBlock().getType() == Material.WATER) {
-            boolean hasNumBlocksAbove = true;
-            boolean isLastBlock = event.getToBlock().getLocation().add(0, -1, 0)
-                    .getBlock().getType() != Material.AIR;
-
-            Block water = event.getBlock();
-            Levelled data = (Levelled) water.getBlockData();
-
-            data.getLevel();
-
-            int minBlocks = 3;
-            for(int i = 1; i <= minBlocks; i++) {
-                if (water.getLocation().clone().add(0, i, 0)
-                        .getBlock().getType() != Material.WATER) {
-                    hasNumBlocksAbove = false;
-                    break;
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    plugin.getEngine().getWorldProvider().getWorld(world).createWaterfall(event.getBlock().getLocation().add(0, -1, 0));
                 }
-            }
-
-            Location loc = water.getLocation();
-            int height = 0;
-            for (int i = 0; i < 255 - water.getY(); i++) {
-                if (loc.clone().add(0, i, 0).getBlock().getType() != Material.WATER) {
-                    break;
-                }
-                height++;
-            }
-
-            if (isLastBlock && hasNumBlocksAbove) {
-                locs.add(new WaterfallEmitter(water.getLocation().add(0, -1, 0), height));
-            }
+            }.runTaskLater(plugin, 5);
         }
     }
 

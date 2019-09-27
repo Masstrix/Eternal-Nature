@@ -16,19 +16,49 @@
 
 package me.masstrix.eternalnature.core.world;
 
+import me.masstrix.eternalnature.util.MathUtil;
+import me.masstrix.eternalnature.util.Position;
+import me.masstrix.eternalnature.util.StringUtil;
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.Levelled;
 
 import java.io.*;
+import java.util.List;
 import java.util.UUID;
 
 public class WaterfallEmitter implements Serializable {
 
+    Position pos;
     private Location location;
-    private int height;
+    private int height = -1;
+    private int lastCheck;
+    private boolean valid, hitsGround;
+
+    public WaterfallEmitter(Location loc) {
+        Block block = loc.getBlock();
+        pos = new Position(block.getX(), block.getY(), block.getZ());
+        this.location = block.getLocation().clone().add(0.5, 0, 0.5);
+        if (block.getType() != Material.WATER) return;
+
+        int height = 0;
+        for(int i = 1; i <= 5; i++) {
+            if (block.getRelative(0, i, 0).getType() != Material.WATER) {
+                break;
+            }
+            height++;
+        }
+
+        if (height >= 3) {
+            this.height = height;
+            valid = true;
+        }
+    }
 
     public WaterfallEmitter(Location loc, int height) {
         this.location = loc;
         this.height = height;
+        valid = loc != null && height > 0;
     }
 
     public Location getLocation() {
@@ -40,24 +70,76 @@ public class WaterfallEmitter implements Serializable {
     }
 
     public void tick() {
-        if (location == null) return;
-        Location loc = location.clone().add(0.5, 0, 0.5);
-        loc.getWorld().spawnParticle(Particle.SPIT, loc.clone().add(0, 0.5, 0), 1, 0.5, 0, 0.5, 0.05);
-        loc.getWorld().spawnParticle(Particle.WATER_SPLASH, loc, 5, 0.5, 0, 0.5, 0.05);
+        World world = location.getWorld();
+        if (!valid) return;
+        if (world != null) {
+            Location location = this.location.clone().add(0, 0.5, 0);
+
+            int size = MathUtil.randomInt(3, 5);
+            world.spawnParticle(Particle.REDSTONE, location, 2, 0.3, 0.3, 0.3,
+                    new Particle.DustOptions(Color.fromRGB(255, 255, 255), size));
+            world.spawnParticle(Particle.SPIT, location, 2, 0.2, 0.1, 0.2, 0.05);
+            world.spawnParticle(Particle.WATER_SPLASH, location, 5, 0.3, 0, 0.3, 0.05);
+        }
     }
 
     public boolean isValid() {
-        return location != null && location.clone().add(0, 1, 0).getBlock().getType() == Material.WATER;
+        if (!valid) return false;
+        if (++lastCheck >= 3) {
+            if (location == null || height == -1) {
+                valid = false;
+                return true;
+            }
+            valid = isRelativeValid(location.getBlock());
+            lastCheck = 0;
+        }
+
+        return valid;
+    }
+
+    /**
+     * Returns if the surrounding area is valid for this waterfall to still be alive.
+     *
+     * @param center center block to check against.
+     * @return if the surrounding area is valid.
+     */
+    private boolean isRelativeValid(Block center) {
+        if (center.getType() != Material.WATER) return false;
+        Block under = center.getRelative(0, -1, 0);
+        if (under.getBlockData() instanceof Levelled) {
+            Levelled levelled = (Levelled) under.getBlockData();
+            if (levelled.getLevel() == 0) return true;
+            if (levelled.getLevel() > 7) return false;
+            hitsGround = false;
+        } else {
+            hitsGround = true;
+            return true;
+        }
+        return false;
     }
 
     @Override
     public int hashCode() {
-        return location.hashCode();
+        return pos == null ? 0 : pos.hashCode();
     }
 
     @Override
     public boolean equals(Object o) {
         return o instanceof WaterfallEmitter && o.hashCode() == this.hashCode();
+    }
+
+    public String serialize() {
+        return String.format("[%s,%s,%s]", pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    public static WaterfallEmitter deserialize(WorldData world, String string) {
+        String[] data = string.substring(1, string.length() - 1).split(",");
+        double x, y, z;
+        if (!StringUtil.isInteger(data[0])) return null;
+        x = Double.parseDouble(data[0]);
+        y = Double.parseDouble(data[1]);
+        z = Double.parseDouble(data[2]);
+        return new WaterfallEmitter(new Location(world.asBukkit(), x, y, z));
     }
 
     private void writeObject(ObjectOutputStream out) throws IOException {
@@ -75,11 +157,4 @@ public class WaterfallEmitter implements Serializable {
             return;
         this.location = new Location(world, in.readDouble(), in.readDouble(), in.readDouble());
     }
-
-//     * private void writeObject(java.io.ObjectOutputStream out)
-// *     throws IOException
-// * private void readObject(java.io.ObjectInputStream in)
-// *     throws IOException, ClassNotFoundException;
-// * private void readObjectNoData()
-// *     throws ObjectStreamException;
 }

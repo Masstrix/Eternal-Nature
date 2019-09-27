@@ -18,15 +18,19 @@ package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.api.EternalWorld;
+import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.core.TemperatureData;
 import me.masstrix.eternalnature.util.*;
 import org.bukkit.*;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -38,13 +42,23 @@ public class WorldData implements EternalWorld {
     private UUID world;
     private static ExecutorService threadPool = Executors.newFixedThreadPool(20,
             new SimpleThreadFactory("ChunkWorker"));
-    private List<UUID> computing = new ArrayList<>(); // List of all tasks currently executing.
     private TemperatureData temperatureData;
+    Map<Position, WaterfallEmitter> waterfalls = new ConcurrentHashMap<>();
 
     public WorldData(EternalNature plugin, UUID world) {
         this.plugin = plugin;
         this.world = world;
         temperatureData = plugin.getEngine().getTemperatureData();
+        worldName = asBukkit().getName();
+        loadData();
+
+        int delay = 20 * 20 * 5;
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                //saveData();
+            }
+        }.runTaskTimerAsynchronously(plugin, delay, delay);
     }
 
     public UUID getWorldUid() {
@@ -52,6 +66,19 @@ public class WorldData implements EternalWorld {
     }
 
     public void tick() {
+        /*
+        if (plugin.getSystemConfig().isEnabled(ConfigOption.WATERFALLS)) {
+            List<WaterfallEmitter> bin = new ArrayList<>();
+            for (WaterfallEmitter waterfall : waterfalls.values()) {
+                if (!waterfall.isValid()) {
+                    bin.add(waterfall);
+                    continue;
+                }
+                waterfall.tick();
+            }
+            bin.forEach(fall -> waterfalls.remove(fall.pos));
+        }
+        */
         chunks.forEach((l, c) -> c.tick());
     }
 
@@ -60,7 +87,67 @@ public class WorldData implements EternalWorld {
     }
 
     public void unload() {
+        saveData();
+    }
 
+    public void saveData() {
+        File worlds = new File(plugin.getDataFolder(), "worlds");
+        File data = new File(worlds, worldName + ".etw");
+        if (!worlds.exists())
+            worlds.mkdirs();
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(data));
+            writer.write("[waterfalls]");
+            writer.write(Character.LINE_SEPARATOR);
+            for (WaterfallEmitter waterfall : waterfalls.values()) {
+                writer.write("  ");
+                writer.write(waterfall.serialize());
+                writer.write(Character.LINE_SEPARATOR);
+            }
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadData() {
+        WorldData worldData = this;
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                File worlds = new File(plugin.getDataFolder(), "worlds");
+                File data = new File(worlds, worldName + ".etw");
+                if (!data.exists()) return;
+                try {
+                    String header = "";
+                    int waterfallsLoaded = 0;
+                    for (String s : Files.readAllLines(data.toPath())) {
+                        if (s.startsWith("[") && s.endsWith("]")) {
+                            header = s;
+                            continue;
+                        }
+                        if (header.equals("[waterfalls]")) {
+                            WaterfallEmitter emitter = WaterfallEmitter.deserialize(worldData,
+                                    s.replaceFirst(" {2}", ""));
+                            if (emitter != null) {
+                                waterfalls.put(emitter.pos, emitter);
+                                waterfallsLoaded++;
+                            }
+                        }
+                    }
+                    plugin.getLogger().info("Loaded " + waterfallsLoaded + " waterfalls");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.runTaskAsynchronously(plugin);
+    }
+
+    public void createWaterfall(Location loc) {
+//        Block block = loc.getBlock();
+//        Position pos = new Position(block.getX(), block.getY(), block.getZ());
+//        WaterfallEmitter emitter = new WaterfallEmitter(loc);
+//        waterfalls.put(pos, emitter);
     }
 
     public World asBukkit() {
