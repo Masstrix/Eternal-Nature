@@ -33,11 +33,15 @@ public class AgeCookItem implements AgeItem {
     private int ticksRandom;
     private boolean baked;
     private EternalNature plugin;
+    private double heat;
 
     public AgeCookItem(EternalNature plugin, Item item) {
         this.plugin = plugin;
         this.item = item;
-        this.ticksRandom = MathUtil.randomInt(5, 10);
+        WorldData data = plugin.getEngine().getWorldProvider().getWorld(item.getWorld());
+        Location loc = item.getLocation();
+        heat = data.getBlockTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+        this.ticksRandom = Math.min(MathUtil.randomInt(130, 240) - (((int) heat) - 25), 40);
     }
 
     /**
@@ -63,10 +67,7 @@ public class AgeCookItem implements AgeItem {
      * @return if the area is hot enough to cook the item.
      */
     public boolean isHotEnough() {
-        WorldData data = plugin.getEngine().getWorldProvider().getWorld(item.getWorld());
-        Location loc = item.getLocation();
-        double localTemp = data.getBiomeTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-        return localTemp > 25;
+        return heat > 25;
     }
 
     /**
