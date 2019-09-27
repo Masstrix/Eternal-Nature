@@ -28,6 +28,7 @@ biome:
   mountain_edge: 6
   savanna: 30
   jungle: 35
+  badlands: 30
   jungle_edge: 28
   desert: 40
   desert_hills: 42
