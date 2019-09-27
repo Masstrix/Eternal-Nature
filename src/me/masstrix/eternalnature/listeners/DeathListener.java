@@ -16,11 +16,14 @@
 
 package me.masstrix.eternalnature.listeners;
 
+import me.masstrix.eternalnature.EternalNature;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +44,12 @@ public class DeathListener implements Listener {
         customReasons.put(player.getUniqueId(), message);
     }
 
+    private EternalNature plugin;
+
+    public DeathListener(EternalNature plugin) {
+        this.plugin = plugin;
+    }
+
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
@@ -51,5 +60,15 @@ public class DeathListener implements Listener {
         }
         // Remove any instance of the player
         customReasons.remove(player.getUniqueId());
+    }
+
+    @EventHandler
+    public void on(PlayerRespawnEvent event) {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                plugin.getEngine().getUserData(event.getPlayer().getUniqueId()).resetTemperature();
+            }
+        }.runTaskLater(plugin, 3);
     }
 }

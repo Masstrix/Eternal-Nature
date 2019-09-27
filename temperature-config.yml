@@ -42,7 +42,7 @@ biome:
 weather:
   clear: 0
   rain: -5
-  thunder: -8
+  storm: -8
   
 blocks:
   lava: 500

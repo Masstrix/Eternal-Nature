@@ -27,6 +27,7 @@ import me.masstrix.eternalnature.util.VersionChecker;
 import org.bukkit.Bukkit;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -70,15 +71,9 @@ public class EternalNature extends JavaPlugin {
         engine.start();
 
         registerCommands(new HydrateCommand(this), new NatureCommand(this), new TestCommand());
-
-        PluginManager manager = Bukkit.getPluginManager();
-        manager.registerEvents(new MoveListener(this), this);
-        manager.registerEvents(new ConnectionListener(this), this);
-        manager.registerEvents(new ConsumeListener(this), this);
-        manager.registerEvents(new ChunkListener(this), this);
-        manager.registerEvents(new BlockListener(this), this);
-        manager.registerEvents(new ItemListener(this), this);
-        manager.registerEvents(settingsMenu, this);
+        registerListeners(new MoveListener(this), new ConnectionListener(this),
+                new ConsumeListener(this), new ChunkListener(this), new BlockListener(this),
+                new ItemListener(this), new DeathListener(this), settingsMenu);
 
         // Only check for updates if enabled.
         if (systemConfig.isEnabled(ConfigOption.UPDATES_CHECK)) {
@@ -117,5 +112,10 @@ public class EternalNature extends JavaPlugin {
             pc.setExecutor(cmd);
             pc.setTabCompleter(cmd);
         }
+    }
+
+    private void registerListeners(Listener... listeners) {
+        PluginManager manager = Bukkit.getPluginManager();
+        for (Listener l : listeners) manager.registerEvents(l, this);
     }
 }

@@ -40,6 +40,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,6 +91,14 @@ public class UserData implements EternalUser {
     }
 
     /**
+     * Resets the players temperature to the exact temperature to where they currently are.
+     */
+    public void resetTemperature() {
+        tick();
+        this.temperature = tempExact;
+    }
+
+    /**
      * Tick the players data. This will do all necessary updates for the player.
      */
     public final void tick() {
@@ -102,8 +112,8 @@ public class UserData implements EternalUser {
 
         // Handle temperature ticking.
         if (data != null && config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) {
-            float emission = 0;
             boolean inWater = isBlockWater(loc.getBlock());
+            float emission = 0;
             emission += data.getBlockTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
 
             // If the world has a height gradient add it to the temperature
@@ -124,7 +134,7 @@ public class UserData implements EternalUser {
             }
 
             // Add armor to temp.
-            ItemStack[] armor =  player.getEquipment().getArmorContents();
+            ItemStack[] armor = player.getEquipment().getArmorContents();
             for (ItemStack i : armor) {
                 if (i == null) continue;
                 emission += tempData.getArmorModifier(i.getType());
@@ -160,9 +170,11 @@ public class UserData implements EternalUser {
                     damageTimer.start();
                     damageCustom(player, 1, config.getString(ConfigOption.MSG_DEATH_HEAT));
                 }
-            }
-            else if (this.temperature <= tempData.getFreezingPoint()
+            } else if (this.temperature <= tempData.getFreezingPoint()
                     && config.isEnabled(ConfigOption.TEMPERATURE_FREEZE)) {
+                player.removePotionEffect(PotionEffectType.SLOW);
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 120,
+                        1, true, false, true));
                 damageTimer.startIfNew();
                 if (damageTimer.hasPassed(3000)) {
                     damageTimer.start();
