@@ -138,8 +138,8 @@ public class SettingsMenu implements Listener {
             player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1, 1);
         }));
         buttons.add(new Button(main, asSlot(3, 1), () -> new ItemBuilder(Material.WATER_BUCKET)
-                .setName("&aWaterfalls")
-                .addLore("", "&cFeature currently disabled in", "&cthis build. Will be added soon.")
+                .setName("&7Waterfalls")
+                .addLore("", "&7Waterfalls will be added in a future", "update.", "", "&cUnavailable")
                 //.addSwitch("Currently:", config.isEnabled(ConfigOption.WATERFALLS))
                 .build()).setToggle("Waterfalls", () -> false /*() -> config.isEnabled(ConfigOption.WATERFALLS)*/)
                 /*.onClick(player -> {
@@ -218,7 +218,8 @@ public class SettingsMenu implements Listener {
         buttons.add(new Button(other, asSlot(1, 5), () -> new ItemBuilder(Material.WRITABLE_BOOK)
                 .setName("&aSave Data")
                 .addLore("", "Set if chunk data is saved to disk/database.", "Having it saved saves time",
-                        "regenerating the chunk reducing", "load on the server", "")
+                        "regenerating the chunk reducing", "load on the server", "",
+                        "&7This currently affects nothing in this", "version.", "")
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_SAVE_DATA))
                 .build()).setToggle("Update Notifications", () -> config.isEnabled(ConfigOption.TEMPERATURE_SAVE_DATA))
                 .onClick(player -> {
