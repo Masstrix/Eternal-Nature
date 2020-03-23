@@ -121,7 +121,7 @@ public class SettingsMenu implements Listener {
                 .addLore("",
                         (config.isEnabled(ConfigOption.UPDATES_NOTIFY) ? "&a" : "&c") + " ▪&7 Update Notifications",
                         (config.isEnabled(ConfigOption.UPDATES_CHECK) ? "&a" : "&c") + " ▪&7 Update Checking",
-                        (config.isEnabled(ConfigOption.TEMPERATURE_SAVE_DATA) ? "&a" : "&c") + " ▪&7 Save Data",
+                        //(config.isEnabled(ConfigOption.TEMPERATURE_SAVE_DATA) ? "&a" : "&c") + " ▪&7 Save Data",
                         "",
                         "&eClick to view & edit")
                 .build()).onClick(player -> {
@@ -215,18 +215,18 @@ public class SettingsMenu implements Listener {
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
-        buttons.add(new Button(other, asSlot(1, 5), () -> new ItemBuilder(Material.WRITABLE_BOOK)
-                .setName("&aSave Data")
-                .addLore("", "Set if chunk data is saved to disk/database.", "Having it saved saves time",
-                        "regenerating the chunk reducing", "load on the server", "",
-                        "&7This currently affects nothing in this", "version.", "")
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_SAVE_DATA))
-                .build()).setToggle("Update Notifications", () -> config.isEnabled(ConfigOption.TEMPERATURE_SAVE_DATA))
-                .onClick(player -> {
-                    config.toggle(ConfigOption.TEMPERATURE_SAVE_DATA);
-                    config.save();
-                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
-                }));
+//        buttons.add(new Button(other, asSlot(1, 5), () -> new ItemBuilder(Material.WRITABLE_BOOK)
+//                .setName("&aSave Data")
+//                .addLore("", "Set if chunk data is saved to disk/database.", "Having it saved saves time",
+//                        "regenerating the chunk reducing", "load on the server", "",
+//                        "&7This currently affects nothing in this", "version.", "")
+//                .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_SAVE_DATA))
+//                .build()).setToggle("Update Notifications", () -> config.isEnabled(ConfigOption.TEMPERATURE_SAVE_DATA))
+//                .onClick(player -> {
+//                    config.toggle(ConfigOption.TEMPERATURE_SAVE_DATA);
+//                    config.save();
+//                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+//                }));
 
         // Hydration Menu buttons
         buttons.add(new Button(hydration, 0, backIcon).onClick(player -> {

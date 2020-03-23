@@ -34,4 +34,12 @@ public interface EternalUser {
      * @param amount how much to hydrate the player by.
      */
     void hydrate(float amount);
+
+    /**
+     * Returns if the player currently has thirst. If the player is thirsty there
+     * hydration will decrease at a faster than normal rate.
+     *
+     * @return if the player is currently thirsty.
+     */
+    boolean isThirsty();
 }

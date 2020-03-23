@@ -14,30 +14,31 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.command;
+package me.masstrix.eternalnature.core.temperature;
 
-//import me.masstrix.eternalnature.core.block.Pineapple;
-import org.bukkit.entity.Player;
+import org.bukkit.World;
 
-@EternalCommand.PlayerOnly
-public class TestCommand extends EternalCommand {
+import java.util.HashMap;
+import java.util.Map;
 
-    public TestCommand() {
-        super("test");
+public class TemperatureTimeModifier implements TemperatureModifier {
+
+    private Map<Long, Double> mappings = new HashMap<>();
+    private World.Environment environment;
+    private World world;
+
+    public TemperatureTimeModifier(World world) {
+        this.world = world;
+        this.environment = world.getEnvironment();
     }
 
-    //private Pineapple pineapple;
+    public void set(long time, double modifier) {
+
+    }
 
     @Override
-    public void execute(String[] args) {
-        Player player = (Player) getSender();
-
-//        if (pineapple == null) {
-//            pineapple = new Pineapple(player.getLocation());
-//        }
-//
-//        if (args.length > 0) {
-//            pineapple.setAge(Integer.parseInt(args[0]));
-//        }
+    public double getTemperature(int x, int y, int z) {
+        long time = world.getTime();
+        return 0;
     }
 }

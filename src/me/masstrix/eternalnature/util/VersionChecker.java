@@ -16,9 +16,13 @@
 
 package me.masstrix.eternalnature.util;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
+import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
@@ -26,6 +30,9 @@ import java.util.concurrent.Executors;
 
 public class VersionChecker {
 
+    private static final String SPIGET_URL = "https://api.spiget.org/v2/resources/";
+    private static final String LATEST_VERSION = "/versions/latest";
+    private static final Gson gson = new Gson();
     private static ExecutorService task = Executors.newSingleThreadExecutor(r -> new Thread(r, "VersionChecker"));
     private int id;
     private String current;
@@ -43,12 +50,27 @@ public class VersionChecker {
     public void run(VersionCallback<VersionMeta> callback) {
         task.execute(() -> {
             try {
-                HttpURLConnection con = (HttpURLConnection) (
-                        new URL("https://api.spigotmc.org/legacy/update.php?resource=" + id)).openConnection();
-                con.setDoOutput(true);
-                con.setRequestMethod("POST");
-                String latest = (new BufferedReader(new InputStreamReader(con.getInputStream()))).readLine();
-                callback.done(new VersionMeta(current, latest));
+                URL url = new URL(SPIGET_URL + id + LATEST_VERSION + "?" + System.currentTimeMillis());
+                HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+                conn.setUseCaches(true);
+                conn.addRequestProperty("User-Agent", "Eternal Systems");
+                conn.setDoOutput(true);
+
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String input;
+                StringBuilder content = new StringBuilder();
+                while ((input = br.readLine()) != null) {
+                    content.append(input);
+                }
+                br.close();
+                JsonObject statistics;
+                try {
+                    statistics = gson.fromJson(content.toString(), JsonObject.class);
+                    callback.done(new VersionMeta(current, statistics.get("name").getAsString()));
+                } catch (JsonParseException e) {
+                    e.printStackTrace();
+                    callback.done(new VersionMeta(current, "unknown"));
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 callback.done(new VersionMeta(current, "unknown"));
@@ -68,7 +90,7 @@ public class VersionChecker {
     /**
      * Meta for a plugins version returned in {@link VersionCallback#done(VersionMeta)}.
      */
-    public class VersionMeta {
+    public static class VersionMeta {
         private String currentStr, latestStr;
         private byte[] current = null, latest = null;
         private PluginVersionState state;
@@ -136,7 +158,7 @@ public class VersionChecker {
         }
 
         private static boolean isBehind(byte[] c, byte[] l) {
-            int v = c.length > l.length ? c.length : l.length;
+            int v = Math.max(c.length, l.length);
             for (int i = 0; i < v; i++) {
                 byte cu = c.length > i ? c[i] : -1;
                 byte la = l.length > i ? l[i] : -1;

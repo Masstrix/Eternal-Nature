@@ -22,6 +22,7 @@ import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.metric.Metrics;
 import me.masstrix.eternalnature.listeners.*;
 import me.masstrix.eternalnature.menus.SettingsMenu;
+import me.masstrix.eternalnature.util.MinecraftVersion;
 import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.eternalnature.util.VersionChecker;
 import org.bukkit.Bukkit;
@@ -35,11 +36,13 @@ import java.util.logging.Level;
 
 public class EternalNature extends JavaPlugin {
 
+    private static final MinecraftVersion REQUIRED_VER = new MinecraftVersion("1.14");
     private EternalEngine engine;
     private SystemConfig systemConfig;
     private EternalNatureAPI api;
     private VersionChecker.VersionMeta versionMeta = null;
     private SettingsMenu settingsMenu;
+    private boolean started = false;
 
     public SystemConfig getSystemConfig() {
         return systemConfig;
@@ -63,6 +66,20 @@ public class EternalNature extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        MinecraftVersion serverVer = MinecraftVersion.getServerVersion();
+
+        // Make sure the server is new enough to run the plugin
+        if (serverVer.isBehindVersion(REQUIRED_VER)) {
+            getLogger().warning("Unsupported version!"
+                    + " This version requires the server "
+                    + "to be running at least "
+                    + REQUIRED_VER.getName());
+            getPluginLoader().disablePlugin(this);
+            return;
+        }
+
+        started = true;
+
         systemConfig = new SystemConfig(this);
         engine = new EternalEngine(this);
         api = new EternalNatureAPI(this);
@@ -73,7 +90,8 @@ public class EternalNature extends JavaPlugin {
         registerCommands(new HydrateCommand(this), new NatureCommand(this), new TestCommand());
         registerListeners(new MoveListener(this), new ConnectionListener(this),
                 new ConsumeListener(this), new ChunkListener(this), new BlockListener(this),
-                new ItemListener(this), new DeathListener(this), settingsMenu);
+                new ItemListener(this), new DeathListener(this), new InteractListener(this),
+                settingsMenu);
 
         // Only check for updates if enabled.
         if (systemConfig.isEnabled(ConfigOption.UPDATES_CHECK)) {
@@ -102,7 +120,7 @@ public class EternalNature extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        engine.shutdown();
+        if (started) engine.shutdown();
     }
 
     private void registerCommands(EternalCommand... commands) {

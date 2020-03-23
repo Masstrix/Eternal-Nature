@@ -66,6 +66,8 @@ public class UserData implements EternalUser {
     private float hydration = 20; // max is 20
     private float distanceWalked;
     private int distanceNextThirst;
+    private int thirstTimer = 0;
+    private long constantTick = 0;
     private boolean debugEnabled = false;
 
     public UserData(EternalNature plugin, UUID id) {
@@ -202,6 +204,14 @@ public class UserData implements EternalUser {
             }
         }
 
+        // Keeps a consistent 1s tick rate
+        if (constantTick == 0 || constantTick - System.currentTimeMillis() >= 1000) {
+            // Count down the thirst timer
+            if (thirstTimer > 0) {
+                thirstTimer--;
+            }
+        }
+
         if (!config.isEnabled(ConfigOption.TEMPERATURE_ENABLED) || !debugEnabled) return;
         World world = player.getWorld();
         final double MAX = tempData.getMaxBiomeTemp();
@@ -258,7 +268,8 @@ public class UserData implements EternalUser {
         if (config.isEnabled(ConfigOption.HYDRATION_ENABLED)) {
             if (config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE) == StatusRenderMethod.BOSSBAR) {
                 if (hydrationBar == null) {
-                    hydrationBar = Bukkit.createBossBar("h2-", BarColor.BLUE, BarStyle.SEGMENTED_12);
+                    BarColor color = isThirsty() ? BarColor.GREEN : BarColor.BLUE;
+                    hydrationBar = Bukkit.createBossBar("h2-", color, BarStyle.SEGMENTED_12);
                     hydrationBar.addPlayer(player);
                 }
                 hydrationBar.setProgress(Math.abs(hydration / 20));
@@ -275,14 +286,18 @@ public class UserData implements EternalUser {
                         && flicker.isEnabled() ? "c" : "f";
                 StringBuilder h20 = new StringBuilder("\u00A7" + flash + "H²O ");
                 float mid = Math.round(hydration / 2);
+                char bubble = '\u2B58'; // Unicode 11096
                 for (int i = 0; i < 10; i++) {
                     if (i < mid) {
-                        h20.append("\u00A7b⭘");
+                        if (isThirsty()) h20.append(ChatColor.GREEN);
+                        else h20.append(ChatColor.AQUA);
                     } else if (i > mid) {
-                        h20.append("\u00A78⭘");
+                        h20.append("\u00A78");
                     } else {
-                        h20.append("\u00A73⭘");
+                        if (isThirsty()) h20.append(ChatColor.DARK_GREEN);
+                        else h20.append(ChatColor.DARK_AQUA);
                     }
+                    h20.append(bubble);
                 }
                 actionBar.append(h20);
             }
@@ -383,6 +398,23 @@ public class UserData implements EternalUser {
      */
     public void setHydration(float hydration) {
         this.hydration = hydration < 0 ? 0 : Math.min(hydration, MAX_THIRST);
+    }
+
+    /**
+     * @return if the user is currently thirsty.
+     */
+    public boolean isThirsty() {
+        return thirstTimer > 0;
+    }
+
+    /**
+     * Adds time to the players thirst in seconds.
+     *
+     * @param sec time in seconds on how long to add to the players
+     *            thirst effect.
+     */
+    public void addThirst(int sec) {
+        thirstTimer += sec;
     }
 
     @Override
