@@ -133,7 +133,8 @@ public class UserData implements EternalUser {
             emission += data.getBlockTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
 
             regionScanner.tick();
-            emission += regionScanner.getTemperatureEmission();
+            float blockEmission = (float) regionScanner.getTemperatureEmission();
+            if (blockEmission > emission) emission = blockEmission;
 
             // If the world has a height gradient add it to the temperature
             HeightGradient gradient = HeightGradient.getGradient(loc.getWorld().getEnvironment());
@@ -174,9 +175,11 @@ public class UserData implements EternalUser {
                 if (inWater && tempExact < temperature) {
                     division = 10;
                 }
-                float toAdd = diff / division;
-                if (this.tempExact > this.temperature) this.temperature += toAdd;
-                else this.temperature -= toAdd;
+                int maxDelta = config.getInt(ConfigOption.TEMPERATURE_MAX_DELTA);
+                float delta = diff / division;
+                if (delta > maxDelta) delta = maxDelta;
+                if (this.tempExact > this.temperature) this.temperature += delta;
+                else this.temperature -= delta;
             } else if (diff < 0.1) {
                 temperature = tempExact;
             }

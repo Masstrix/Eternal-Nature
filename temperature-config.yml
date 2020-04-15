@@ -48,7 +48,7 @@ weather:
 blocks:
   lava: 100
   fire: 60
-  torch: 20
+  torch: 25
   campfire: 50
   lantern: 2
   glowstone: 10

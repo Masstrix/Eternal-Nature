@@ -63,8 +63,10 @@ temperature:
   burn: true
   freeze: true
   sweat: true
-  cold-damage: -5
-  heat-damage: 50
+  max-delta-change: 15
+  damage-threshold:
+    cold: -5
+    heat: 50
   display:
     text: "%temperature% %temp_icon% %temp_simple%"
     style: BOSSBAR
