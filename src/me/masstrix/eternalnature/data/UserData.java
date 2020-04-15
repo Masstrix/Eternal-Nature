@@ -160,6 +160,18 @@ public class UserData implements EternalUser {
                 emission += tempData.getArmorModifier(i.getType());
             }
 
+            // Add temperature depending on what the player is holding
+            Material mainHand = player.getInventory().getItemInMainHand().getType();
+            Material offHand = player.getInventory().getItemInOffHand().getType();
+            if (mainHand != Material.AIR) {
+                float mainTemp = tempData.getBlockEmission(mainHand);
+                emission += mainTemp / 10;
+            }
+            if (offHand != Material.AIR) {
+                float offTemp = tempData.getBlockEmission(offHand);
+                emission += offTemp / 10;
+            }
+
             if (!Float.isInfinite(emission) && !Float.isNaN(emission)) {
                 this.tempExact = emission;
                 tempData.updateMinMaxTempCache(tempExact);
