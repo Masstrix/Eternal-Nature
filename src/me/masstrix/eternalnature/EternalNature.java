@@ -87,7 +87,7 @@ public class EternalNature extends JavaPlugin {
 
         engine.start();
 
-        registerCommands(new HydrateCommand(this), new NatureCommand(this), new TestCommand());
+        registerCommands(new HydrateCommand(this), new NatureCommand(this));
         registerListeners(new MoveListener(this), new ConnectionListener(this),
                 new ConsumeListener(this), new ChunkListener(this), new BlockListener(this),
                 new ItemListener(this), new DeathListener(this), new InteractListener(this),

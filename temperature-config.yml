@@ -46,14 +46,14 @@ weather:
   storm: -8
   
 blocks:
-  lava: 500
-  fire: 100
-  torch: 40
-  campfire: 80
-  lantern: 30
-  glowstone: 20
+  lava: 100
+  fire: 60
+  torch: 20
+  campfire: 50
+  lantern: 2
+  glowstone: 10
   netherrack: 10
-  jack_o_lantern: 20
+  jack_o_lantern: 13
   snow: -2
   end_stone: -3
   end_portal: -5

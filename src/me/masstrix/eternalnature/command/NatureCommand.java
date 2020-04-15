@@ -45,6 +45,7 @@ public class NatureCommand extends EternalCommand {
             msg("     &7&oby Masstrix");
             msg("");
             msg("&a/eternal reload &7- Reloads all config files.");
+            msg("&a/eternal resetConfig &7- Resets all config files.");
             msg("&a/eternal stats &7- Shows background stats.");
             msg("&a/eternal version &7- View version and update info.");
             msg("&a/eternal setting &7- Opens a GUI to edit settings.");
@@ -54,10 +55,19 @@ public class NatureCommand extends EternalCommand {
         }
 
         if (args[0].equalsIgnoreCase("reload")) {
+            msg("Reloading files...");
             plugin.getEngine().getTemperatureData().loadConfigData();
             plugin.getSystemConfig().reload();
-            msg("Reloading files...");
             msg("&aReloaded config files");
+        }
+
+        else if (args[0].equalsIgnoreCase("resetConfig")) {
+            msg("Resetting files...");
+            plugin.saveResource("temperature-config.yml", true);
+            plugin.saveResource("config.yml", true);
+            plugin.getEngine().getTemperatureData().loadConfigData();
+            plugin.getSystemConfig().reload();
+            msg("&aReset config files back to default");
         }
 
         else if (args[0].equalsIgnoreCase("settings")) {
@@ -128,7 +138,7 @@ public class NatureCommand extends EternalCommand {
     @Override
     public List<String> tabComplete(String[] args) {
         if (args.length == 1) {
-            return Arrays.asList("reload", "stats", "version", "settings");
+            return Arrays.asList("reload", "stats", "version", "settings", "resetConfig");
         }
         return super.tabComplete(args);
     }
