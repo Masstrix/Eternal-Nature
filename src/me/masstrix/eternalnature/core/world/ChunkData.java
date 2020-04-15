@@ -34,6 +34,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Deprecated
 public class ChunkData implements EternalChunk {
 
     private static final int VERSION = 1;

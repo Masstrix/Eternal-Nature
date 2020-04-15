@@ -21,6 +21,7 @@ import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.data.UserData;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -51,23 +52,22 @@ public class InteractListener implements Listener {
             return;
         }
 
-        Vector looking = player.getEyeLocation().getDirection().clone();
-        Location loc = player.getEyeLocation().clone();
+        Location origin = player.getEyeLocation().clone();
+        Vector direction = origin.getDirection().clone().normalize();
 
         // Shoot ray in players direction to check if a block of water is in
         // line of sight.
         for (int i = 0; i < 3; i++) {
-            looking.multiply(i);
-            loc.add(looking);
-
-            Block block = loc.getBlock();
-            if (!block.isPassable()) // Stop if hit a solid block
-                break;
+            origin.add(direction);
+            Block block = origin.getBlock();
             if (block.isLiquid() && block.getType() == Material.WATER) {
-                loc.getWorld().playSound(player.getEyeLocation(), Sound.ENTITY_GENERIC_DRINK, 1, 1);
                 UserData data = engine.getUserData(player.getUniqueId());
-                data.hydrate(1);
-                data.addThirst(10);
+                if (!data.isHydrationFull()) {
+                    data.hydrate(1);
+                    data.addThirst(10);
+                    origin.getWorld().playSound(player.getEyeLocation(), Sound.ENTITY_GENERIC_DRINK, 1, 1);
+                    block.getWorld().spawnParticle(Particle.WATER_SPLASH, origin, 3, 0, 0, 0, 0);
+                }
                 break;
             }
         }

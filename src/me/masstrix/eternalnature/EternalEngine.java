@@ -102,6 +102,7 @@ public class EternalEngine {
                     user = new UserData(plugin, uuid,
                             (float) config.getDouble(uuid + ".temp", 0),
                             (float) config.getDouble(uuid+ ".hydration", 0));
+                    user.setThirstTimer(config.getInt(uuid + ".effects.thirst", 0));
                 }
             } catch (IOException | InvalidConfigurationException e) {
                 e.printStackTrace();

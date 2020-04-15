@@ -23,6 +23,7 @@ import me.masstrix.eternalnature.core.HeightGradient;
 import me.masstrix.eternalnature.core.TemperatureData;
 import me.masstrix.eternalnature.config.StatusRenderMethod;
 import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.core.world.RegionScanner;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.listeners.DeathListener;
@@ -59,6 +60,7 @@ public class UserData implements EternalUser {
 
     private Stopwatch damageTimer = new Stopwatch();
     private Flicker flicker = new Flicker(300);
+    private RegionScanner regionScanner;
 
     private BossBar hydrationBar, tempBar;
     private UUID id;
@@ -67,8 +69,9 @@ public class UserData implements EternalUser {
     private float distanceWalked;
     private int distanceNextThirst;
     private int thirstTimer = 0;
-    private long constantTick = 0;
+    private long constantTick = -1;
     private boolean debugEnabled = false;
+    private PlayerIdle playerIdle = new PlayerIdle();
 
     public UserData(EternalNature plugin, UUID id) {
         this.id = id;
@@ -92,6 +95,11 @@ public class UserData implements EternalUser {
         distanceNextThirst = MathUtil.randomInt(dehydrateChance, dehydrateChance + dehydrateChanceRange);
     }
 
+    public UserData setThirstTimer(int time) {
+        this.thirstTimer = time;
+        return this;
+    }
+
     /**
      * Resets the players temperature to the exact temperature to where they currently are.
      */
@@ -105,7 +113,13 @@ public class UserData implements EternalUser {
      */
     public final void tick() {
         Player player = Bukkit.getPlayer(id);
-        if (player == null) return;
+        if (player == null || !player.isOnline()) return;
+        if (regionScanner == null) {
+            this.regionScanner = new RegionScanner(plugin, this, player);
+            this.regionScanner.setScanScale(11, 5);
+        }
+
+        playerIdle.check(player.getLocation());
 
         WorldProvider provider = plugin.getEngine().getWorldProvider();
         WorldData data = provider.getWorld(player.getWorld());
@@ -117,6 +131,9 @@ public class UserData implements EternalUser {
             boolean inWater = isBlockWater(loc.getBlock());
             float emission = 0;
             emission += data.getBlockTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+
+            regionScanner.tick();
+            emission += regionScanner.getTemperatureEmission();
 
             // If the world has a height gradient add it to the temperature
             HeightGradient gradient = HeightGradient.getGradient(loc.getWorld().getEnvironment());
@@ -205,11 +222,16 @@ public class UserData implements EternalUser {
         }
 
         // Keeps a consistent 1s tick rate
-        if (constantTick == 0 || constantTick - System.currentTimeMillis() >= 1000) {
+        if (System.currentTimeMillis() - constantTick >= 1000) {
             // Count down the thirst timer
             if (thirstTimer > 0) {
                 thirstTimer--;
+
+                if (MathUtil.chance(6)) {
+                    dehydrate(0.5);
+                }
             }
+            constantTick = System.currentTimeMillis();
         }
 
         if (!config.isEnabled(ConfigOption.TEMPERATURE_ENABLED) || !debugEnabled) return;
@@ -360,6 +382,17 @@ public class UserData implements EternalUser {
     }
 
     /**
+     * @return if the player is currently in idle.
+     */
+    public boolean isIdle() {
+        return playerIdle.isIdle();
+    }
+
+    public PlayerIdle getPlayerIdleInfo() {
+        return playerIdle;
+    }
+
+    /**
      * Sets if debug mode is enabled for this player. When debug mode is enabled
      * the local temperatures will be displayed around them along with extra info.
      *
@@ -389,6 +422,13 @@ public class UserData implements EternalUser {
     @Override
     public double getHydration() {
         return hydration;
+    }
+
+    /**
+     * @return if the players hydration is max.
+     */
+    public boolean isHydrationFull() {
+        return hydration >= 19.5;
     }
 
     /**
@@ -507,6 +547,7 @@ public class UserData implements EternalUser {
             config.load(file);
             config.set(id + ".temp", temperature);
             config.set(id + ".hydration", hydration);
+            config.set(id + ".effects.thirst", thirstTimer);
             config.save(file);
         } catch (IOException | InvalidConfigurationException e) {
             e.printStackTrace();
