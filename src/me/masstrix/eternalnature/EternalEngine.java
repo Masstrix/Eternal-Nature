@@ -16,10 +16,8 @@
 
 package me.masstrix.eternalnature;
 
-import me.masstrix.eternalnature.core.EternalWorker;
-import me.masstrix.eternalnature.core.Renderer;
-import me.masstrix.eternalnature.core.TemperatureData;
-import me.masstrix.eternalnature.core.UserWorker;
+import me.masstrix.eternalnature.core.*;
+import me.masstrix.eternalnature.core.entity.EntityStorage;
 import me.masstrix.eternalnature.core.world.*;
 import me.masstrix.eternalnature.data.UserData;
 import me.masstrix.eternalnature.util.Stopwatch;
@@ -41,6 +39,7 @@ public class EternalEngine {
     private WorldProvider worldProvider;
     private TemperatureData temperatureData;
     private AutoPlanter autoPlanter;
+    private EntityStorage entityStorage;
 
     private List<EternalWorker> workers = new ArrayList<>();
     private Map<UUID, UserData> users = new HashMap<>();
@@ -57,20 +56,42 @@ public class EternalEngine {
         enabled  = true;
         this.plugin = plugin;
         temperatureData = new TemperatureData(plugin);
+        entityStorage = new EntityStorage(plugin);
+        try {
+            entityStorage.restartSystem();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         registerWorkers(userWorker = new UserWorker(plugin, this),
                 renderer = new Renderer(plugin, this),
                 worldProvider = new WorldProvider(plugin),
                 autoPlanter = new AutoPlanter(plugin),
                 new AgingItemWorker(plugin),
-                new LeafEmitter(plugin),
+                new LeafEmitter(plugin, entityStorage),
                 new TreeSpreader(plugin));
 
         getWorker(TreeSpreader.class);
     }
 
+    public void updateSettings() {
+        plugin.getLogger().info("Updating settings");
+        for (EternalWorker worker : workers) {
+            if (ConfigReloadUpdate.class.isAssignableFrom(worker.getClass())) {
+                ((ConfigReloadUpdate) worker).updateSettings();
+            }
+        }
+    }
+
     void start() {
         loadPlayerData();
         workers.forEach(EternalWorker::start);
+    }
+
+    /**
+     * @return the entity storage.
+     */
+    public EntityStorage getEntityStorage() {
+        return entityStorage;
     }
 
     private void loadPlayerData() {

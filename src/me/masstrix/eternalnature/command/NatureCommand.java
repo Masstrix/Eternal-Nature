@@ -17,7 +17,9 @@
 package me.masstrix.eternalnature.command;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.config.ConfigOption;
+import me.masstrix.eternalnature.core.render.LeafParticle;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -49,25 +51,31 @@ public class NatureCommand extends EternalCommand {
             msg("&a/eternal stats &7- Shows background stats.");
             msg("&a/eternal version &7- View version and update info.");
             msg("&a/eternal setting &7- Opens a GUI to edit settings.");
+            msg("&a/eternal fixLeafEffect &7- Removes any stuck leaf particles.");
             msg("&a/hydrate <user> &7- Hydrates a user to max.");
             msg("");
             return;
         }
 
         if (args[0].equalsIgnoreCase("reload")) {
-            msg("Reloading files...");
+            msg(PluginData.PREFIX + "&7Reloading files...");
             plugin.getEngine().getTemperatureData().loadConfigData();
             plugin.getSystemConfig().reload();
-            msg("&aReloaded config files");
+            msg(PluginData.PREFIX + "&aReloaded config files");
+        }
+
+        else if (args[0].equalsIgnoreCase("fixLeafEffect")) {
+            int count = LeafParticle.removeBrokenParticles();
+            msg(PluginData.PREFIX + "Removed " + count + " leaf particles from the world.");
         }
 
         else if (args[0].equalsIgnoreCase("resetConfig")) {
-            msg("Resetting files...");
+            msg(PluginData.PREFIX + "&7Resetting files...");
             plugin.saveResource("temperature-config.yml", true);
             plugin.saveResource("config.yml", true);
             plugin.getEngine().getTemperatureData().loadConfigData();
             plugin.getSystemConfig().reload();
-            msg("&aReset config files back to default");
+            msg(PluginData.PREFIX + "&aReset config files back to default");
         }
 
         else if (args[0].equalsIgnoreCase("settings")) {
@@ -138,7 +146,7 @@ public class NatureCommand extends EternalCommand {
     @Override
     public List<String> tabComplete(String[] args) {
         if (args.length == 1) {
-            return Arrays.asList("reload", "stats", "version", "settings", "resetConfig");
+            return Arrays.asList("reload", "stats", "version", "settings", "resetConfig", "fixLeafEffect");
         }
         return super.tabComplete(args);
     }

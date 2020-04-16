@@ -28,7 +28,13 @@ general:
   
 global:
   waterfalls: true
-  falling-leaves: true
+  falling-leaves:
+    enabled: true
+    range: 12
+    fidelity: 3
+    max-particles: 300
+    scan-delay: 100
+    spawn-chance: 300
   randomly-spread-trees:
     enabled: true
     range: 20

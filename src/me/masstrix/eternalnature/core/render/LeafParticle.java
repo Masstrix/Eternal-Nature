@@ -20,19 +20,24 @@ import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.api.Leaf;
 import me.masstrix.eternalnature.core.CleanableEntity;
 import me.masstrix.eternalnature.core.EntityCleanup;
+import me.masstrix.eternalnature.core.entity.CachedEntity;
+import me.masstrix.eternalnature.core.entity.EntityOption;
+import me.masstrix.eternalnature.core.entity.EntityStorage;
 import me.masstrix.eternalnature.events.LeafSpawnEvent;
 import me.masstrix.eternalnature.util.MathUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.util.EulerAngle;
 
-public class LeafEffect implements CleanableEntity, Leaf {
+import java.util.logging.Level;
+
+public class LeafParticle extends CachedEntity implements CleanableEntity, Leaf {
 
     private ArmorStand leaf;
     private boolean alive;
@@ -46,7 +51,9 @@ public class LeafEffect implements CleanableEntity, Leaf {
      *
      * @param loc location to spawn the effect at.
      */
-    public LeafEffect(EternalNature plugin, Location loc) {
+    public LeafParticle(EntityStorage storage, EternalNature plugin, Location loc) {
+        super(storage);
+        super.options(EntityOption.REMOVE_ON_RESTART);
         lifeTime = MathUtil.randomInt(60, 120);
         fallRate = MathUtil.random().nextDouble() / 10;
 
@@ -55,7 +62,6 @@ public class LeafEffect implements CleanableEntity, Leaf {
         if (event.isCancelled()) {
             return;
         }
-
 
         leaf = loc.getWorld().spawn(loc.add(0, -0.5, 0), ArmorStand.class, a -> {
             a.setMarker(true);
@@ -71,8 +77,16 @@ public class LeafEffect implements CleanableEntity, Leaf {
                     getAngle(MathUtil.randomInt(90))));
         });
         alive = true;
+
+        // Add current session id to entity to keep it living if a flush is run.
+        leaf.setMetadata("session", new FixedMetadataValue(plugin, EntityStorage.SESSION_ID.hashCode()));
+
+        super.setWorld(loc.getWorld().getUID());
+        super.setEntityId(leaf.getUniqueId());
+
         // Cleans up the entity at start and stop of plugin
         new EntityCleanup(plugin, this);
+        super.cache();
     }
 
     @Override
@@ -89,6 +103,7 @@ public class LeafEffect implements CleanableEntity, Leaf {
     public void remove() {
         alive = false;
         leaf.remove();
+        getStorage().remove(this);
     }
 
     public void tick() {
@@ -117,5 +132,38 @@ public class LeafEffect implements CleanableEntity, Leaf {
     @Override
     public Entity[] getEntities() {
         return new Entity[] {leaf};
+    }
+
+    private static boolean removeIfMatches(Entity entity) {
+        if (!(entity instanceof ArmorStand)) return false;
+        ArmorStand stand = (ArmorStand) entity;
+        if (stand.hasMetadata("session") &&
+                stand.getMetadata("session").get(0).asInt()
+                == EntityStorage.SESSION_ID.hashCode())
+            return false;
+        return stand.isMarker() && !stand.hasGravity()
+                && stand.getItemInHand().getType() == Material.KELP;
+    }
+
+    /**
+     * Removes entities based on what they are holding and the options set on the armor stand.
+     * This is a dirty method of removing them if there are any issues of leaf particles being
+     * glitched.
+     *
+     * @return how many entities were removed.
+     */
+    public static int removeBrokenParticles() {
+        EternalNature.getPlugin(EternalNature.class).getLogger().log(Level.INFO,
+                "Doing dirty cleaning of potentially glitched leaf effects...");
+        int countCleaned = 0;
+        for (World world : Bukkit.getWorlds()) {
+            for (Entity e : world.getEntities()) {
+                if (removeIfMatches(e)) {
+                    e.remove();
+                    countCleaned++;
+                }
+            }
+        }
+        return countCleaned;
     }
 }

@@ -46,6 +46,7 @@ public class SystemConfig {
      */
     public void reload() {
         loadConfig(true);
+        plugin.getEngine().updateSettings();
     }
 
     /**
@@ -104,6 +105,7 @@ public class SystemConfig {
      */
     public void set(ConfigOption option, Object o) {
         config.set(option.key, o);
+        plugin.getEngine().updateSettings();
     }
 
     /**
@@ -114,7 +116,7 @@ public class SystemConfig {
      */
     public boolean toggle(ConfigOption option) {
         boolean b = !getBoolean(option);
-        config.set(option.key, b);
+        set(option, b);
         return b;
     }
 

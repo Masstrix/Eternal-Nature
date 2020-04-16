@@ -18,9 +18,13 @@ package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.ConfigOption;
+import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.core.ConfigReloadUpdate;
 import me.masstrix.eternalnature.core.EternalWorker;
-import me.masstrix.eternalnature.core.render.LeafEffect;
-import me.masstrix.eternalnature.util.CuboidScanner;
+import me.masstrix.eternalnature.core.entity.EntityStorage;
+import me.masstrix.eternalnature.core.render.LeafParticle;
+import me.masstrix.eternalnature.data.UserData;
+import me.masstrix.eternalnature.util.BlockScanner;
 import me.masstrix.eternalnature.util.MathUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -34,16 +38,34 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.HashSet;
 import java.util.Set;
 
-public class LeafEmitter implements EternalWorker {
+public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
 
-    private final int DEFAULT_SCAN_DELAY = 20 * 5;
+    private int spawnChance = 300;
+    private int maxParticles = 200;
+    private int scanDelay = 20 * 5;
     private EternalNature plugin;
     private Set<Location>  locations = new HashSet<>();
-    private Set<LeafEffect> effects = new HashSet<>();
+    private Set<LeafParticle> effects = new HashSet<>();
     private BukkitTask updater, spawner;
+    private EntityStorage storage;
+    private BlockScanner scanner;
 
-    public LeafEmitter(EternalNature plugin) {
+    public LeafEmitter(EternalNature plugin, EntityStorage storage) {
         this.plugin = plugin;
+        this.storage = storage;
+        this.scanner = new BlockScanner(plugin);
+        updateSettings();
+    }
+
+    @Override
+    public void updateSettings() {
+        SystemConfig config = plugin.getSystemConfig();
+        scanDelay = config.getInt(ConfigOption.LEAF_EFFECT_SCAN_DELAY);
+        maxParticles = config.getInt(ConfigOption.LEAF_EFFECT_MAX_PARTICLES);
+        spawnChance = config.getInt(ConfigOption.LEAF_EFFECT_CHANCE);
+        int range = config.getInt(ConfigOption.LEAF_EFFECT_RANGE);
+        scanner.setScanScale(range, range);
+        scanner.setFidelity(config.getInt(ConfigOption.LEAF_EFFECT_RANGE));
     }
 
     @Override
@@ -51,7 +73,7 @@ public class LeafEmitter implements EternalWorker {
         if (updater != null)
             updater.cancel();
         updater = new BukkitRunnable() { // Auto scan around players for new leaves.
-            int ticks = DEFAULT_SCAN_DELAY;
+            int ticks = scanDelay;
             int passed = 0;
             @Override
             public void run() {
@@ -59,30 +81,35 @@ public class LeafEmitter implements EternalWorker {
                     passed = 0;
                     if (!plugin.getSystemConfig().isEnabled(ConfigOption.LEAF_EFFECT)) return;
                     scan();
+                    // Reduce the amount of scans being done as more players are online
                     int online = Bukkit.getOnlinePlayers().size();
                     if (online > 20) {
-                        ticks = (int) Math.floor(online / 5) + DEFAULT_SCAN_DELAY;
+                        ticks = (online / 5) + scanDelay;
                     }
                 }
             }
         }.runTaskTimer(plugin, 10, 1);
 
+        // Stop a spawner if it has already been started.
         if (spawner != null)
             spawner.cancel();
-        spawner = new BukkitRunnable() { // Spawn leaf effects in valid locations found.
+
+        // Spawn leaf effects in valid locations found.
+        spawner = new BukkitRunnable() {
             @Override
             public void run() {
-                Set<LeafEffect> dead = new HashSet<>();
-                for (LeafEffect effect : effects) {
+                Set<LeafParticle> dead = new HashSet<>();
+                for (LeafParticle effect : effects) {
                     effect.tick();
                     if (!effect.isAlive())
                         dead.add(effect);
                 }
                 effects.removeAll(dead);
+                if (effects.size() >= maxParticles) return;
                 if (!plugin.getSystemConfig().isEnabled(ConfigOption.LEAF_EFFECT)) return;
                 for (Location loc : locations) {
-                    if (MathUtil.chance(300)) {
-                        effects.add(new LeafEffect(plugin, loc));
+                    if (MathUtil.chance(spawnChance)) {
+                        effects.add(new LeafParticle(storage, plugin, loc));
                     }
                 }
             }
@@ -96,16 +123,17 @@ public class LeafEmitter implements EternalWorker {
     public void scan() {
         locations.clear();
         for (Player player : Bukkit.getOnlinePlayers()) {
-            Location loc = player.getLocation();
-            new CuboidScanner(6, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(),
-                    (CuboidScanner.CuboidTask) (x, y, z) -> {
-                Location blockLoc = new Location(loc.getWorld(), x, y, z);
-                        Block block = blockLoc.getBlock();
-                        Block below = block.getRelative(BlockFace.DOWN);
-                        if (block.getBlockData() instanceof Leaves && below.isPassable()) {
-                            locations.add(blockLoc.add(0.5, 0, 0.5));
-                        }
-            }).start();
+            // Ignore afk players.
+            UserData userData = plugin.getEngine().getUserData(player.getUniqueId());
+            if (userData.getPlayerIdleInfo().isDeepIdle()) continue;
+
+            // Set the location of the player and scan around them.
+            scanner.setLocation(player.getLocation());
+            scanner.scan(block -> {
+                Block below = block.getRelative(BlockFace.DOWN);
+                if (block.getBlockData() instanceof Leaves && below.isPassable())
+                    locations.add(block.getLocation().add(0.5, 0, 0.5));
+            });
         }
     }
 
@@ -117,7 +145,7 @@ public class LeafEmitter implements EternalWorker {
         updater.cancel();
         spawner.cancel();
         locations.clear();
-        effects.forEach(LeafEffect::remove);
+        effects.forEach(LeafParticle::remove);
         effects.clear();
     }
 }

@@ -20,8 +20,14 @@ public enum ConfigOption {
     UPDATES_NOTIFY("general.notify-update-join", true),
     UPDATES_CHECK("general.check-for-updates", true),
 
+    LEAF_EFFECT("global.falling-leaves.enabled", true),
+    LEAF_EFFECT_RANGE("global.falling-leaves.range", 6),
+    LEAF_EFFECT_FIDELITY("global.falling-leaves.fidelity", 3),
+    LEAF_EFFECT_MAX_PARTICLES("global.falling-leaves.max-particles", 200),
+    LEAF_EFFECT_SCAN_DELAY("global.falling-leaves.scan-delay", 100),
+    LEAF_EFFECT_CHANCE("global.falling-leaves.spawn-chance", 300),
+
     WATERFALLS("global.waterfalls", true),
-    LEAF_EFFECT("global.falling-leaves", true),
     RANDOM_TREE_SPREAD("global.randomly-spread-trees.enabled", true),
     RANDOM_TREE_SPREAD_RANGE("global.randomly-spread-trees.range", 20),
     RANDOM_TREE_SPREAD_SCANS("global.randomly-spread-trees.scans", 2),
