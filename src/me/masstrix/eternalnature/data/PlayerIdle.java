@@ -41,6 +41,9 @@ public class PlayerIdle {
             this.x = x;
             this.y = y;
             this.z = z;
+            idle = false;
+            deepIdle = false;
+            afk = false;
         }
         else if (!idle)
             idle = System.currentTimeMillis() - lastMovement > 10000; // 10s

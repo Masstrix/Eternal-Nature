@@ -21,7 +21,6 @@ import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.metric.Metrics;
 import me.masstrix.eternalnature.listeners.*;
-import me.masstrix.eternalnature.menus.SettingsMenu;
 import me.masstrix.eternalnature.util.MinecraftVersion;
 import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.eternalnature.util.VersionChecker;
@@ -41,7 +40,6 @@ public class EternalNature extends JavaPlugin {
     private SystemConfig systemConfig;
     private EternalNatureAPI api;
     private VersionChecker.VersionMeta versionMeta = null;
-    private SettingsMenu settingsMenu;
     private boolean started = false;
 
     public SystemConfig getSystemConfig() {
@@ -58,10 +56,6 @@ public class EternalNature extends JavaPlugin {
 
     public VersionChecker.VersionMeta getVersionMeta() {
         return versionMeta;
-    }
-
-    public SettingsMenu getSettingsMenu() {
-        return settingsMenu;
     }
 
     @Override
@@ -83,15 +77,13 @@ public class EternalNature extends JavaPlugin {
         systemConfig = new SystemConfig(this);
         engine = new EternalEngine(this);
         api = new EternalNatureAPI(this);
-        settingsMenu = new SettingsMenu(this);
 
         engine.start();
 
         registerCommands(new HydrateCommand(this), new NatureCommand(this));
         registerListeners(new MoveListener(this), new ConnectionListener(this),
                 new ConsumeListener(this), new ChunkListener(this), new BlockListener(this),
-                new ItemListener(this), new DeathListener(this), new InteractListener(this),
-                settingsMenu);
+                new ItemListener(this), new DeathListener(this), new InteractListener(this));
 
         // Only check for updates if enabled.
         if (systemConfig.isEnabled(ConfigOption.UPDATES_CHECK)) {
@@ -123,7 +115,7 @@ public class EternalNature extends JavaPlugin {
         if (started) engine.shutdown();
     }
 
-    private void registerCommands(EternalCommand... commands) {
+    protected void registerCommands(EternalCommand... commands) {
         for (EternalCommand cmd : commands) {
             PluginCommand pc = Bukkit.getPluginCommand(cmd.getName());
             if (pc == null) continue;
@@ -132,7 +124,7 @@ public class EternalNature extends JavaPlugin {
         }
     }
 
-    private void registerListeners(Listener... listeners) {
+    protected void registerListeners(Listener... listeners) {
         PluginManager manager = Bukkit.getPluginManager();
         for (Listener l : listeners) manager.registerEvents(l, this);
     }

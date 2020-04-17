@@ -28,6 +28,7 @@ import me.masstrix.eternalnature.util.BlockScanner;
 import me.masstrix.eternalnature.util.MathUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Leaves;
@@ -35,12 +36,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
 
-    private int spawnChance = 300;
+    private double spawnChance = 0.3;
     private int maxParticles = 200;
     private int scanDelay = 20 * 5;
     private EternalNature plugin;
@@ -62,10 +64,15 @@ public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
         SystemConfig config = plugin.getSystemConfig();
         scanDelay = config.getInt(ConfigOption.LEAF_EFFECT_SCAN_DELAY);
         maxParticles = config.getInt(ConfigOption.LEAF_EFFECT_MAX_PARTICLES);
-        spawnChance = config.getInt(ConfigOption.LEAF_EFFECT_CHANCE);
+        spawnChance = config.getDouble(ConfigOption.LEAF_EFFECT_CHANCE);
+        // Fixes older versions or mistakes in the config.
+        if (spawnChance > 1) {
+            spawnChance = (double) ConfigOption.LEAF_EFFECT_CHANCE.getDefault();
+            config.set(ConfigOption.LEAF_EFFECT_CHANCE, ConfigOption.LEAF_EFFECT_CHANCE.getDefault());
+        }
         int range = config.getInt(ConfigOption.LEAF_EFFECT_RANGE);
         scanner.setScanScale(range, range);
-        scanner.setFidelity(config.getInt(ConfigOption.LEAF_EFFECT_RANGE));
+        scanner.setFidelity(config.getInt(ConfigOption.LEAF_EFFECT_FIDELITY));
     }
 
     @Override

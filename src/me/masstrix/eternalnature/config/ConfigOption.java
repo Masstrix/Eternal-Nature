@@ -25,7 +25,7 @@ public enum ConfigOption {
     LEAF_EFFECT_FIDELITY("global.falling-leaves.fidelity", 3),
     LEAF_EFFECT_MAX_PARTICLES("global.falling-leaves.max-particles", 200),
     LEAF_EFFECT_SCAN_DELAY("global.falling-leaves.scan-delay", 100),
-    LEAF_EFFECT_CHANCE("global.falling-leaves.spawn-chance", 300),
+    LEAF_EFFECT_CHANCE("global.falling-leaves.spawn-chance", 0.005),
 
     WATERFALLS("global.waterfalls", true),
     RANDOM_TREE_SPREAD("global.randomly-spread-trees.enabled", true),

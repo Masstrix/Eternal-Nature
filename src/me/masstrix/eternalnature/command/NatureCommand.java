@@ -20,6 +20,7 @@ import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.core.render.LeafParticle;
+import me.masstrix.eternalnature.menus.Menus;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -79,7 +80,13 @@ public class NatureCommand extends EternalCommand {
         }
 
         else if (args[0].equalsIgnoreCase("settings")) {
-            if (wasPlayer()) plugin.getSettingsMenu().open((Player) getSender());
+            //if (wasPlayer()) plugin.getSettingsMenu().open((Player) getSender());
+            if (wasPlayer()) {
+                plugin.getEngine().getMenuManager()
+                        .getMenu(Menus.SETTINGS.getId()).open((Player) getSender());
+            } else {
+                msg("Settings can only be accessed in game.");
+            }
         }
 
         else if (args[0].equalsIgnoreCase("stats")) {

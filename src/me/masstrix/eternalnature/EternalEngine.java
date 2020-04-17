@@ -20,6 +20,7 @@ import me.masstrix.eternalnature.core.*;
 import me.masstrix.eternalnature.core.entity.EntityStorage;
 import me.masstrix.eternalnature.core.world.*;
 import me.masstrix.eternalnature.data.UserData;
+import me.masstrix.eternalnature.menus.*;
 import me.masstrix.eternalnature.util.Stopwatch;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -40,6 +41,7 @@ public class EternalEngine {
     private TemperatureData temperatureData;
     private AutoPlanter autoPlanter;
     private EntityStorage entityStorage;
+    private MenuManager menuManager;
 
     private List<EternalWorker> workers = new ArrayList<>();
     private Map<UUID, UserData> users = new HashMap<>();
@@ -57,6 +59,7 @@ public class EternalEngine {
         this.plugin = plugin;
         temperatureData = new TemperatureData(plugin);
         entityStorage = new EntityStorage(plugin);
+        menuManager = new MenuManager(plugin);
         try {
             entityStorage.restartSystem();
         } catch (IOException e) {
@@ -69,8 +72,20 @@ public class EternalEngine {
                 new AgingItemWorker(plugin),
                 new LeafEmitter(plugin, entityStorage),
                 new TreeSpreader(plugin));
-
         getWorker(TreeSpreader.class);
+
+        plugin.registerListeners(menuManager);
+        menuManager.register(
+                new SettingsMenu(plugin, menuManager),
+                new HydrationSettingsMenu(plugin, menuManager),
+                new TempSettingsMenu(plugin, menuManager),
+                new LangSettingsMenu(plugin, menuManager),
+                new LeafParticleMenu(plugin, menuManager),
+                new OtherSettingsMenu(plugin, menuManager));
+    }
+
+    public MenuManager getMenuManager() {
+        return menuManager;
     }
 
     public void updateSettings() {

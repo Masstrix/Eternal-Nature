@@ -88,6 +88,17 @@ public class MathUtil {
     }
 
     /**
+     * Returns the difference between two doubles.
+     *
+     * @param a first value.
+     * @param b second value.
+     * @return the difference between a and b.
+     */
+    public static double diff(double a, double b) {
+        return a > b ? a - b : b - a;
+    }
+
+    /**
      * Cubes an int.
      *
      * @param v value to cube.

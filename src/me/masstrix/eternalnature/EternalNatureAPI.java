@@ -20,6 +20,7 @@ import me.masstrix.eternalnature.api.EternalUser;
 import me.masstrix.eternalnature.api.EternalWorld;
 import me.masstrix.eternalnature.core.TemperatureData;
 import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.menus.Menus;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -56,7 +57,7 @@ public class EternalNatureAPI {
      * @param player who to open the settings menu for.
      */
     public void openSettingsMenu(Player player) {
-        plugin.getSettingsMenu().open(player);
+        plugin.getEngine().getMenuManager().getMenu(Menus.SETTINGS).open(player);
     }
 
     /**
