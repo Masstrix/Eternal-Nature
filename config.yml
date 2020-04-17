@@ -27,14 +27,13 @@ general:
   notify-update-join: true
   
 global:
-  waterfalls: true
   falling-leaves:
     enabled: true
     range: 12
     fidelity: 3
     max-particles: 300
     scan-delay: 100
-    spawn-chance: 300
+    spawn-chance: 0.005
   randomly-spread-trees:
     enabled: true
     range: 20
