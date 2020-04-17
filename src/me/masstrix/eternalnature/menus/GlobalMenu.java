@@ -84,6 +84,8 @@ public abstract class GlobalMenu {
             menu.open(player);
     }
 
+    public void onOpen(Player who) {}
+
     /**
      * Makes the player open the menu.
      *
@@ -92,6 +94,7 @@ public abstract class GlobalMenu {
     public void open(Player player) {
         player.openInventory(inventory);
         player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1, 1);
+        onOpen(player);
     }
 
     /**

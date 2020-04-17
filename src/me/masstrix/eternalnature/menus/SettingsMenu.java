@@ -30,29 +30,59 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionType;
 
 public class SettingsMenu extends GlobalMenu {
 
+    private EternalNature plugin;
+    private VersionChecker.VersionMeta versionMeta;
+
     public SettingsMenu(EternalNature plugin, MenuManager menuManager) {
         super(Menus.SETTINGS, "Eternal Nature Settings", 5);
         SystemConfig config = plugin.getSystemConfig();
+        this.plugin = plugin;
 
-        // getInventory() info icon
+        versionMeta = plugin.getVersionMeta();
+
         setButton(new Button(getInventory(), asSlot(0, 4), () -> {
-            VersionChecker.VersionMeta versionMeta = plugin.getVersionMeta();
+
+            String version = plugin.getDescription().getVersion();
+            String latest = versionMeta == null ? "&8Unknown" : versionMeta.getLatestVersion();
+
+            if (!plugin.getSystemConfig().isEnabled(ConfigOption.UPDATES_CHECK)) {
+                latest = "&8Checking Disabled";
+            }
+
+            if (versionMeta != null) {
+                VersionChecker.PluginVersionState state = versionMeta.getState();
+                switch (state) {
+                    case DEV_BUILD: {
+                        version = "&6" + version + " (Dev Build)";
+                        break;
+                    }
+                    case LATEST: {
+                        version = "&a" + version + " (Latest)";
+                        break;
+                    }
+                    case BEHIND: {
+                        version = "&e" + version + " (Outdated)";
+                        break;
+                    }
+                    case UNKNOWN: {
+                        version = "&7" + version;
+                        break;
+                    }
+                }
+            }
+
             return new ItemBuilder(Material.FERN)
                     .setName("&aEternal Nature")
                     .addLore("Improving the survival experience.",
                             "",
                             "Developed by &f" + StringUtil.fromStringArray(plugin.getDescription().getAuthors(), ", "),
-                            "Version: " +
-                                    (versionMeta != null ? (versionMeta.getState() == VersionChecker.PluginVersionState.BEHIND ?
-                                            String.format("&c%s &6(%s)", versionMeta.getCurrentVersion(),
-                                                    versionMeta.getLatestVersion())
-                                            : versionMeta.getState() == VersionChecker.PluginVersionState.DEV_BUILD ?
-                                            String.format("&6%s (Dev Build)", versionMeta.getCurrentVersion())
-                                            : "&a" + versionMeta.getCurrentVersion()) : "&7Loading..."))
+                            "Version: " + version,
+                            "Latest: &7" + latest)
                     .addLore("", "&eClick to get help", "&elinks to the project.")
                     .build();
         }).onClick(player -> {
@@ -181,5 +211,10 @@ public class SettingsMenu extends GlobalMenu {
                     player.closeInventory();
                     player.sendMessage(StringUtil.color(PluginData.PREFIX + "&aReloaded Config."));
                 }));
+    }
+
+    @Override
+    public void onOpen(Player who) {
+        versionMeta = plugin.getVersionMeta();
     }
 }
