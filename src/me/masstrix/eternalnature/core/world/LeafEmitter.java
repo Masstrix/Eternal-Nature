@@ -68,7 +68,8 @@ public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
         // Fixes older versions or mistakes in the config.
         if (spawnChance > 1) {
             spawnChance = (double) ConfigOption.LEAF_EFFECT_CHANCE.getDefault();
-            config.set(ConfigOption.LEAF_EFFECT_CHANCE, ConfigOption.LEAF_EFFECT_CHANCE.getDefault());
+            config.set(ConfigOption.LEAF_EFFECT_CHANCE, spawnChance);
+            config.save();
         }
         int range = config.getInt(ConfigOption.LEAF_EFFECT_RANGE);
         scanner.setScanScale(range, range);

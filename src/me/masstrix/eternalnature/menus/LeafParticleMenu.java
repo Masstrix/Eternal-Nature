@@ -41,6 +41,7 @@ public class LeafParticleMenu extends GlobalMenu {
                 .onClick(player -> {
                     config.toggle(ConfigOption.LEAF_EFFECT);
                     config.save();
+                    plugin.getEngine().updateSettings();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
@@ -61,6 +62,7 @@ public class LeafParticleMenu extends GlobalMenu {
                     spawnChances.next();
                     config.set(ConfigOption.LEAF_EFFECT_CHANCE, spawnChances.getSelected().getChance());
                     config.save();
+                    plugin.getEngine().updateSettings();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
     }

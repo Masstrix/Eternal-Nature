@@ -105,7 +105,6 @@ public class SystemConfig {
      */
     public void set(ConfigOption option, Object o) {
         config.set(option.key, o);
-        plugin.getEngine().updateSettings();
     }
 
     /**
