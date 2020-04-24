@@ -111,7 +111,7 @@ public class TemperatureData {
      * @param temp temperature to evaluate.
      * @return the most relevant icon.
      */
-    public TemperatureIcon getClosestIconName(float temp) {
+    public TemperatureIcon getClosestIconName(double temp) {
         if (temp >= burningPoint - 4) return TemperatureIcon.BURNING;
         if (temp <= freezingPoint + 2) return TemperatureIcon.FREEZING;
         if (temp <= TemperatureIcon.COLD.temp) return TemperatureIcon.COLD;
@@ -266,7 +266,7 @@ public class TemperatureData {
      *
      * @param temp temperature value to check for a cache update against.
      */
-    public void updateMinMaxTempCache(float temp) {
+    public void updateMinMaxTempCache(double temp) {
         if (maxTemp < temp)
             maxTemp = temp;
         else if (temp < minTemp)

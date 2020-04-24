@@ -16,6 +16,8 @@
 
 package me.masstrix.eternalnature.util;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Random;
 
 public class MathUtil {
@@ -109,6 +111,21 @@ public class MathUtil {
     }
 
     /**
+     * Rounds a double value to contain n decimal places.
+     *
+     * @param value  value to round.
+     * @param places how many decimal places ro round to.
+     * @return the rounded value or the value if places is less than 0.
+     */
+    public static double round(double value, int places) {
+        if (places < 0) return value;
+
+        BigDecimal bd = BigDecimal.valueOf(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
+    }
+
+    /**
      * Fixes a float value if it is invalid.
      *
      * @param v value to fix.
@@ -118,5 +135,17 @@ public class MathUtil {
      */
     public static float fix(float v, float fix) {
         return Float.isNaN(v) || Float.isInfinite(v) ? fix : v;
+    }
+
+    /**
+     * Fixes a float value if it is invalid.
+     *
+     * @param v value to fix.
+     * @param fix fixed default value to use if <i>v</i> is invalid.
+     * @return returns <i>v</i> if the value is valid otherwise returns <i>fix</i>
+     *         if the value is NaN or Infinite.
+     */
+    public static double fix(double v, double fix) {
+        return Double.isNaN(v) || Double.isInfinite(v) ? fix : v;
     }
 }

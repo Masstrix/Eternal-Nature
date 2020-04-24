@@ -43,6 +43,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import java.io.File;
 import java.io.IOException;
@@ -64,14 +65,17 @@ public class UserData implements EternalUser {
 
     private BossBar hydrationBar, tempBar;
     private UUID id;
-    private float temperature = 0, tempExact = 0;
-    private float hydration = 20; // max is 20
+    private double temperature = 0, tempExact = 0;
+    private double hydration = 20; // max is 20
     private float distanceWalked;
     private int distanceNextThirst;
     private int thirstTimer = 0;
     private long constantTick = -1;
     private boolean debugEnabled = false;
     private PlayerIdle playerIdle = new PlayerIdle();
+    private Vector motion = new Vector();
+    private boolean inMotion;
+    private long lastMovementCheck = 0;
 
     public UserData(EternalNature plugin, UUID id) {
         this.id = id;
@@ -86,7 +90,7 @@ public class UserData implements EternalUser {
         }
     }
 
-    public UserData(EternalNature plugin, UUID id, float temperature, float hydration) {
+    public UserData(EternalNature plugin, UUID id, double temperature, double hydration) {
         this.id = id;
         this.plugin = plugin;
         this.temperature = temperature;
@@ -95,30 +99,56 @@ public class UserData implements EternalUser {
         distanceNextThirst = MathUtil.randomInt(dehydrateChance, dehydrateChance + dehydrateChanceRange);
     }
 
+    public void setMotion(Vector vector) {
+        this.motion = vector;
+        this.inMotion = vector.length() > 0;
+        lastMovementCheck = System.currentTimeMillis();
+    }
+
+    public Vector getMotion() {
+        checkMotion();
+        return motion;
+    }
+
+    public boolean isInMotion() {
+        checkMotion();
+        return inMotion;
+    }
+
+    private void checkMotion() {
+        if (inMotion && System.currentTimeMillis() - lastMovementCheck > 100) {
+            inMotion = false;
+            motion.zero();
+        }
+    }
+
     public UserData setThirstTimer(int time) {
         this.thirstTimer = time;
         return this;
     }
 
     /**
-     * Resets the players temperature to the exact temperature to where they currently are.
-     */
-    public void resetTemperature() {
-        tick();
-        this.temperature = tempExact;
-    }
-
-    /**
-     * Tick the players data. This will do all necessary updates for the player.
+     * Performs a tick for the player. This will update all enabled settings for
+     * the player and perform any related actions. This includes handling of
+     * temperature scanning and updating, hydration changes and idle updating.
      */
     public final void tick() {
         Player player = Bukkit.getPlayer(id);
         if (player == null || !player.isOnline()) return;
+
+        // Stop updating if the player is dead. This will stop players who
+        // stay on the respawn screen for to long using resources.
+        if (player.isDead()) {
+            return;
+        }
+
+        // Create a region scanner if one has not been made already.
         if (regionScanner == null) {
             this.regionScanner = new RegionScanner(plugin, this, player);
             this.regionScanner.setScanScale(11, 5);
         }
 
+        // Update the players idle state.
         playerIdle.check(player.getLocation());
 
         WorldProvider provider = plugin.getEngine().getWorldProvider();
@@ -126,75 +156,11 @@ public class UserData implements EternalUser {
         Location loc = player.getLocation();
         TemperatureData tempData = plugin.getEngine().getTemperatureData();
 
-        // Handle temperature ticking.
-        if (data != null && config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) {
-            boolean inWater = isBlockWater(loc.getBlock());
-            float emission = 0;
-            emission += data.getBlockTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-
-            regionScanner.tick();
-            float blockEmission = (float) regionScanner.getTemperatureEmission();
-            if (blockEmission > emission) emission = blockEmission;
-
-            // If the world has a height gradient add it to the temperature
-            HeightGradient gradient = HeightGradient.getGradient(loc.getWorld().getEnvironment());
-            if (gradient != null) {
-                emission += gradient.getModifier(loc.getBlockY());
-            }
-
-            // If the player is swimming, subtract temperature from depth.
-            if (inWater) {
-                int height = 0;
-                for (int i = 1; i < 30; i++) {
-                    if (!isBlockWater(loc.getBlock().getRelative(0, i, 0))) break;
-                    height++;
-                }
-                double depthSub = (double) height / 30D * 4;
-                emission -= depthSub;
-            }
-
-            // Add armor to temp.
-            ItemStack[] armor = player.getEquipment().getArmorContents();
-            for (ItemStack i : armor) {
-                if (i == null) continue;
-                emission += tempData.getArmorModifier(i.getType());
-            }
-
-            // Add temperature depending on what the player is holding
-            Material mainHand = player.getInventory().getItemInMainHand().getType();
-            Material offHand = player.getInventory().getItemInOffHand().getType();
-            if (mainHand != Material.AIR) {
-                float mainTemp = tempData.getBlockEmission(mainHand);
-                emission += mainTemp / 10;
-            }
-            if (offHand != Material.AIR) {
-                float offTemp = tempData.getBlockEmission(offHand);
-                emission += offTemp / 10;
-            }
-
-            if (!Float.isInfinite(emission) && !Float.isNaN(emission)) {
-                this.tempExact = emission;
-                tempData.updateMinMaxTempCache(tempExact);
-            }
-
-            // Reset the players temperature to the exact temp if it is invalid.
-            temperature = MathUtil.fix(temperature, tempExact);
-
-            // Change players temperature gradually
-            float diff = MathUtil.diff(this.tempExact, this.temperature);
-            if (diff > 0.09) {
-                int division = 30;
-                if (inWater && tempExact < temperature) {
-                    division = 10;
-                }
-                int maxDelta = config.getInt(ConfigOption.TEMPERATURE_MAX_DELTA);
-                float delta = diff / division;
-                if (delta > maxDelta) delta = maxDelta;
-                if (this.tempExact > this.temperature) this.temperature += delta;
-                else this.temperature -= delta;
-            } else if (diff < 0.1) {
-                temperature = tempExact;
-            }
+        // Updates the players temperature and applies damage to the player
+        // if damage is enabled.
+        if (config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) {
+            // Update the players temperature
+            updateTemperature(false);
 
             // Damage the player if they are to hot or cold or are dehydrated.
             if (this.temperature >= tempData.getBurningPoint()
@@ -217,8 +183,10 @@ public class UserData implements EternalUser {
             }
         }
 
-        // Handle hydration ticking.
-        if (config.isEnabled(ConfigOption.HYDRATION_ENABLED) && player.getGameMode() != GameMode.CREATIVE) {
+        // Updates the players hydration levels and applys damage id damage is enabled
+        // for hydration.
+        if (config.isEnabled(ConfigOption.HYDRATION_ENABLED)
+                && player.getGameMode() != GameMode.CREATIVE) {
             // Sweat randomly. Becomes more common the warmer you are.
             if (plugin.getSystemConfig().isEnabled(ConfigOption.TEMPERATURE_SWEAT)) {
                 if (MathUtil.randomInt((int) (1000 * 1.5)) <= temperature * (temperature * 0.005)) {
@@ -248,47 +216,6 @@ public class UserData implements EternalUser {
             }
             constantTick = System.currentTimeMillis();
         }
-
-        if (!config.isEnabled(ConfigOption.TEMPERATURE_ENABLED) || !debugEnabled) return;
-        World world = player.getWorld();
-        final double MAX = tempData.getMaxBiomeTemp();
-        final double MIN = tempData.getMinBiomeTemp();
-        /*
-        * Scans around the player and projects the temperature above blocks.
-        * */
-        new CuboidScanner(4, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(),
-                (CuboidScanner.CuboidTask) (x, y, z) -> {
-            Block block = world.getBlockAt(x, y, z);
-            if (!block.isPassable() && block.getType().isSolid() || block.getType() == Material.TORCH) {
-
-                double temp = provider.getWorld(world).getBlockTemperature(x, y, z);
-                java.awt.Color color;
-
-                if (temp != Float.NEGATIVE_INFINITY) {
-                    float[] hsbVals = new float[3];
-                    java.awt.Color.RGBtoHSB(126, 255, 0, hsbVals);
-
-                    float colorRotate;
-                    if (temp > 0) {
-                        colorRotate = (float) (temp / MAX);
-                        // Shift the hue clockwise by 25% (from green to red).
-                        color = new java.awt.Color(java.awt.Color.HSBtoRGB(0.25f - (0.25f * colorRotate),
-                                hsbVals[1], hsbVals[2]));
-                    } else {
-                        colorRotate = (float) (Math.abs(temp) / MIN);
-                        // Shift the hue counter clockwise by 30% (from green to blue).
-                        color = new java.awt.Color(java.awt.Color.HSBtoRGB(0.30f * colorRotate,
-                                hsbVals[1], hsbVals[2]));
-                    }
-                } else {
-                    color = new java.awt.Color(255, 0, 206); // Invalid color
-                }
-
-                player.spawnParticle(Particle.REDSTONE, block.getLocation().add(0.5, 1.2, 0.5),
-                        1, 0, 0, 0, new Particle.DustOptions(org.bukkit.Color.fromRGB(
-                                color.getRed(), color.getGreen(), color.getBlue()), 1));
-            }
-        }).start();
     }
 
     /**
@@ -362,6 +289,11 @@ public class UserData implements EternalUser {
             }
 
             text = text.replaceAll("%temperature%", tempInfoColor + String.format("%.1f°", temperature) + "&f");
+
+            // Append debug info for temperature
+            if (debugEnabled) {
+                text += " &d(exact: " + MathUtil.round(tempExact, 2) + ")";
+            }
 
             if (config.getRenderMethod(ConfigOption.TEMPERATURE_BAR_STYLE) == StatusRenderMethod.BOSSBAR) {
                 if (tempBar == null) {
@@ -577,6 +509,114 @@ public class UserData implements EternalUser {
         if (hydrationBar != null) hydrationBar.removeAll();
         if (tempBar != null) tempBar.removeAll();
         save();
+    }
+
+    /**
+     * Update the players temperature.
+     *
+     * @param forceNew if true this update will instantly become the
+     *                 players temperature.
+     */
+    public void updateTemperature(boolean forceNew) {
+        Player player = Bukkit.getPlayer(id);
+        if (player == null || !player.isOnline()) return;
+
+        WorldProvider provider = plugin.getEngine().getWorldProvider();
+        WorldData data = provider.getWorld(player.getWorld());
+        Location loc = player.getLocation();
+        TemperatureData tempData = plugin.getEngine().getTemperatureData();
+
+        // Handle temperature ticking.
+        if (data != null && config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) {
+            boolean inWater = isBlockWater(loc.getBlock());
+            float emission = 0;
+            emission += data.getBlockTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+
+            regionScanner.tick();
+            float blockEmission = (float) regionScanner.getTemperatureEmission();
+            if (blockEmission > emission) emission = blockEmission;
+
+            // If the world has a height gradient add it to the temperature
+            HeightGradient gradient = HeightGradient.getGradient(loc.getWorld().getEnvironment());
+            if (gradient != null) {
+                emission += gradient.getModifier(loc.getBlockY());
+            }
+
+            // If the player is swimming, subtract temperature from depth.
+            if (inWater) {
+                int height = 0;
+                for (int i = 1; i < 30; i++) {
+                    if (!isBlockWater(loc.getBlock().getRelative(0, i, 0))) break;
+                    height++;
+                }
+                double depthSub = (double) height / 30D * 4;
+                emission -= depthSub;
+            }
+
+            // Add armor to temp.
+            ItemStack[] armor = player.getEquipment().getArmorContents();
+            for (ItemStack i : armor) {
+                if (i == null) continue;
+                emission += tempData.getArmorModifier(i.getType());
+            }
+
+            // Add temperature depending on what the player is holding
+            Material mainHand = player.getInventory().getItemInMainHand().getType();
+            Material offHand = player.getInventory().getItemInOffHand().getType();
+            if (mainHand != Material.AIR) {
+                float mainTemp = tempData.getBlockEmission(mainHand);
+                emission += mainTemp / 10;
+            }
+            if (offHand != Material.AIR) {
+                float offTemp = tempData.getBlockEmission(offHand);
+                emission += offTemp / 10;
+            }
+
+            if (!Float.isInfinite(emission) && !Float.isNaN(emission)) {
+                this.tempExact = emission;
+                tempData.updateMinMaxTempCache(tempExact);
+            }
+
+            // Force the new exact temperature on the player.
+            if (forceNew) {
+                temperature = tempExact;
+                return;
+            }
+
+            // Reset the players temperature to the exact temp if it is invalid.
+            temperature = MathUtil.fix(temperature, tempExact);
+
+            // Push the
+            progressTemperature(inWater);
+        }
+    }
+
+    /**
+     * Gradually updates the temperature to get to the exact temperature.
+     *
+     * @param inWater is the player currently in water.
+     */
+    private void progressTemperature(boolean inWater) {
+        // Stop updating temperature if is already exactly the same as
+        // the expected value.
+        if (temperature == tempExact) return;
+
+        // Change players temperature gradually
+        double diff = MathUtil.diff(this.tempExact, this.temperature);
+        if (diff > 0.09) {
+            int division = 30;
+            if (inWater && tempExact < temperature) {
+                division = 10;
+            }
+            int maxDelta = config.getInt(ConfigOption.TEMPERATURE_MAX_DELTA);
+            double delta = diff / division;
+            if (delta > maxDelta) delta = maxDelta;
+            if (this.tempExact > this.temperature) this.temperature += delta;
+            else this.temperature -= delta;
+        } else if (diff < 0.1) {
+            // stop trying to round temperature.
+            temperature = tempExact;
+        }
     }
 
     /**

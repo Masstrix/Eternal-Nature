@@ -17,6 +17,7 @@
 package me.masstrix.eternalnature.listeners;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.data.UserData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -64,10 +65,13 @@ public class DeathListener implements Listener {
 
     @EventHandler
     public void on(PlayerRespawnEvent event) {
+        Player player = event.getPlayer();
+        UserData data = plugin.getEngine().getUserData(player.getUniqueId());
         new BukkitRunnable() {
             @Override
             public void run() {
-                plugin.getEngine().getUserData(event.getPlayer().getUniqueId()).resetTemperature();
+                data.updateTemperature(true);
+                data.setHydration(20);
             }
         }.runTaskLater(plugin, 3);
     }

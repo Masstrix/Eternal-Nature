@@ -26,6 +26,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.util.Vector;
 
 public class MoveListener implements Listener {
 
@@ -45,6 +46,12 @@ public class MoveListener implements Listener {
         double distance = from.distanceSquared(to);
         if (distance == 0) return;
 
+        UserData data = plugin.getEngine().getUserData(player.getUniqueId());
+        if (data == null) return;
+
+        // Updates the players motion vector
+        data.setMotion(from.toVector().subtract(to.toVector()));
+
         // Does the players chunk section change
         if (from.getChunk() != to.getChunk() || ChunkData.getSection(from.getY())
                 != ChunkData.getSection(to.getY())) {
@@ -58,8 +65,7 @@ public class MoveListener implements Listener {
 
         // Ignore movement if player is a passenger.
         if (!player.isInsideVehicle() && !player.isGliding() && !player.isRiptiding()) {
-            UserData user = plugin.getEngine().getUserData(player.getUniqueId());
-            if (user != null) user.addWalkDistance((float) distance, player.isSprinting());
+            data.addWalkDistance((float) distance, player.isSprinting());
         }
     }
 }

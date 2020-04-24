@@ -20,6 +20,7 @@ import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.core.render.LeafParticle;
+import me.masstrix.eternalnature.data.UserData;
 import me.masstrix.eternalnature.menus.Menus;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -147,6 +148,16 @@ public class NatureCommand extends EternalCommand {
                 }
             }
             msg("");
+        }
+
+        else if (args[0].equalsIgnoreCase("debug") && wasPlayer()) {
+            UserData data = plugin.getEngine().getUserData(((Player) getSender()).getUniqueId());
+            data.setDebug(!data.isDebugEnabled());
+            if (data.isDebugEnabled()) {
+                msg(PluginData.PREFIX + "&7Enabled &6debug mode.");
+            } else {
+                msg(PluginData.PREFIX + "&7Disabled &6debug mode.");
+            }
         }
     }
 
