@@ -54,7 +54,8 @@ public class DeathListener implements Listener {
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
-        if (player.getLastDamageCause().getCause() == EntityDamageEvent.DamageCause.CUSTOM) {
+        EntityDamageEvent cause = player.getLastDamageCause();
+        if (cause != null && cause.getCause() == EntityDamageEvent.DamageCause.CUSTOM) {
             if (customReasons.containsKey(player.getUniqueId())) {
                 event.setDeathMessage(customReasons.get(player.getUniqueId()));
             }
