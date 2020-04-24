@@ -55,7 +55,7 @@ public class SettingsMenu extends GlobalMenu {
             }
 
             if (versionMeta != null) {
-                VersionChecker.PluginVersionState state = versionMeta.getState();
+                VersionChecker.VersionState state = versionMeta.getState();
                 switch (state) {
                     case DEV_BUILD: {
                         version = "&6" + version + " (Dev Build)";

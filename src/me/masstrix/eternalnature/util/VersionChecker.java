@@ -93,77 +93,122 @@ public class VersionChecker {
     public static class VersionMeta {
         private String currentStr, latestStr;
         private byte[] current = null, latest = null;
-        private PluginVersionState state;
+        private VersionState state;
 
         public VersionMeta(String current, String latest) {
             if (latest == null || latest.equalsIgnoreCase("unknown")) {
-                state = PluginVersionState.UNKNOWN;
+                state = VersionState.UNKNOWN;
                 return;
             }
             this.currentStr = current;
             this.latestStr = latest;
             try {
-                this.current = getBytes(current.split("\\."));
-                this.latest = getBytes(latest.split("\\."));
+                this.current = getBytes(current);
+                this.latest = getBytes(latest);
             } catch (Exception e) {
-                state = PluginVersionState.UNKNOWN;
+                state = VersionState.UNKNOWN;
                 return;
             }
-            this.state = PluginVersionState.getState(this.current, this.latest);
+            this.state = VersionState.getState(this.current, this.latest);
         }
 
-        private byte[] getBytes(String[] s) {
+        /**
+         * Returns the versions state. This state is an easy identifier for if
+         * it is outdated, current, dev or unknown.
+         *
+         * @return the versions state.
+         */
+        public VersionState getState() {
+            return state;
+        }
+
+        /**
+         * @return the current version as a byte array.
+         */
+        public byte[] getCurrentBytes() {
+            return current;
+        }
+
+        /**
+         * @return the latest version as a byte array.
+         */
+        public byte[] getLatestBytes() {
+            return latest;
+        }
+
+        /**
+         * @return the current version as a formatted string.
+         */
+        public String getCurrentVersion() {
+            return currentStr;
+        }
+
+        /**
+         * @return the latest version as a string.
+         */
+        public String getLatestVersion() {
+            return latestStr;
+        }
+
+        /**
+         * Converts an array of bytes to an array.
+         *
+         * @param version version as a byte array (eg {@code [1, 0, 2]}.
+         * @return the version as a formatted string.
+         */
+        private String bytesToVer(byte[] version) {
+            StringBuilder builder = new StringBuilder();
+            for (byte build : version) {
+                if (builder.length() > 0)
+                    builder.append(".");
+                builder.append(build);
+            }
+            return builder.substring(0, builder.length() - 1);
+        }
+
+        /**
+         * Converts a version string to an array of bytes.
+         *
+         * @param version string of version to convert.
+         * @return a version byte array.
+         */
+        private byte[] getBytes(String version) {
+            String[] s = version.split("\\.");
             byte[] data = new byte[s.length];
             for (int i = 0; i < s.length; i++)
                 data[i] = Byte.parseByte(s[i]);
             return data;
         }
-
-        public PluginVersionState getState() {
-            return state;
-        }
-
-        public byte[] getCurrentBytes() {
-            return current;
-        }
-
-        public byte[] getLatestBytes() {
-            return latest;
-        }
-
-        public String getCurrentVersion() {
-            return currentStr;
-        }
-
-        public String getLatestVersion() {
-            return latestStr;
-        }
-
-        private String bytesToVer(byte[] version) {
-            StringBuilder builder = new StringBuilder();
-            for (byte build : version) {
-                builder.append(build).append(".");
-            }
-            return builder.substring(0, builder.length() - 1);
-        }
     }
 
-    public enum PluginVersionState {
+    public enum VersionState {
         DEV_BUILD, LATEST, BEHIND, UNKNOWN;
 
-        public static PluginVersionState getState(byte[] c, byte[] l) {
-            if (Arrays.equals(c, l)) return LATEST;
-            if (isBehind(c, l)) return BEHIND;
+        /**
+         * Gets the state of a version and returns a {@code VersionState}.
+         *
+         * @param current current version bytes.
+         * @param latest  latest version bytes.
+         * @return the versions state.
+         */
+        public static VersionState getState(byte[] current, byte[] latest) {
+            if (Arrays.equals(current, latest)) return LATEST;
+            if (isBehind(current, latest)) return BEHIND;
             return DEV_BUILD;
         }
 
-        private static boolean isBehind(byte[] c, byte[] l) {
-            int v = Math.max(c.length, l.length);
-            for (int i = 0; i < v; i++) {
-                byte cu = c.length > i ? c[i] : -1;
-                byte la = l.length > i ? l[i] : -1;
-                if (cu != -1 && la != -1 && (cu < la)) return true;
-                if (la != -1 && cu == -1) return true;
+        /**
+         * Compares the bytes of two versions and returns if the current version
+         * is behind the latest.
+         *
+         * @param current current version bytes.
+         * @param latest  latest version bytes.
+         * @return true if the current version is behind the latest version.
+         */
+        private static boolean isBehind(byte[] current, byte[] latest) {
+            int ln = Math.min(current.length, latest.length);
+            for (int i = 0; i < ln; i++) {
+                if (current[i] < latest[i]) return true;
             }
             return false;
         }

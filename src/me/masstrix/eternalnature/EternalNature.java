@@ -88,13 +88,13 @@ public class EternalNature extends JavaPlugin {
         // Only check for updates if enabled.
         if (systemConfig.isEnabled(ConfigOption.UPDATES_CHECK)) {
             new VersionChecker(PluginData.RESOURCE_ID, getDescription().getVersion()).run(s -> {
-                if (s.getState() == VersionChecker.PluginVersionState.UNKNOWN) {
+                if (s.getState() == VersionChecker.VersionState.UNKNOWN) {
                     getLogger().log(Level.WARNING, "Failed to check plugin version. Are you running offline?");
-                } else if (s.getState() == VersionChecker.PluginVersionState.DEV_BUILD) {
+                } else if (s.getState() == VersionChecker.VersionState.DEV_BUILD) {
                     ConsoleCommandSender sender = Bukkit.getConsoleSender();
                     sender.sendMessage(StringUtil.color("[EternalNature] \u00A7cYou are using a development build! " +
                             "Bug are to be expected, please report them."));
-                } else if (s.getState() == VersionChecker.PluginVersionState.BEHIND) {
+                } else if (s.getState() == VersionChecker.VersionState.BEHIND) {
                     ConsoleCommandSender sender = Bukkit.getConsoleSender();
                     sender.sendMessage(StringUtil.color(""));
                     sender.sendMessage(StringUtil.color("&e New update available for " + getDescription().getName()));
