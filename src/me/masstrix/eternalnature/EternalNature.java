@@ -24,19 +24,28 @@ import me.masstrix.eternalnature.listeners.*;
 import me.masstrix.eternalnature.util.MinecraftVersion;
 import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.eternalnature.util.VersionChecker;
+import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.Bukkit;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.*;
+import java.net.URL;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.logging.Level;
 
 public class EternalNature extends JavaPlugin {
 
     private static final MinecraftVersion REQUIRED_VER = new MinecraftVersion("1.14");
     private EternalEngine engine;
+    private LanguageEngine languageEngine;
     private SystemConfig systemConfig;
     private EternalNatureAPI api;
     private VersionChecker.VersionMeta versionMeta = null;
@@ -58,6 +67,13 @@ public class EternalNature extends JavaPlugin {
         return versionMeta;
     }
 
+    /**
+     * @return the language engine.
+     */
+    public LanguageEngine getLanguageEngine() {
+        return languageEngine;
+    }
+
     @Override
     public void onEnable() {
         MinecraftVersion serverVer = MinecraftVersion.getServerVersion();
@@ -73,6 +89,26 @@ public class EternalNature extends JavaPlugin {
         }
 
         started = true;
+
+        // Init language engine
+        File langFolder = new File(getDataFolder(), "lang");
+        languageEngine = new LanguageEngine(langFolder, "en");
+
+        // Save internal resource.lang files externally
+        String[] langFiles = new String[] {"en"};
+        for (String s : langFiles) {
+            File destination = new File(langFolder, s + ".lang");
+            if (destination.exists()) continue;
+            URL path = getClass().getResource("/lang/" + s + ".lang");
+            try {
+                FileUtils.copyURLToFile(path, destination);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Load languages
+        languageEngine.loadLanguages();
 
         systemConfig = new SystemConfig(this);
         engine = new EternalEngine(this);

@@ -25,6 +25,7 @@ version: 2
 general:
   check-for-updates: true
   notify-update-join: true
+  language: "en"
   
 global:
   falling-leaves:

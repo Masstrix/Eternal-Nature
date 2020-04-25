@@ -1,0 +1,11 @@
+# header
+name=English
+#
+
+// Settings menu items
+menu.settings.title=Eternal Nature Settings
+
+// Death messages
+death.heat=%name% died of scalding heat
+death.cold=%name% died of hypothermia
+death.dehydrate=%name% died of dehydration
