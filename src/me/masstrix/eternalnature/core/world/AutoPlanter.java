@@ -99,18 +99,11 @@ public class AutoPlanter implements EternalWorker {
         task = new BukkitRunnable() {
             @Override
             public void run() {
-                List<Plant> bin = new ArrayList<>();
-                for (Plant p : plants) {
-                    if (!p.isValid() || p.isGroundTypeValid() == Plant.GROUND_INVALID) {
-                        bin.add(p);
-                        continue;
-                    }
+                for (Plant p : new ArrayList<>(plants)) {
                     if (!p.isValid() || p.plant()) {
-                        bin.add(p);
+                        plants.remove(p);
                     }
                 }
-                if (bin.size() > 0)
-                    plants.removeAll(bin);
             }
         }.runTaskTimer(plugin, 20, 20);
     }

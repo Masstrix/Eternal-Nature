@@ -100,9 +100,10 @@ public class Plant {
      *         if the block type is invalid.
      */
     public byte isGroundTypeValid() {
-        if (!item.isOnGround()) return 0;
+        if (!item.isOnGround()) return GROUND_NONE;
         Block block = item.getLocation().clone().add(0, -0.3, 0).getBlock();
-        return (byte) (plantType.getSoilType().isValidBlock(block.getType()) ? 1 : -1);
+        if (block.isLiquid() || block.isPassable() || block.isEmpty()) return GROUND_INVALID;
+        return plantType.getSoilType().isValidBlock(block.getType()) ? GROUND_VALID : GROUND_INVALID;
     }
 
     /**
@@ -112,6 +113,7 @@ public class Plant {
      * @return true if the plant was placed.
      */
     public boolean plant() {
+        if (isGroundTypeValid() != GROUND_VALID) return false;
         if (++ticks >= plantTime) {
             ItemStack stack = item.getItemStack();
 
