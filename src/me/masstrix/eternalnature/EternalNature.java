@@ -20,6 +20,7 @@ import me.masstrix.eternalnature.command.*;
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.metric.Metrics;
+import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
 import me.masstrix.eternalnature.listeners.*;
 import me.masstrix.eternalnature.util.MinecraftVersion;
 import me.masstrix.eternalnature.util.StringUtil;
@@ -34,11 +35,15 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 
 public class EternalNature extends JavaPlugin {
@@ -90,27 +95,16 @@ public class EternalNature extends JavaPlugin {
 
         started = true;
 
+        systemConfig = new SystemConfig(this);
+
         // Init language engine
         File langFolder = new File(getDataFolder(), "lang");
         languageEngine = new LanguageEngine(langFolder, "en");
-
-        // Save internal resource.lang files externally
-        String[] langFiles = new String[] {"en"};
-        for (String s : langFiles) {
-            File destination = new File(langFolder, s + ".lang");
-            if (destination.exists()) continue;
-            URL path = getClass().getResource("/lang/" + s + ".lang");
-            try {
-                FileUtils.copyURLToFile(path, destination);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
+        writeLangFiles(false);
         // Load languages
         languageEngine.loadLanguages();
-
-        systemConfig = new SystemConfig(this);
+        languageEngine.setLanguage(systemConfig.getString(ConfigOption.LANGUAGE));
+        TemperatureIcon.reloadLang(languageEngine);
         engine = new EternalEngine(this);
         api = new EternalNatureAPI(this);
 
@@ -144,6 +138,42 @@ public class EternalNature extends JavaPlugin {
         
         // Enable metrics
         new Metrics(this);
+    }
+
+    /**
+     * Writes all internal .lang files to external lang folder to be edited.
+     *
+     * @param override should this override any .lang files that have
+     *                 already been created.
+     */
+    public void writeLangFiles(boolean override) {
+        File langFolder = new File(getDataFolder(), "lang");
+        // Save internal resource.lang files externally
+        String[] langFiles = new String[] {"en"};
+        for (String s : langFiles) {
+            File destination = new File(langFolder, s + ".lang");
+            if (!override && destination.exists()) continue;
+            try {
+                URL url = getClass().getResource("/lang/" + s + ".lang");
+
+                InputStreamReader streamReader = new InputStreamReader(url.openStream(), StandardCharsets.UTF_8);
+                BufferedReader reader = new BufferedReader(streamReader);
+
+                //List<String> lines = Files.readAllLines(path);
+                BufferedWriter writer = new BufferedWriter(new FileWriter(destination));
+
+                // Write file data
+                for (String line; (line = reader.readLine()) != null;) {
+                    writer.write(line);
+                    writer.newLine();
+                }
+
+                writer.flush();
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override

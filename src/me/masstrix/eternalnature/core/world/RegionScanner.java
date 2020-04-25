@@ -18,7 +18,7 @@ package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.core.TemperatureData;
+import me.masstrix.eternalnature.core.temperature.TemperatureData;
 import me.masstrix.eternalnature.data.PlayerIdle;
 import me.masstrix.eternalnature.data.UserData;
 import org.bukkit.Color;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Matthew Denton
+ * Copyright 2020 Matthew Denton
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.core;
+package me.masstrix.eternalnature.core.temperature;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.util.Stopwatch;
 import me.masstrix.eternalnature.util.StringUtil;
+import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.WeatherType;
@@ -41,44 +42,6 @@ public class TemperatureData {
     public static final String ICON_NORMAL = "✿";
     public static final String ICON_COLD = "❈";
     public static final String ICON_WET = "☁";
-
-    public enum TemperatureIcon {
-        BURNING(ICON_HOT, "burning", 100, ChatColor.RED),
-        HOT(ICON_HOT, "hot", 30, ChatColor.GOLD),
-        WARM(ICON_HOT, "warm", 20, ChatColor.YELLOW),
-        NORMAL(ICON_NORMAL, "pleasant", 13, ChatColor.GREEN),
-        COOL(ICON_COLD, "cool", 5, ChatColor.DARK_AQUA),
-        COLD(ICON_COLD, "cold", 0, ChatColor.AQUA),
-        FREEZING(ICON_COLD, "freezing", -4, ChatColor.WHITE);
-
-        private String icon;
-        private String name;
-        private float temp;
-        private ChatColor color;
-
-        TemperatureIcon(String icon, String name, float temp, ChatColor color) {
-            this.icon = icon;
-            this.name = name.toUpperCase();
-            this.temp = temp;
-            this.color = color;
-        }
-
-        public String getIcon() {
-            return icon;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public float getTemp() {
-            return temp;
-        }
-
-        public ChatColor getColor() {
-            return color;
-        }
-    }
 
     private EternalNature plugin;
 
@@ -114,10 +77,10 @@ public class TemperatureData {
     public TemperatureIcon getClosestIconName(double temp) {
         if (temp >= burningPoint - 4) return TemperatureIcon.BURNING;
         if (temp <= freezingPoint + 2) return TemperatureIcon.FREEZING;
-        if (temp <= TemperatureIcon.COLD.temp) return TemperatureIcon.COLD;
+        if (temp <= TemperatureIcon.COLD.getTemp()) return TemperatureIcon.COLD;
         TemperatureIcon icon = TemperatureIcon.FREEZING;
         for (TemperatureIcon i : TemperatureIcon.values()) {
-            if (temp >= i.temp && icon.temp < i.temp)
+            if (temp >= i.getTemp() && icon.getTemp() < i.getTemp())
                 icon = i;
         }
         return icon;

@@ -25,7 +25,6 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 
 import java.util.*;
-import java.util.logging.Level;
 
 public final class MenuManager implements Listener {
 
@@ -39,7 +38,18 @@ public final class MenuManager implements Listener {
     public void register(GlobalMenu... menu) {
         for (GlobalMenu m : menu) {
             menus.put(m.getID(), m);
-            plugin.getLogger().log(Level.INFO, "Registered menu " + m.getID());
+        }
+    }
+
+    public void forceCloseAll() {
+        for (GlobalMenu m : menus.values()) {
+            m.forceClose();
+        }
+    }
+
+    public void rebuildAllMenus() {
+        for (GlobalMenu m : menus.values()) {
+            m.rebuild();
         }
     }
 

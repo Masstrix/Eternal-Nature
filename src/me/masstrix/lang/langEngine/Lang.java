@@ -4,11 +4,13 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class Lang {
 
     private static final String DATA_HEADER = "header";
     private static final String DATA_TEXT = "text";
+    private static final Pattern PATTERN = Pattern.compile(".*=");
 
     private boolean persistent;
     private File file;
@@ -185,6 +187,10 @@ public class Lang {
                     continue;
                 }
 
+                // Ignore mal-formatted lines
+                if (!PATTERN.matcher(line).lookingAt()) continue;
+
+                // Split key and value line data
                 String[] data = getLineInfo(line);
 
                 // Handle reading just the file readHeader
@@ -195,6 +201,10 @@ public class Lang {
                 if (readText && section.equals(DATA_TEXT)) {
                     text.put(data[0], data[1]);
                 }
+            }
+
+            if (readText) {
+                System.out.print("Loaded Language " + getNiceName());
             }
         } catch (IOException e) {
             System.out.println("Failed to language load file " + file.getName());

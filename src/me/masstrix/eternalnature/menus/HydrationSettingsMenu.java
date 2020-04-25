@@ -20,23 +20,41 @@ import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
+import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 
 public class HydrationSettingsMenu extends GlobalMenu {
 
-    public HydrationSettingsMenu(EternalNature plugin, MenuManager menuManager) {
-        super(Menus.HYDRATION_SETTINGS, "Hydration Settings", 5);
-        SystemConfig config = plugin.getSystemConfig();
+    private EternalNature plugin;
+    private MenuManager menuManager;
+    private SystemConfig config;
+    private LanguageEngine le;
 
+    public HydrationSettingsMenu(EternalNature plugin, MenuManager menuManager) {
+        super(Menus.HYDRATION_SETTINGS, 5);
+        this.plugin = plugin;
+        this.menuManager = menuManager;
+        this.config = plugin.getSystemConfig();
+        this.le = plugin.getLanguageEngine();
+    }
+
+    @Override
+    public String getTitle() {
+        return le.getText("menu.hydration.title");
+    }
+
+    @Override
+    public void build() {
         // Back button
         addBackButton(menuManager, Menus.SETTINGS);
 
         setButton(new Button(getInventory(), asSlot(1, 3), () -> new ItemBuilder(Material.REDSTONE_TORCH)
-                .setName("&aHydration Enabled")
-                .addLore("", "Set if hydration is enabled", "")
+                .setName("&a" + le.getText("menu.hydration.enabled.title"))
+                .addDescription(le.getText("menu.hydration.enabled.description"))
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.HYDRATION_ENABLED))
-                .build()).setToggle("Enabled", () -> config.isEnabled(ConfigOption.HYDRATION_ENABLED))
+                .build()).setToggle(le.getText("menu.hydration.enabled.title"),
+                () -> config.isEnabled(ConfigOption.HYDRATION_ENABLED))
                 .onClick(player -> {
                     config.toggle(ConfigOption.HYDRATION_ENABLED);
                     config.save();
@@ -44,10 +62,11 @@ public class HydrationSettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(getInventory(), asSlot(1, 4), () -> new ItemBuilder(Material.IRON_SWORD)
-                .setName("&aHydration Damage")
-                .addLore("", "Set if players will be hurt if", "there hydration is empty.", "")
+                .setName("&a" + le.getText("menu.hydration.damage.title"))
+                .addDescription(le.getText("menu.hydration.damage.description"))
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.HYDRATION_DAMAGE))
-                .build()).setToggle("Cause Damage", () -> config.isEnabled(ConfigOption.HYDRATION_DAMAGE))
+                .build()).setToggle(le.getText("menu.hydration.damage.title"),
+                () -> config.isEnabled(ConfigOption.HYDRATION_DAMAGE))
                 .onClick(player -> {
                     config.toggle(ConfigOption.HYDRATION_DAMAGE);
                     config.save();
@@ -55,12 +74,11 @@ public class HydrationSettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(getInventory(), asSlot(1, 5), () -> new ItemBuilder(Material.RABBIT_FOOT)
-                .setName("&aHydration Walking")
-                .addLore("", "Sets if players hydration",
-                        "usage will increase while doing",
-                        "activities such as sprinting.", "")
+                .setName("&a" + le.getText("menu.hydration.activity.title"))
+                .addDescription(le.getText("menu.hydration.activity.description"))
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.HYDRATION_WALKING))
-                .build()).setToggle("Walking", () -> config.isEnabled(ConfigOption.HYDRATION_WALKING))
+                .build()).setToggle(le.getText("menu.hydration.activity.title"),
+                () -> config.isEnabled(ConfigOption.HYDRATION_WALKING))
                 .onClick(player -> {
                     config.toggle(ConfigOption.HYDRATION_WALKING);
                     config.save();
@@ -68,8 +86,8 @@ public class HydrationSettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(getInventory(), asSlot(4, 4), () -> new ItemBuilder(Material.JUNGLE_SIGN)
-                .setName("&aDisplay Mode")
-                .addLore("", "Set how how hydration is displayed", "to players.", "")
+                .setName("&a" + le.getText("menu.hydration.display.title"))
+                .addDescription(le.getText("menu.hydration.display.description"))
                 .addLore("Currently: &f" + config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE).getSimple(),
                         config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE).getDescription())
                 .addLore("&eClick to switch to &7" + config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE).opposite().getSimple())

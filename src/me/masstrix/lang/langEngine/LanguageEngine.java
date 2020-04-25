@@ -117,8 +117,13 @@ public class LanguageEngine {
     public void loadSingle(File file) {
         int nl = file.getName().length();
         String fn = file.getName().substring(0, nl - ".lang".length());
-        Lang lang = new Lang(file, persistent.contains(fn));
-        LOADED.put(lang.getLocale(), lang);
+        if (LOADED.containsKey(fn)) {
+            if (selected.equals(fn))
+                LOADED.get(fn).loadText();
+        } else {
+            Lang lang = new Lang(file, persistent.contains(fn));
+            LOADED.put(lang.getLocale(), lang);
+        }
     }
 
     /**
@@ -131,18 +136,47 @@ public class LanguageEngine {
     }
 
     /**
+     * @return the selected language.
+     */
+    public String getSelected() {
+        return selected;
+    }
+
+    /**
+     * Returns if the selected language is the same.
+     *
+     * @param lang language to check.
+     * @return if this language is the selected one.
+     */
+    public boolean isActive(Lang lang) {
+        return lang != null && lang.getLocale().equals(selected);
+    }
+
+    /**
+     * Sets the language to use.
+     *
+     * @param lang language to change to.
+     */
+    public void setLanguage(Lang lang) {
+        setLanguage(lang.getLocale());
+    }
+
+    /**
      * Sets the language to use.
      *
      * @param name name of locale.
      */
     public void setLanguage(String name) {
         if (LOADED.containsKey(name)) {
+            // Unload currently selected language
             Lang lang = LOADED.get(selected);
             lang.unload();
+
+            // Load new language
             this.selected = name;
             lang = LOADED.get(name);
             lang.loadText();
-            System.out.println("Changed language to " + name);
+            System.out.println("Changed language to " + lang.getNiceName());
         }
     }
 

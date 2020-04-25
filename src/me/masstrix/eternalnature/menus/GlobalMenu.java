@@ -20,6 +20,7 @@ import me.masstrix.eternalnature.core.item.ItemBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
@@ -32,19 +33,32 @@ import java.util.List;
 public abstract class GlobalMenu {
 
     static final ItemStack BACK_ICON = new ItemBuilder(Material.ARROW)
-            .setName("&aGo Back").build();
+            .setName("&a⬅ Back").build();
 
+    private final int slots;
     private final String ID;
     private Inventory inventory;
     private List<Button> buttons = new ArrayList<>();
 
-    public GlobalMenu(Menus id, String name, int rows) {
-        this(id.getId(), name, rows);
+    /**
+     * Creates a new global menu instance.
+     *
+     * @param id   id for this menu.
+     * @param rows how many rows the inventory should have.
+     */
+    public GlobalMenu(Menus id, int rows) {
+        this(id.getId(), rows);
     }
 
-    public GlobalMenu(String id, String name, int rows) {
+    /**
+     * Creates a new global menu instance.
+     *
+     * @param id   id for this menu.
+     * @param rows how many rows the inventory should have.
+     */
+    public GlobalMenu(String id, int rows) {
         this.ID = id;
-        this.inventory = Bukkit.createInventory(null, rows * 9, name);
+        this.slots = rows * 9;
     }
 
     public final String getID() {
@@ -84,6 +98,28 @@ public abstract class GlobalMenu {
             menu.open(player);
     }
 
+    /**
+     * Rebuilds the menu. This will force anyone who has this menu open to
+     * close it.
+     */
+    public final void rebuild() {
+        forceClose();
+        String title = getTitle();
+        if (title == null) title = "";
+        this.inventory = Bukkit.createInventory(null, slots, title);
+        build();
+    }
+
+    /**
+     * @return the inventory title.
+     */
+    public abstract String getTitle();
+
+    /**
+     * Builds theinventory menu.
+     */
+    public abstract void build();
+
     public void onOpen(Player who) {}
 
     /**
@@ -92,6 +128,7 @@ public abstract class GlobalMenu {
      * @param player player who will open the menu.
      */
     public void open(Player player) {
+        if (inventory == null) rebuild();
         player.openInventory(inventory);
         player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1, 1);
         onOpen(player);
@@ -115,7 +152,9 @@ public abstract class GlobalMenu {
      * @param clickType type of click the player preformed.
      */
     final void processClick(int slot, Player player, ClickType clickType) {
+        if (inventory == null) return;
         onClick(slot, player, clickType);
+        List<Button> buttons = new ArrayList<>(this.buttons);
         buttons.forEach(b -> b.click(player, this.inventory, slot));
     }
 
@@ -131,6 +170,17 @@ public abstract class GlobalMenu {
     }
 
     /**
+     * Forcibly closes the menu for anyone who has it open.
+     */
+    public final void forceClose() {
+        if (inventory == null) return;
+        if (inventory.getViewers().size() == 0) return;
+        List<HumanEntity> viewers = new ArrayList<>(inventory.getViewers());
+        for (HumanEntity player : viewers)
+            player.closeInventory();
+    }
+
+    /**
      * Returns if a inventory is similar or the same to this inventory. Note there is a
      * very small chance this can cause a false positive.
      *
@@ -138,6 +188,7 @@ public abstract class GlobalMenu {
      * @return if the inventory is similar or the same.
      */
     final boolean isInventorySimilar(Inventory inv) {
+        if (inv == null || inventory == null) return false;
         if (inv == inventory) return true;
         if (inv.getType() != inventory.getType()) return false;
         if (inv.getSize() != inventory.getSize()) return false;

@@ -2,10 +2,104 @@
 name=English
 #
 
-// Settings menu items
-menu.settings.title=Eternal Nature Settings
-
+//
 // Death messages
+//
 death.heat=%name% died of scalding heat
 death.cold=%name% died of hypothermia
 death.dehydrate=%name% died of dehydration
+
+
+//
+// Temperature icons
+//
+temp.icon.burning=Burning
+temp.icon.hot=Hot
+temp.icon.warm=Warm
+temp.icon.pleasant=Pleasant
+temp.icon.cool=Cool
+temp.icon.cold=Cold
+temp.icon.freezing=Freezing
+
+
+//
+//  Menus
+//
+
+// Common menu
+menu.common.edit=Click to view & Edit
+menu.common.change=Click to change
+menu.common.selected=Selected
+menu.common.select=Click to select
+menu.common.enable=Click to Enable
+menu.common.disable=Click to Disable
+menu.common.reset=Click to Reset
+menu.common.reload=Click to Reload
+
+// Settings menu items
+menu.settings.title=Eternal Nature Settings
+menu.settings.item.replant.title=Auto Replant Crops
+menu.settings.item.replant.description=Set if crops will be automatically replanted when harvested.
+menu.settings.item.auto-plant.title=Auto Plant
+menu.settings.item.auto-plant.description=Set if plants have a chance to automatically plant it's self when left on the ground.
+menu.settings.item.tree-spread.title=Random Tree Spread
+menu.settings.item.tree-spread.description=Sets if trees will randomly drop saplings, causing forests to slowly grow.
+menu.settings.item.reload-config.title=Reload Config
+menu.settings.item.reload-config.description=Reloads the config files.
+menu.settings.item.reset-config.title=Reset Config
+menu.settings.item.reset-config.description=Resets the config file back to default.
+
+// Language Settings Menu
+menu.language.title=Language Settings
+menu.language.description=Change the plugins language. Languages are loaded from the plugins lang folder.
+menu.language.reset.title=Reset .lang files
+menu.language.reset.description=This will reset the packaged language files. It will not affect custom languages.
+menu.language.reload.title=Reload Languages
+menu.language.reload.description=This will reload all languages and update the current language if changes were made.
+
+// Leaf Particle Menu
+menu.leaf-particles.title=Leaf Particle Settings
+menu.leaf-particles.description=Set if leave blocks will emmit a leaf particle randomly.
+menu.leaf-particles.spawn.extreme=VERY HIGH
+menu.leaf-particles.spawn.high=HIGH
+menu.leaf-particles.spawn.medium=MEDIUM
+menu.leaf-particles.spawn.low=LOW
+menu.leaf-particles.spawn.title=Spawn Chance
+menu.leaf-particles.spawn.description=Set the spawn rate of particles.
+menu.leaf-particles.enabled.title=Leaf Particles Enabled
+menu.leaf-particles.enabled.description=Toggle if leaf particles are enabled. When enabled leaves will slowly fall from leave blocks.
+
+// Temperature Menu
+menu.temp.title=Temperature Settings
+menu.temp.description=Change the settings for how temperature works.
+menu.temp.enabled.title=Temperature Enabled
+menu.temp.enabled.description=Sets if temperature is enabled. While enabled players will have a new challenge.
+menu.temp.damage.title=Cause Damage
+menu.temp.damage.description=Set if players will be hurt if there temperature is to high or low.
+menu.temp.sweat.title=Sweating
+menu.temp.sweat.description=If enabled players will lose hydration faster the higher there temperature is.
+menu.temp.burning.title=Self Ignition
+menu.temp.burning.description=If a player gets to hot they have a chance of catching on fire.
+menu.temp.freezing.title=Freeze Damage
+menu.temp.freezing.description=If a player gets to cold they will begin to get damaged.
+menu.temp.display.title=Display Mode
+menu.temp.display.description=Set where temperature is displayed for players.
+
+// hydration Menu
+menu.hydration.title=Hydration Settings
+menu.hydration.description=Change the settings for how hydration works.
+menu.hydration.enabled.title=Hydration Enabled
+menu.hydration.enabled.description=Set if hydration is enabled.
+menu.hydration.damage.title=Hydration Damage
+menu.hydration.damage.description=Set if players will be damaged when they run out of h20.
+menu.hydration.activity.title=High Activity Sweating
+menu.hydration.activity.description=If enabled players hydration will decrease faster when doing high activity tasks such as sprinting.
+menu.hydration.display.title=Display Mode
+menu.hydration.display.description=Set where hydration is displayed for players.
+
+// Other Menu
+menu.other.title=Other Settings
+menu.other.update-notify.title=Update Notifications
+menu.other.update-notify.description=Notify's admins and ops on join if there is a newer version available.
+menu.other.update-checks.title=Update Checking
+menu.other.update-checks.description=Toggle if automatic update checks are done.

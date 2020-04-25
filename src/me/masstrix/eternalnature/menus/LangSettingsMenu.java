@@ -17,15 +17,114 @@
 package me.masstrix.eternalnature.menus;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.PluginData;
+import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.core.item.ItemBuilder;
+import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
+import me.masstrix.eternalnature.util.StringUtil;
+import me.masstrix.lang.langEngine.Lang;
+import me.masstrix.lang.langEngine.LanguageEngine;
+import org.bukkit.Material;
+import org.bukkit.Sound;
 
 public class LangSettingsMenu extends GlobalMenu {
 
-    public LangSettingsMenu(EternalNature plugin, MenuManager menuManager) {
-        super(Menus.LANG_SETTINGS, "Language Selection", 5);
-        SystemConfig config = plugin.getSystemConfig();
+    private EternalNature plugin;
+    private MenuManager menuManager;
+    private LanguageEngine le;
+    private SystemConfig config;
 
+    public LangSettingsMenu(EternalNature plugin, MenuManager menuManager) {
+        super(Menus.LANG_SETTINGS, 5);
+        this.plugin = plugin;
+        this.menuManager = menuManager;
+        this.le = plugin.getLanguageEngine();
+        this.config = plugin.getSystemConfig();
+    }
+
+    @Override
+    public String getTitle() {
+        return le.getText("menu.language.title");
+    }
+
+    @Override
+    public void build() {
         // Back button
         addBackButton(menuManager, Menus.SETTINGS);
+
+        setButton(new Button(getInventory(), asSlot(1, 3), new ItemBuilder(Material.WRITABLE_BOOK)
+                .setName("&a" + le.getText("menu.language.reset.title"))
+                .addDescription(le.getText("menu.language.reset.description"))
+                .addLore("&e" + le.getText("menu.common.reset"))
+                .build())
+                .onClick(player -> {
+                    plugin.writeLangFiles(true);
+                    le.loadLanguages();
+                    TemperatureIcon.reloadLang(le);
+                    menuManager.forceCloseAll();
+                    menuManager.rebuildAllMenus();
+                    player.playSound(player.getLocation(), Sound.UI_LOOM_SELECT_PATTERN, 1, 1);
+                    player.sendMessage(StringUtil.color(PluginData.PREFIX
+                            + "Reset packaged language files."));
+                }));
+
+        setButton(new Button(getInventory(), asSlot(1, 5), new ItemBuilder(Material.BOOKSHELF)
+                .setName("&a" + le.getText("menu.language.reload.title"))
+                .addDescription(le.getText("menu.language.reload.description"))
+                .addLore("&e" + le.getText("menu.common.reload"))
+                .build())
+                .onClick(player -> {
+                    menuManager.forceCloseAll();
+                    le.loadLanguages();
+                    TemperatureIcon.reloadLang(le);
+                    menuManager.forceCloseAll();
+                    menuManager.rebuildAllMenus();
+                    player.playSound(player.getLocation(), Sound.UI_LOOM_SELECT_PATTERN, 1, 1);
+                    player.sendMessage(StringUtil.color(PluginData.PREFIX
+                            + "Reloaded language files."));
+                }));
+
+        // Load all languages into menu.
+        int slot = 0;
+        for (Lang lang : le.list()) {
+
+            int row = slot / 7;
+            int column = slot % 7;
+
+            boolean selected = le.isActive(lang);
+
+            // Add a loaded language to the menu.
+            setButton(new Button(getInventory(), asSlot(row + 2, column + 1), () -> {
+                ItemBuilder builder = new ItemBuilder(selected ? Material.MAP : Material.PAPER);
+                builder.setGlowing(selected);
+                builder.setName("&a" + lang.getNiceName());
+                builder.addLore("");
+                if (le.isActive(lang))
+                    builder.addLore("&a" + le.getText("menu.common.selected"));
+                else
+                    builder.addLore("&e" + le.getText("menu.common.select"));
+                return builder.build();
+            }).onClick(player -> {
+                if (selected) return;
+
+                // Update config
+                config.set(ConfigOption.LANGUAGE, lang.getLocale());
+                config.save();
+
+                // Apply language
+                le.setLanguage(lang);
+                menuManager.forceCloseAll();
+                menuManager.rebuildAllMenus();
+                player.playSound(player.getLocation(), Sound.UI_LOOM_SELECT_PATTERN, 1, 1);
+                player.sendMessage(StringUtil.color(PluginData.PREFIX
+                        + "Set language to &7" + lang.getNiceName()));
+
+                // Reload temp icon names
+                TemperatureIcon.reloadLang(le);
+            }));
+
+            slot++;
+        }
     }
 }

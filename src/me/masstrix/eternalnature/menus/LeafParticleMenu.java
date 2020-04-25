@@ -21,23 +21,40 @@ import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
 import me.masstrix.eternalnature.util.ChangeToggleUtil;
+import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 
 public class LeafParticleMenu extends GlobalMenu {
 
-    public LeafParticleMenu(EternalNature plugin, MenuManager menuManager) {
-        super(Menus.LEAF_PARTICLE_SETTINGS, "Leaf Particle Settings", 5);
-        SystemConfig config = plugin.getSystemConfig();
+    private EternalNature plugin;
+    private MenuManager menuManager;
+    private SystemConfig config;
+    private LanguageEngine le;
 
+    public LeafParticleMenu(EternalNature plugin, MenuManager menuManager) {
+        super(Menus.LEAF_PARTICLE_SETTINGS, 5);
+        this.config = plugin.getSystemConfig();
+        this.plugin = plugin;
+        this.menuManager = menuManager;
+        this.le = plugin.getLanguageEngine();
+    }
+
+    @Override
+    public String getTitle() {
+        return le.getText("menu.leaf-particle.title");
+    }
+
+    @Override
+    public void build() {
         // Back button
         addBackButton(menuManager, Menus.SETTINGS);
 
         setButton(new Button(getInventory(), asSlot(1, 3), () -> new ItemBuilder(Material.REDSTONE_TORCH)
-                .setName("&aLeaf Particles Enabled")
-                .addLore("", "Set if lef particles are enabled.", "")
+                .setName("&a" + le.getText("menu.leaf-particles.enabled.title.title"))
+                .addDescription(le.getText("menu.leaf-particles.enabled.description"))
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.LEAF_EFFECT))
-                .build()).setToggle("Leaf Particles", () -> config.isEnabled(ConfigOption.LEAF_EFFECT))
+                .build()).setToggle(le.getText("menu.leaf-particles.enabled.title.title"), () -> config.isEnabled(ConfigOption.LEAF_EFFECT))
                 .onClick(player -> {
                     config.toggle(ConfigOption.LEAF_EFFECT);
                     config.save();
@@ -46,15 +63,15 @@ public class LeafParticleMenu extends GlobalMenu {
                 }));
 
         ChangeToggleUtil spawnChances = new ChangeToggleUtil();
-        spawnChances.add("&cVERY HIGH", 0.05);
-        spawnChances.add("&cHIGH", 0.01);
-        spawnChances.add("&eMEDIUM", 0.005);
-        spawnChances.add("&aLOW", 0.001);
+        spawnChances.add("&c" + le.getText("menu.leaf-particles.spawn.extreme"), 0.05);
+        spawnChances.add("&c" + le.getText("menu.leaf-particles.spawn.high"), 0.01);
+        spawnChances.add("&e" + le.getText("menu.leaf-particles.spawn..medium"), 0.005);
+        spawnChances.add("&a" + le.getText("menu.leaf-particles.spawn.low"), 0.001);
         spawnChances.selectClosest(config.getDouble(ConfigOption.LEAF_EFFECT_CHANCE));
 
         setButton(new Button(getInventory(), asSlot(1, 4), () -> new ItemBuilder(Material.ENDER_EYE)
-                .setName("&aSpawn Chance")
-                .addLore("", "Set the spawn rate of particles.", "")
+                .setName("&a" + le.getText("menu.leaf-particles.spawn.title.title"))
+                .addDescription(le.getText("menu.leaf-particles.spawn.description"))
                 .addLore("Currently: " +  spawnChances.getSelected().getName())
                 .addLore("&eChange to " +  spawnChances.getNext().getName())
                 .build())

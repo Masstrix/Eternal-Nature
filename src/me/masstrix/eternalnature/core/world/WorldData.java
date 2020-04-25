@@ -18,8 +18,7 @@ package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.api.EternalWorld;
-import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.core.TemperatureData;
+import me.masstrix.eternalnature.core.temperature.TemperatureData;
 import me.masstrix.eternalnature.util.*;
 import org.bukkit.*;
 import org.bukkit.block.Biome;

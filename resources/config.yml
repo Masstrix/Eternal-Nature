@@ -85,8 +85,3 @@ temperature:
     save-chunk-data: false
     thread-limit: 20
     chunk-pool-cap: 20
-    
-messages:
-  death-heat: "%name% died of hyperthermia"
-  death-cold: "%name% died of hypothermia"
-  death-dehydrate: "%name% died of dehydration"

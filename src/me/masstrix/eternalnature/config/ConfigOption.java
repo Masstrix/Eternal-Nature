@@ -19,6 +19,7 @@ package me.masstrix.eternalnature.config;
 public enum ConfigOption {
     UPDATES_NOTIFY("general.notify-update-join", true),
     UPDATES_CHECK("general.check-for-updates", true),
+    LANGUAGE("general.language", "en"),
 
     LEAF_EFFECT("global.falling-leaves.enabled", true),
     LEAF_EFFECT_RANGE("global.falling-leaves.range", 6),
@@ -69,11 +70,7 @@ public enum ConfigOption {
     HYDRATION_WALKING("hydration.increase-from-activity", true),
     HYDRATION_DAMAGE("hydration.damage-when-empty", true),
     HYDRATION_BAR_STYLE("hydration.display.style", StatusRenderMethod.BOSSBAR.name()),
-    HYDRATION_BAR_FLASH("hydration.display.warning-flash", true),
-
-    MSG_DEATH_HEAT("messages.death-heat", "%name% burnt to a crisp"),
-    MSG_DEATH_COLD("messages.death-cold", "%name% died of hypothermia"),
-    MSG_DEATH_WATER("messages.death-dehydrate", "%name% died of dehydration");
+    HYDRATION_BAR_FLASH("hydration.display.warning-flash", true);
 
     String key;
     Object def;

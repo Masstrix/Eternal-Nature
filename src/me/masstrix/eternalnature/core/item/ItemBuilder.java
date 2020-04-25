@@ -18,6 +18,7 @@ package me.masstrix.eternalnature.core.item;
 
 import me.masstrix.eternalnature.util.StringUtil;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -35,6 +36,7 @@ public class ItemBuilder {
     private String name;
     private List<String> lore = new ArrayList<>();
     private PotionType potionType;
+    private boolean glowing;
 
     public ItemBuilder(Material type) {
         this.type = type;
@@ -60,6 +62,27 @@ public class ItemBuilder {
         return this;
     }
 
+    public ItemBuilder addDescription(String desc) {
+        StringBuilder line = new StringBuilder();
+        addLore("");
+        boolean complete = false;
+        for (String s : desc.split(" ")) {
+            if (line.length() >= 25) {
+                addLore(line.toString());
+                line = new StringBuilder();
+                complete = true;
+            } else {
+                complete = false;
+            }
+            line.append(s);
+            line.append(" ");
+        }
+        if (!complete)
+            addLore(line.toString());
+        addLore("");
+        return this;
+    }
+
     public ItemBuilder addSwitch(String prefix, boolean toggle) {
         addLore(prefix + (toggle ? "&a Enabled" : "&c Disabled"),
                 "&eClick to " + (toggle ? "disable" : "enable"));
@@ -81,6 +104,11 @@ public class ItemBuilder {
         return this;
     }
 
+    public ItemBuilder setGlowing(boolean glowing) {
+        this.glowing = glowing;
+        return this;
+    }
+
     public ItemStack build() {
         ItemStack item = stack == null ? new ItemStack(type) : stack;
 
@@ -89,6 +117,9 @@ public class ItemBuilder {
         meta.setLore(lore);
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS,
                 ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_UNBREAKABLE);
+        if (glowing) {
+            meta.addEnchant(Enchantment.DURABILITY, 1, true);
+        }
         item.setItemMeta(meta);
         if (meta instanceof PotionMeta && potionType != null) {
             PotionMeta potionMeta = (PotionMeta) meta;

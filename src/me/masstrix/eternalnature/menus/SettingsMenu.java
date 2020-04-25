@@ -21,8 +21,11 @@ import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
+import me.masstrix.eternalnature.core.item.SkullIndex;
 import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.eternalnature.util.VersionChecker;
+import me.masstrix.lang.langEngine.Lang;
+import me.masstrix.lang.langEngine.LanguageEngine;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -30,19 +33,31 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionType;
 
 public class SettingsMenu extends GlobalMenu {
 
     private EternalNature plugin;
+    private MenuManager menuManager;
+    private SystemConfig config;
+    private LanguageEngine le;
     private VersionChecker.VersionMeta versionMeta;
 
     public SettingsMenu(EternalNature plugin, MenuManager menuManager) {
-        super(Menus.SETTINGS, "Eternal Nature Settings", 5);
-        SystemConfig config = plugin.getSystemConfig();
+        super(Menus.SETTINGS, 5);
+        this.config = plugin.getSystemConfig();
+        this.menuManager = menuManager;
+        this.le = plugin.getLanguageEngine();
         this.plugin = plugin;
+    }
 
+    @Override
+    public String getTitle() {
+        return le.getText("menu.settings.title");
+    }
+
+    @Override
+    public void build() {
         versionMeta = plugin.getVersionMeta();
 
         setButton(new Button(getInventory(), asSlot(0, 4), () -> {
@@ -78,9 +93,8 @@ public class SettingsMenu extends GlobalMenu {
 
             return new ItemBuilder(Material.FERN)
                     .setName("&aEternal Nature")
-                    .addLore("Improving the survival experience.",
-                            "",
-                            "Developed by &f" + StringUtil.fromStringArray(plugin.getDescription().getAuthors(), ", "),
+                    .addDescription("A plugin to make the world be more lively.")
+                    .addLore("Developed by &f" + StringUtil.fromStringArray(plugin.getDescription().getAuthors(), ", "),
                             "Version: " + version,
                             "Latest: &7" + latest)
                     .addLore("", "&eClick to get help", "&elinks to the project.")
@@ -113,52 +127,73 @@ public class SettingsMenu extends GlobalMenu {
             player.spigot().sendMessage(builder.create());
         }));
 
+        LanguageEngine engine = plugin.getLanguageEngine();
+
+        setButton(new Button(getInventory(), asSlot(1, 8), () -> {
+            ItemBuilder builder = new ItemBuilder(SkullIndex.PLANET_EARTH)
+                    .setName("&a" + le.getText("menu.language.title"))
+                    .addDescription(le.getText("menu.language.description"));
+
+            for (Lang lang : engine.list()) {
+                boolean selected = engine.isActive(lang);
+                if (selected)
+                    builder.addLore(" &a• " + lang.getNiceName());
+                else
+                    builder.addLore(" &7• " + lang.getNiceName());
+            }
+            builder.addLore("", "&e" + le.getText("menu.common.select"));
+            return builder.build();
+        }).onClick(player -> {
+            menuManager.getMenu(Menus.LANG_SETTINGS).open(player);
+        }));
+
         setButton(new Button(getInventory(), asSlot(1, 2), () -> new ItemBuilder(Material.POTION)
                 .setPotionType(PotionType.SPEED)
-                .setName("&aHydration Settings")
-                .addLore("", "Change the settings for how", "hydration works.", "")
+                .setName("&a" + le.getText("menu.hydration.title"))
+                .addDescription(le.getText("menu.hydration.description"))
                 .addSwitchView("Currently:", config.isEnabled(ConfigOption.HYDRATION_ENABLED))
-                .addLore("", "&eClick to view & edit")
+                .addLore("", "&e" + le.getText("menu.common.edit"))
                 .build()).onClick(player -> {
             menuManager.getMenu(Menus.HYDRATION_SETTINGS).open(player);
         }));
 
         setButton(new Button(getInventory(), asSlot(1, 4), () -> new ItemBuilder(Material.COMPARATOR)
-                .setName("&aOther Settings")
+                .setName("&a" + le.getText("menu.other.title"))
                 .addLore("",
                         (config.isEnabled(ConfigOption.UPDATES_NOTIFY) ? "&a" : "&c") + " ▪&7 Update Notifications",
                         (config.isEnabled(ConfigOption.UPDATES_CHECK) ? "&a" : "&c") + " ▪&7 Update Checking",
                         "",
-                        "&eClick to view & edit")
+                        "&e" + le.getText("menu.common.edit"))
                 .build()).onClick(player -> {
             menuManager.getMenu(Menus.OTHER_SETTINGS).open(player);
         }));
 
         setButton(new Button(getInventory(), asSlot(1, 6), () -> new ItemBuilder(Material.CAMPFIRE)
-                .setName("&aTemperature Settings")
-                .addLore("", "Change the settings for how", "temperature works.", "")
+                .setName("&a" + le.getText("menu.temp.title"))
+                .addDescription(le.getText("menu.temp.description"))
                 .addSwitchView("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_ENABLED))
-                .addLore("", "&eClick to view & edit")
+                .addLore("", "&e" + le.getText("menu.common.edit"))
                 .build()).onClick(player -> {
             menuManager.getMenu(Menus.TEMP_SETTINGS).open(player);
         }));
 
         setButton(new Button(getInventory(), asSlot(3, 2), () -> new ItemBuilder(Material.KELP)
-                .setName("&aFalling Leaves")
-                .addLore("", "Set if leave blocks will emmit", "a leaf particle randomly.", "")
+                .setName("&a" + le.getText("menu.leaf-particles.title"))
+                .addDescription(le.getText("menu.leaf-particles.description"))
                 .addSwitchView("Currently:", config.isEnabled(ConfigOption.LEAF_EFFECT))
-                .addLore("&eClick to view & edit")
+                .addLore("&e" + le.getText("menu.common.edit"))
                 .build())
-                .setToggle("Falling Leaves", () -> config.isEnabled(ConfigOption.LEAF_EFFECT))
+                .setToggle(le.getText("menu.leaf-particles.title"),
+                        () -> config.isEnabled(ConfigOption.LEAF_EFFECT))
                 .onClick(player -> {
                     openMenu(menuManager, Menus.LEAF_PARTICLE_SETTINGS, player);
                 }));
         setButton(new Button(getInventory(), asSlot(3, 3), () -> new ItemBuilder(Material.OAK_SAPLING)
-                .setName("&aAuto Plant")
-                .addLore("", "Set if foliage have a chance to", "auto plant them self.",
-                        "This includes flowers, saplings", "and crops.", "")
+                .setName("&a" + le.getText("menu.settings.item.auto-plant.title"))
+                .addDescription(le.getText("menu.settings.item.auto-plant.description"))
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.AUTO_PLANT))
-                .build()).setToggle("Auto Plant", () -> config.isEnabled(ConfigOption.AUTO_PLANT))
+                .build()).setToggle(le.getText("menu.settings.item.auto-plant.title"),
+                () -> config.isEnabled(ConfigOption.AUTO_PLANT))
                 .onClick(player -> {
                     config.toggle(ConfigOption.AUTO_PLANT);
                     config.save();
@@ -166,10 +201,11 @@ public class SettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(getInventory(), asSlot(3, 4), () -> new ItemBuilder(Material.WOODEN_HOE)
-                .setName("&aAuto Replant Crops")
-                .addLore("", "Set if crops will get", "auto replanted when harvested.", "")
+                .setName("&a" + le.getText("menu.settings.item.replant.title"))
+                .addDescription(le.getText("menu.settings.item.replant.description"))
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.AUTO_REPLANT))
-                .build()).setToggle("Auto Replant", () -> config.isEnabled(ConfigOption.AUTO_REPLANT))
+                .build()).setToggle(le.getText("menu.settings.item.replant.title"),
+                () -> config.isEnabled(ConfigOption.AUTO_REPLANT))
                 .onClick(player -> {
                     config.toggle(ConfigOption.AUTO_REPLANT);
                     config.save();
@@ -177,19 +213,21 @@ public class SettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(getInventory(), asSlot(3, 5), () -> new ItemBuilder(Material.OAK_LEAVES)
-                .setName("&aRandom Tree Spread")
-                .addLore("", "Set if trees randomly", "drop saplings making forests", "very slowly grow over time.", "")
+                .setName("&a" + le.getText("menu.settings.item.tree-spread.title"))
+                .addDescription(le.getText("menu.settings.item.tree-spread.description"))
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.RANDOM_TREE_SPREAD))
-                .build()).setToggle("Random Tree Spread", () -> config.isEnabled(ConfigOption.RANDOM_TREE_SPREAD))
+                .build()).setToggle(le.getText("menu.settings.item.tree-spread.title"),
+                () -> config.isEnabled(ConfigOption.RANDOM_TREE_SPREAD))
                 .onClick(player -> {
                     config.toggle(ConfigOption.RANDOM_TREE_SPREAD);
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(1, 8), () -> new ItemBuilder(Material.BARRIER)
-                .setName("&aReset Config")
-                .addLore("", "Resets the config to default settings.", "", "&eClick to Reset Config")
+        setButton(new Button(getInventory(), asSlot(3, 8), () -> new ItemBuilder(Material.WRITABLE_BOOK)
+                .setName("&a" + le.getText("menu.settings.item.reset-config.title"))
+                .addDescription(le.getText("menu.settings.item.reset-config.description"))
+                .addLore("&e" + le.getText("menu.common.reset"))
                 .build())
                 .onClick(player -> {
                     plugin.saveResource("temperature-config.yml", true);
@@ -201,9 +239,10 @@ public class SettingsMenu extends GlobalMenu {
                     player.sendMessage(StringUtil.color(PluginData.PREFIX + "&aReset Config back to default."));
                 }));
 
-        setButton(new Button(getInventory(), asSlot(2, 8), () -> new ItemBuilder(Material.EMERALD)
-                .setName("&aReload Config")
-                .addLore("", "Reloads the config files.", "", "&eClick to Reload Config")
+        setButton(new Button(getInventory(), asSlot(4, 8), () -> new ItemBuilder(Material.BOOK)
+                .setName("&a" + le.getText("menu.settings.item.reload-config.title"))
+                .addDescription(le.getText("menu.settings.item.reload-config.description"))
+                .addLore("&e" + le.getText("menu.common.reload"))
                 .build())
                 .onClick(player -> {
                     config.reload();
@@ -211,10 +250,5 @@ public class SettingsMenu extends GlobalMenu {
                     player.closeInventory();
                     player.sendMessage(StringUtil.color(PluginData.PREFIX + "&aReloaded Config."));
                 }));
-    }
-
-    @Override
-    public void onOpen(Player who) {
-        versionMeta = plugin.getVersionMeta();
     }
 }

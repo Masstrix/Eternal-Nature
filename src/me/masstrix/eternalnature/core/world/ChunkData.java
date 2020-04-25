@@ -18,7 +18,7 @@ package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.api.EternalChunk;
 import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.core.TemperatureData;
+import me.masstrix.eternalnature.core.temperature.TemperatureData;
 import me.masstrix.eternalnature.util.*;
 import org.bukkit.Chunk;
 import org.bukkit.Material;

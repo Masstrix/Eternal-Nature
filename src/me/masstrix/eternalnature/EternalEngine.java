@@ -18,6 +18,7 @@ package me.masstrix.eternalnature;
 
 import me.masstrix.eternalnature.core.*;
 import me.masstrix.eternalnature.core.entity.EntityStorage;
+import me.masstrix.eternalnature.core.temperature.TemperatureData;
 import me.masstrix.eternalnature.core.world.*;
 import me.masstrix.eternalnature.data.UserData;
 import me.masstrix.eternalnature.menus.*;

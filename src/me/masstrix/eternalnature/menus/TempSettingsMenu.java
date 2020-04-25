@@ -20,24 +20,41 @@ import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
+import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.potion.PotionType;
 
 public class TempSettingsMenu extends GlobalMenu {
 
-    public TempSettingsMenu(EternalNature plugin, MenuManager menuManager) {
-        super(Menus.TEMP_SETTINGS, "Temperature Settings", 5);
-        SystemConfig config = plugin.getSystemConfig();
+    private EternalNature plugin;
+    private MenuManager menuManager;
+    private SystemConfig config;
+    private LanguageEngine le;
 
-        // Back button
+    public TempSettingsMenu(EternalNature plugin, MenuManager menuManager) {
+        super(Menus.TEMP_SETTINGS, 5);
+        this.config = plugin.getSystemConfig();
+        this.menuManager = menuManager;
+        this.le = plugin.getLanguageEngine();
+        this.plugin = plugin;
+    }
+
+    @Override
+    public String getTitle() {
+        return le.getText("menu.temp.title");
+    }
+
+    @Override
+    public void build() {
         addBackButton(menuManager, Menus.SETTINGS);
 
         setButton(new Button(getInventory(), asSlot(1, 2), () -> new ItemBuilder(Material.REDSTONE_TORCH)
-                .setName("&aTemperature Enabled")
-                .addLore("", "Set if temperature is enabled", "")
+                .setName("&a" + le.getText("menu.temp.enabled.title"))
+                .addDescription(le.getText("menu.temp.enabled.description"))
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_ENABLED))
-                .build()).setToggle("Enabled", () -> config.isEnabled(ConfigOption.TEMPERATURE_ENABLED))
+                .build()).setToggle(le.getText("menu.temp.enabled.title"),
+                () -> config.isEnabled(ConfigOption.TEMPERATURE_ENABLED))
                 .onClick(player -> {
                     config.toggle(ConfigOption.TEMPERATURE_ENABLED);
                     config.save();
@@ -45,10 +62,11 @@ public class TempSettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(getInventory(), asSlot(1, 3), () -> new ItemBuilder(Material.IRON_SWORD)
-                .setName("&aDamage")
-                .addLore("", "Set if players will be hurt if", "there temperature is to high or low.", "")
+                .setName("&a" + le.getText("menu.temp.damage.title"))
+                .addDescription(le.getText("menu.temp.damage.description"))
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_DAMAGE))
-                .build()).setToggle("Cause Damage", () -> config.isEnabled(ConfigOption.TEMPERATURE_DAMAGE))
+                .build()).setToggle(le.getText("menu.temp.damage.title"),
+                () -> config.isEnabled(ConfigOption.TEMPERATURE_DAMAGE))
                 .onClick(player -> {
                     config.toggle(ConfigOption.TEMPERATURE_DAMAGE);
                     config.save();
@@ -56,11 +74,12 @@ public class TempSettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(getInventory(), asSlot(1, 4), () -> new ItemBuilder(Material.POTION)
-                .setName("&aSweating")
                 .setPotionType(PotionType.WATER)
-                .addLore("", "If enabled players will sweat and lose", "hydration faster in higher temperatures.", "")
+                .setName("&a" + le.getText("menu.temp.sweat.title"))
+                .addDescription(le.getText("menu.temp.sweat.description"))
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_SWEAT))
-                .build()).setToggle("Sweat", () -> config.isEnabled(ConfigOption.TEMPERATURE_SWEAT))
+                .build()).setToggle(le.getText("menu.temp.sweat.title"),
+                () -> config.isEnabled(ConfigOption.TEMPERATURE_SWEAT))
                 .onClick(player -> {
                     config.toggle(ConfigOption.TEMPERATURE_SWEAT);
                     config.save();
@@ -68,10 +87,11 @@ public class TempSettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(getInventory(), asSlot(1, 5), () -> new ItemBuilder(Material.FLINT_AND_STEEL)
-                .setName("&aBurn Damage")
-                .addLore("", "If enabled and a player gets too hot", "they will ignite.", "")
+                .setName("&a" + le.getText("menu.temp.burning.title"))
+                .addDescription(le.getText("menu.temp.burning.description"))
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_BURN))
-                .build()).setToggle("Burn", () -> config.isEnabled(ConfigOption.TEMPERATURE_BURN))
+                .build()).setToggle(le.getText("menu.temp.burning.title"),
+                () -> config.isEnabled(ConfigOption.TEMPERATURE_BURN))
                 .onClick(player -> {
                     config.toggle(ConfigOption.TEMPERATURE_BURN);
                     config.save();
@@ -79,18 +99,19 @@ public class TempSettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(getInventory(), asSlot(1, 6), () -> new ItemBuilder(Material.ICE)
-                .setName("&aFreeze Damage")
-                .addLore("", "If a player gets to cold they", "will begin to get damaged.", "")
+                .setName("&a" + le.getText("menu.temp.freezing.title"))
+                .addDescription(le.getText("menu.temp.freezing.description"))
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_FREEZE))
-                .build()).setToggle("Freeze", () -> config.isEnabled(ConfigOption.TEMPERATURE_FREEZE))
+                .build()).setToggle(le.getText("menu.temp.freezing.title"),
+                () -> config.isEnabled(ConfigOption.TEMPERATURE_FREEZE))
                 .onClick(player -> {
                     config.toggle(ConfigOption.TEMPERATURE_FREEZE);
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
         setButton(new Button(getInventory(), asSlot(4, 4), () -> new ItemBuilder(Material.JUNGLE_SIGN)
-                .setName("&aDisplay Mode")
-                .addLore("", "Set how how temperature is displayed", "to players.", "")
+                .setName("&a" + le.getText("menu.temp.display.title"))
+                .addDescription(le.getText("menu.temp.display.description"))
                 .addLore("Currently: &f" + config.getRenderMethod(ConfigOption.TEMPERATURE_BAR_STYLE).getSimple(),
                         config.getRenderMethod(ConfigOption.TEMPERATURE_BAR_STYLE).getDescription())
                 .addLore("&eClick to switch to &7" + config.getRenderMethod(ConfigOption.TEMPERATURE_BAR_STYLE).opposite().getSimple())

@@ -20,14 +20,16 @@ import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.api.EternalUser;
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.core.HeightGradient;
-import me.masstrix.eternalnature.core.TemperatureData;
+import me.masstrix.eternalnature.core.temperature.TemperatureData;
 import me.masstrix.eternalnature.config.StatusRenderMethod;
 import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
 import me.masstrix.eternalnature.core.world.RegionScanner;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.listeners.DeathListener;
 import me.masstrix.eternalnature.util.*;
+import me.masstrix.lang.langEngine.LanguageEngine;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -58,6 +60,7 @@ public class UserData implements EternalUser {
     public static final float MAX_THIRST = 20;
     private SystemConfig config;
     private EternalNature plugin;
+    private LanguageEngine le;
 
     private Stopwatch damageTimer = new Stopwatch();
     private Flicker flicker = new Flicker(300);
@@ -80,6 +83,7 @@ public class UserData implements EternalUser {
     public UserData(EternalNature plugin, UUID id) {
         this.id = id;
         this.plugin = plugin;
+        this.le = plugin.getLanguageEngine();
         config = plugin.getSystemConfig();
 
         Player player = Bukkit.getPlayer(id);
@@ -168,7 +172,7 @@ public class UserData implements EternalUser {
                 damageTimer.startIfNew();
                 if (damageTimer.hasPassed((long) (3000 - (temperature * 2)))) {
                     damageTimer.start();
-                    damageCustom(player, 1, config.getString(ConfigOption.MSG_DEATH_HEAT));
+                    damageCustom(player, 1, le.getText("death.heat"));
                 }
             } else if (this.temperature <= tempData.getFreezingPoint()
                     && config.isEnabled(ConfigOption.TEMPERATURE_FREEZE)) {
@@ -178,7 +182,7 @@ public class UserData implements EternalUser {
                 damageTimer.startIfNew();
                 if (damageTimer.hasPassed(3000)) {
                     damageTimer.start();
-                    damageCustom(player, 1, config.getString(ConfigOption.MSG_DEATH_COLD));
+                    damageCustom(player, 1, le.getText("death.cold"));
                 }
             }
         }
@@ -199,7 +203,7 @@ public class UserData implements EternalUser {
                 damageTimer.startIfNew();
                 if (damageTimer.hasPassed(3000)) {
                     damageTimer.start();
-                    damageCustom(player, 1, config.getString(ConfigOption.MSG_DEATH_WATER));
+                    damageCustom(player, 1, le.getText("death.dehydrate"));
                 }
             }
         }
@@ -271,7 +275,7 @@ public class UserData implements EternalUser {
 
         if (config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) {
             TemperatureData tempData = plugin.getEngine().getTemperatureData();
-            TemperatureData.TemperatureIcon icon = tempData.getClosestIconName(temperature);
+            TemperatureIcon icon = tempData.getClosestIconName(temperature);
 
             String text = config.getString(ConfigOption.TEMPERATURE_TEXT);
             text = text.replaceAll("%temp_simple%", icon.getColor() + icon.getName() + "&f");
