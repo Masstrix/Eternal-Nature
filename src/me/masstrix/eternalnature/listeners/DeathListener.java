@@ -18,6 +18,7 @@ package me.masstrix.eternalnature.listeners;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.data.UserData;
+import me.masstrix.eternalnature.util.StringUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -57,7 +58,7 @@ public class DeathListener implements Listener {
         EntityDamageEvent cause = player.getLastDamageCause();
         if (cause != null && cause.getCause() == EntityDamageEvent.DamageCause.CUSTOM) {
             if (customReasons.containsKey(player.getUniqueId())) {
-                event.setDeathMessage(customReasons.get(player.getUniqueId()));
+                event.setDeathMessage(StringUtil.color(customReasons.get(player.getUniqueId())));
             }
         }
         // Remove any instance of the player
