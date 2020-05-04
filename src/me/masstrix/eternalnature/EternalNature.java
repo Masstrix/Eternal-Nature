@@ -22,28 +22,22 @@ import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.metric.Metrics;
 import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
 import me.masstrix.eternalnature.listeners.*;
-import me.masstrix.eternalnature.util.MinecraftVersion;
 import me.masstrix.eternalnature.util.StringUtil;
-import me.masstrix.eternalnature.util.VersionChecker;
 import me.masstrix.lang.langEngine.LanguageEngine;
+import me.masstrix.version.MinecraftRelease;
+import me.masstrix.version.MinecraftVersion;
+import me.masstrix.version.checker.VersionCheckInfo;
+import me.masstrix.version.checker.VersionChecker;
 import org.bukkit.Bukkit;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.PluginCommand;
-import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Level;
 
 public class EternalNature extends JavaPlugin {
@@ -53,7 +47,7 @@ public class EternalNature extends JavaPlugin {
     private LanguageEngine languageEngine;
     private SystemConfig systemConfig;
     private EternalNatureAPI api;
-    private VersionChecker.VersionMeta versionMeta = null;
+    private VersionCheckInfo versionCheckInfo = null;
     private boolean started = false;
 
     public SystemConfig getSystemConfig() {
@@ -68,8 +62,8 @@ public class EternalNature extends JavaPlugin {
         return api;
     }
 
-    public VersionChecker.VersionMeta getVersionMeta() {
-        return versionMeta;
+    public VersionCheckInfo getVersionInfo() {
+        return versionCheckInfo;
     }
 
     /**
@@ -81,10 +75,10 @@ public class EternalNature extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        MinecraftVersion serverVer = MinecraftVersion.getServerVersion();
+        MinecraftVersion serverVer = MinecraftRelease.getServerVersion();
 
         // Make sure the server is new enough to run the plugin
-        if (serverVer.isBehindVersion(REQUIRED_VER)) {
+        if (serverVer.isBehind(REQUIRED_VER)) {
             getLogger().warning("Unsupported version!"
                     + " This version requires the server "
                     + "to be running at least "
@@ -117,22 +111,26 @@ public class EternalNature extends JavaPlugin {
 
         // Only check for updates if enabled.
         if (systemConfig.isEnabled(ConfigOption.UPDATES_CHECK)) {
-            new VersionChecker(PluginData.RESOURCE_ID, getDescription().getVersion()).run(s -> {
-                if (s.getState() == VersionChecker.VersionState.UNKNOWN) {
+            new VersionChecker(PluginData.RESOURCE_ID, getDescription().getVersion()).run(info -> {
+                if (info.isUnknown()) {
                     getLogger().log(Level.WARNING, "Failed to check plugin version. Are you running offline?");
-                } else if (s.getState() == VersionChecker.VersionState.DEV_BUILD) {
-                    ConsoleCommandSender sender = Bukkit.getConsoleSender();
-                    sender.sendMessage(StringUtil.color("[EternalNature] \u00A7cYou are using a development build! " +
-                            "Bug are to be expected, please report them."));
-                } else if (s.getState() == VersionChecker.VersionState.BEHIND) {
+                }
+                else if (info.isDev()) {
+                    getLogger().log(Level.WARNING, "You are running a development build. Expect extra bugs.");
+                }
+                else if (info.isLatest()) {
+                    getLogger().log(Level.INFO, "Plugin is up to date.");
+                }
+                else if (info.isBehind()) {
                     ConsoleCommandSender sender = Bukkit.getConsoleSender();
                     sender.sendMessage(StringUtil.color(""));
                     sender.sendMessage(StringUtil.color("&e New update available for " + getDescription().getName()));
-                    sender.sendMessage(StringUtil.color(" Current version: &e" + s.getCurrentVersion()));
-                    sender.sendMessage(StringUtil.color(" Latest version: &e" + s.getLatestVersion()));
+                    sender.sendMessage(StringUtil.color(" Current version: &e" + info.getCurrent().getName()));
+                    sender.sendMessage(StringUtil.color(" Latest version: &e" + info.getLatest().getName()));
                     sender.sendMessage(StringUtil.color(""));
                 }
-                this.versionMeta = s;
+
+                this.versionCheckInfo = info;
             });
         }
         

@@ -23,9 +23,10 @@ import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
 import me.masstrix.eternalnature.core.item.SkullIndex;
 import me.masstrix.eternalnature.util.StringUtil;
-import me.masstrix.eternalnature.util.VersionChecker;
 import me.masstrix.lang.langEngine.Lang;
 import me.masstrix.lang.langEngine.LanguageEngine;
+import me.masstrix.version.checker.VersionCheckInfo;
+import me.masstrix.version.checker.VersionState;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -41,7 +42,7 @@ public class SettingsMenu extends GlobalMenu {
     private MenuManager menuManager;
     private SystemConfig config;
     private LanguageEngine le;
-    private VersionChecker.VersionMeta versionMeta;
+    private VersionCheckInfo versionInfo;
 
     public SettingsMenu(EternalNature plugin, MenuManager menuManager) {
         super(Menus.SETTINGS, 5);
@@ -58,25 +59,25 @@ public class SettingsMenu extends GlobalMenu {
 
     @Override
     public void build() {
-        versionMeta = plugin.getVersionMeta();
+        versionInfo = plugin.getVersionInfo();
 
         setButton(new Button(getInventory(), asSlot(0, 4), () -> {
 
             String version = plugin.getDescription().getVersion();
-            String latest = versionMeta == null ? "&8Unknown" : versionMeta.getLatestVersion();
+            String latest = versionInfo == null ? "&8Unknown" : versionInfo.getLatest().getName();
 
             if (!plugin.getSystemConfig().isEnabled(ConfigOption.UPDATES_CHECK)) {
                 latest = "&8Checking Disabled";
             }
 
-            if (versionMeta != null) {
-                VersionChecker.VersionState state = versionMeta.getState();
+            if (versionInfo != null) {
+                VersionState state = versionInfo.getState();
                 switch (state) {
-                    case DEV_BUILD: {
+                    case AHEAD: {
                         version = "&6" + version + " (Dev Build)";
                         break;
                     }
-                    case LATEST: {
+                    case CURRENT: {
                         version = "&a" + version + " (Latest)";
                         break;
                     }

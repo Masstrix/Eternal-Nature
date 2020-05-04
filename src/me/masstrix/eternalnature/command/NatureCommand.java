@@ -22,6 +22,7 @@ import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.core.render.LeafParticle;
 import me.masstrix.eternalnature.data.UserData;
 import me.masstrix.eternalnature.menus.Menus;
+import me.masstrix.version.checker.VersionCheckInfo;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -106,20 +107,21 @@ public class NatureCommand extends EternalCommand {
             msg("     &7Version Info");
             msg("");
             msg(" Current Version: &7" + plugin.getDescription().getVersion());
-            if (plugin.getVersionMeta() == null) {
+            if (plugin.getVersionInfo() == null) {
                 if (plugin.getSystemConfig().isEnabled(ConfigOption.UPDATES_CHECK)) {
                     msg("&cUnable to check plugin version.");
                 } else {
                     msg("&cVersion checking is disabled.");
                 }
             } else {
-                switch (plugin.getVersionMeta().getState()) {
+                VersionCheckInfo info = plugin.getVersionInfo();
+                switch (info.getState()) {
                     case UNKNOWN: {
                         msg("&cError trying to check version.");
                         break;
                     }
                     case BEHIND: {
-                        msg(" Latest: &7" + plugin.getVersionMeta().getLatestVersion() + " &6(update available)");
+                        msg(" Latest: &7" + info.getLatest().getName() + " &6(update available)");
 
                         ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.spigotmc.org/resources/natural-environment.43290/history");
                         HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new BaseComponent[] {
@@ -127,22 +129,22 @@ public class NatureCommand extends EternalCommand {
                         });
 
                         TextComponent text = new TextComponent(" ");
-                        TextComponent info = new TextComponent("CLICK HERE TO UPDATE");
-                        info.setBold(true);
-                        info.setColor(ChatColor.GOLD);
-                        info.setClickEvent(click);
-                        info.setHoverEvent(hover);
+                        TextComponent infoTxt = new TextComponent("CLICK HERE TO UPDATE");
+                        infoTxt.setBold(true);
+                        infoTxt.setColor(ChatColor.GOLD);
+                        infoTxt.setClickEvent(click);
+                        infoTxt.setHoverEvent(hover);
 
                         if (wasPlayer()) {
-                            ((Player) getSender()).spigot().sendMessage(text, info);
+                            ((Player) getSender()).spigot().sendMessage(text, infoTxt);
                         }
                         break;
                     }
-                    case DEV_BUILD: {
+                    case AHEAD: {
                         msg("&c This is a development build and may be unstable. Please report any bugs.");
                         break;
                     }
-                    case LATEST: {
+                    case CURRENT: {
                         msg("&a Plugin is up to date.");
                     }
                 }
