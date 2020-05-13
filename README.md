@@ -1,18 +1,34 @@
+[licenseImg]: https://img.shields.io/github/license/Masstrix/Eternal-Nature?style=for-the-badge
+[license]: https://github.com/Masstrix/Eternal-Nature/blob/master/LICENSE
+
+[releaseImg]: https://img.shields.io/github/v/release/Masstrix/Eternal-Nature?include_prereleases&style=for-the-badge
+[release]: https://github.com/PlaceholderAPI/PlaceholderAPI/releases/latest
+
+[downloadsImg]: https://img.shields.io/spiget/downloads/43290?style=for-the-badge
+[spigotPage]: https://www.spigotmc.org/resources/eternal-nature.43290/
+
+[testedImg]: https://img.shields.io/spiget/tested-versions/43290?style=for-the-badge
+
+[discord]: https://discord.gg/Uk3M9Y6
+[spigot]: https://www.spigotmc.org/resources/43290/
+[wiki]: https://github.com/Masstrix/Eternal-Nature/wiki
+
 <img src="https://i.imgur.com/8zlezgy.jpg" align="center">
 
-Spigot plugin to make your server more realistic with an H²O bar, temperature and more.
+[![releaseImg]][release] [![downloadsImg]][spigotPage] ![testedImg] [![licenseImg]][license]
 
-Ever wanted to drink out of water bottles and let them have a use? Or maybe have the lava pits cook you alive? You're in luck! This is a plugin originally started on a private survival server and left sitting for months but has managed to make it way to a public release (somehow).
+## Information
 
-### What versions does this currently run on?
-This version is built to run on the latest version. Currently 1.14, may also work on 1.13 although untested on this version.
+[Eternal Nature][spigot] is a spigot plugin aimed towards adding more realistic effects and systems for minecraft servers. Creating a different and new expriance without interfering with normal gameplay.
 
-### What does it add?
- * World Temperature - Makes you take damage if to hot or cold and effects other factors such as hydration.
- * Hydration - Impliemnts a hydration (h20/water) level. This works much like the food bar but is for hydration.
- * Environment Effects - Creates a bit more atmosphare in the world.
- * Improved Apples - Makes it aviliabe for apples to have to be grown from an apple tree.
+Adding fatures such as temperature, hydration, and more atmospheric effects a new dynamic is created with each world. Allowing configration for every world to have a different eco system. Each fature can be enabled or disabled, letting you just use a small part of the plugin.
 
-## Events
-Current supported events are:
-* PlayerDehydrateEvent - Called when a players H2O bar changes.
+## Core Features?
+ * **Temperature** - Biomes, blocks, items, altitude, dimention all effect a players temperature creating a new dynamic for gameplay.
+ * **Hydration** - Adds a new hydration bar for players. This slowly depleates over time making players have to keep there hydration levels up. 
+ * **Environment Effects** - New effects such as falling leaves from trees are added to create more atmosphere in the world.
+
+## Quick Links
+* [Disscord Support][discord]
+* [Spigot Page][spigotPage]
+* [Wiki Page][wiki]
