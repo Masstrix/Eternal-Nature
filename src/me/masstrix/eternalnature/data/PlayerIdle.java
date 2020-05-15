@@ -16,9 +16,10 @@
 
 package me.masstrix.eternalnature.data;
 
+import me.masstrix.eternalnature.api.IPlayerIdle;
 import org.bukkit.Location;
 
-public class PlayerIdle {
+public class PlayerIdle implements IPlayerIdle {
 
     private int x, y, z;
     private boolean idle;

@@ -17,19 +17,20 @@
 package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.config.Reloadable;
 import me.masstrix.eternalnature.core.EternalWorker;
 import org.bukkit.World;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
-public class WorldProvider implements EternalWorker {
+public class WorldProvider implements EternalWorker, Reloadable {
 
     private EternalNature plugin;
-    private Map<UUID, WorldData> worldData = new HashMap<>();
+    private Map<String, WorldData> worldData = new HashMap<>();
     private BukkitTask ticker;
     private int tick = 0;
 
@@ -37,21 +38,25 @@ public class WorldProvider implements EternalWorker {
         this.plugin = plugin;
     }
 
+    /**
+     * @param world world to get data for.
+     * @return the worlds data or null if the world does not exist.
+     */
     public WorldData getWorld(World world) {
-        return getWorld(world.getUID());
+        return getWorld(world.getName());
     }
 
     /**
-     * @param uuid name of the world. Case sensitive.
-     * @return the worlds data.
+     * @param name name of the world. Case sensitive.
+     * @return the worlds data or null if the world does not exist.
      */
-    public WorldData getWorld(UUID uuid) {
-        if (worldData.containsKey(uuid)) {
-            return worldData.get(uuid);
+    public WorldData getWorld(String name) {
+        if (worldData.containsKey(name)) {
+            return worldData.get(name);
         }
 
-        WorldData data = new WorldData(plugin, uuid);
-        worldData.put(uuid, data);
+        WorldData data = new WorldData(plugin, name);
+        worldData.put(name, data);
         return data;
     }
 
@@ -71,12 +76,27 @@ public class WorldProvider implements EternalWorker {
 
     @Override
     public void end() {
-        ChunkData.killProcesses();
         ticker.cancel();
         worldData.forEach((n, w) -> w.unload());
     }
 
+    @Override
+    public void reload() {
+        worldData.values().forEach(w -> reload());
+    }
+
+    /**
+     * @return how many worlds are loaded.
+     */
     public int getLoaded() {
         return worldData.size();
+    }
+
+    public Iterable<WorldData> getWorlds() {
+        return worldData.values();
+    }
+
+    public Collection<String> getWorldNames() {
+        return worldData.keySet();
     }
 }

@@ -59,7 +59,7 @@ public class MoveListener implements Listener {
             WorldProvider provider = plugin.getEngine().getWorldProvider();
             WorldData worldData = provider.getWorld(player.getWorld());
             if (worldData != null) {
-                worldData.loadNearby(to.toVector());
+
             }
         }
 

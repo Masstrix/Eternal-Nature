@@ -18,16 +18,18 @@ package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.core.temperature.TemperatureData;
+import me.masstrix.eternalnature.core.temperature.BlockTemperature;
+import me.masstrix.eternalnature.core.temperature.TempModifierType;
+import me.masstrix.eternalnature.core.temperature.Temperatures;
 import me.masstrix.eternalnature.data.PlayerIdle;
 import me.masstrix.eternalnature.data.UserData;
 import org.bukkit.Color;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
-
 
 public class RegionScanner {
 
@@ -39,7 +41,7 @@ public class RegionScanner {
     private boolean setLoc;
     private final Player PLAYER;
     private final EternalNature PLUGIN;
-    private TemperatureData tempData;
+    private Temperatures tempData;
     private Location loc;
     private UserData user;
     private double temperature;
@@ -52,11 +54,13 @@ public class RegionScanner {
     private int tempTotalCoolCount = 0;
     private int emissiveBlockCount = 0;
 
+    Material cold, hot;
+
     public RegionScanner(EternalNature plugin, UserData data, Player player) {
         this.PLUGIN = plugin;
         this.PLAYER = player;
         this.user = data;
-        this.tempData = plugin.getEngine().getTemperatureData();
+        this.tempData = plugin.getEngine().getDefaultTemperatures();
         setFidelity(4);
         setScanScale(2, 2);
     }
@@ -146,7 +150,7 @@ public class RegionScanner {
         int areaCb = areaSq * this.height; // cubed area
         int scanSize = (areaCb / fidelity) + 1;
 
-        int dmgTemp = PLUGIN.getSystemConfig().getInt(ConfigOption.TEMPERATURE_BURN_DMG);
+        int dmgTemp = PLUGIN.getSystemConfig().getInt(ConfigOption.TEMPERATURE_BURN_THR);
 
         for (int j = 0; j < scanSize; j++) {
             int i = j * fidelity + iteration;
@@ -158,9 +162,17 @@ public class RegionScanner {
             Block block = center.getRelative(x, y, z);
 
             // Calculate block emission temperature
-            double temp = tempData.getBlockEmission(block.getType());
+            BlockTemperature blockTemp = (BlockTemperature) tempData.getModifier(
+                    block.getType(), TempModifierType.BLOCK);
+            if (blockTemp == null) continue;
+            double temp = blockTemp.getEmission();
+
+            // Ignore non emissive blocks
+            if (temp == 0) continue;
+
             double distance = block.getLocation().distance(center.getLocation());
-            double fallOff = distance == 0 ? temp : temp * Math.min(1 - (distance / (area)), 1D);
+            double scalar = blockTemp.getScalar();
+            double fallOff = distance == 0 ? temp : temp * Math.min(scalar / (distance * distance), 1);
 
             // Check if here should be block dissipation.
             if (fallOff > hottest && fallOff > dmgTemp) {
@@ -199,9 +211,11 @@ public class RegionScanner {
             }
             else if (fallOff > hottest) {
                 hottest = fallOff;
+                hot = block.getType();
             }
             else if (fallOff < coldest) {
                 coldest = fallOff;
+                cold = block.getType();
             }
         }
 
@@ -251,16 +265,14 @@ public class RegionScanner {
             temperatureAvg = tempTotal / emissiveBlockCount;
 
             double averageHeat = hottest;
-            double averageCool = tempTotalCool / tempTotalCoolCount;
 
             // Make heat become stronger as there are more heating
             // blocks around.
-            averageHeat *= Math.min(tempTotalHeatCount / 5D, 1);
+            averageHeat *= Math.max(0.6, Math.min(tempTotalHeatCount / 3D, 1D));
 
             if (Double.isNaN(averageHeat)) averageHeat = 0;
-            if (Double.isNaN(averageCool)) averageCool = 0;
 
-            this.temperature = averageHeat + averageCool;
+            this.temperature = tempTotal;
 
             // reset the base values.
             lastScanTime = System.currentTimeMillis();

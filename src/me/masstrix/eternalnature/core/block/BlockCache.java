@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Matthew Denton
+ * Copyright 2020 Matthew Denton
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.api;
+package me.masstrix.eternalnature.core.block;
 
-import me.masstrix.eternalnature.core.temperature.Temperatures;
+import org.bukkit.Location;
 
-public interface EternalWorld {
+import java.util.HashMap;
+import java.util.Map;
 
-    String getWorldName();
+public class BlockCache {
 
-    int getChunksLoaded();
+    private static final Map<Location, AbstractBlock> CACHE = new HashMap<>();
 
-    Temperatures getTemperatures();
+    static void add(AbstractBlock block) {
+        CACHE.put(block.getLocation(), block);
+    }
 }

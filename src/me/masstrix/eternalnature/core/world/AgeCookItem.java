@@ -85,7 +85,7 @@ public class AgeCookItem implements AgeItem {
         // Get the local temperature for the item.
         WorldData data = plugin.getEngine().getWorldProvider().getWorld(item.getWorld());
         Location loc = item.getLocation();
-        double localTemp = data.getBiomeTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+        double localTemp = data.getBiomeEmission(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
         totalTemp += localTemp;
 
         // Bake the item if it has become hot enough.

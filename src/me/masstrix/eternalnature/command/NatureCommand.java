@@ -20,6 +20,8 @@ import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.core.render.LeafParticle;
+import me.masstrix.eternalnature.core.world.WorldData;
+import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.data.UserData;
 import me.masstrix.eternalnature.menus.Menus;
 import me.masstrix.version.checker.VersionCheckInfo;
@@ -30,8 +32,7 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class NatureCommand extends EternalCommand {
 
@@ -50,6 +51,8 @@ public class NatureCommand extends EternalCommand {
             msg("     &7&oby Masstrix");
             msg("");
             msg("&a/eternal reload &7- Reloads all config files.");
+            msg("&a/eternal world <world> &7- Provides options for a world.");
+            msg("&a/eternal reloadWorld <world> &7- Reloads data for a world.");
             msg("&a/eternal resetConfig &7- Resets all config files.");
             msg("&a/eternal stats &7- Shows background stats.");
             msg("&a/eternal version &7- View version and update info.");
@@ -62,9 +65,77 @@ public class NatureCommand extends EternalCommand {
 
         if (args[0].equalsIgnoreCase("reload")) {
             msg(PluginData.PREFIX + "&7Reloading files...");
-            plugin.getEngine().getTemperatureData().loadConfigData();
+            plugin.getEngine().getDefaultTemperatures().loadData();
             plugin.getSystemConfig().reload();
             msg(PluginData.PREFIX + "&aReloaded config files");
+        }
+
+        else if (args[0].equalsIgnoreCase("world")) {
+            if (args.length == 1) {
+                msg(PluginData.PREFIX + "&cPlease specify a world.");
+                return;
+            }
+
+            String world = args[1];
+
+            if (args.length == 2) {
+                msg("");
+                msg("     &2&lEternal Nature");
+                msg("     &7&o/world options");
+                msg("");
+                msg("&a/eternal world " + world + " reload &7- Reloads the worlds configs.");
+                msg("&a/eternal world " + world + " info &7- Displays info about that world.");
+                msg("&a/eternal world " + world + " makeCustomConfig &7- " +
+                        "Makes a custom temperature config for world specific configuration.");
+                msg("");
+                return;
+            }
+
+            String sub = args[2];
+            WorldData data = plugin.getEngine().getWorldProvider().getWorld(world);
+            if (data == null) {
+                msg(PluginData.PREFIX + "&cNo world was found with that name.");
+                return;
+            }
+
+            // Handle sub commands for /eternal world
+            if (sub.equalsIgnoreCase("reload")) {
+                msg(PluginData.PREFIX + "&7Reloading files...");
+                data.reload();
+                msg(PluginData.PREFIX + "&aReloaded config files");
+            }
+            else if (sub.equalsIgnoreCase("info")) {
+                msg("");
+                msg("     &2&lEternal Nature");
+                msg("     &6&o" + world + "'s info");
+                msg(" Uses custom data set: &6" + data.usesCustomConfig());
+                msg("");
+            }
+            else if (sub.equalsIgnoreCase("makeCustomConfig")) {
+                msg(PluginData.PREFIX + "&7Reloading files...");
+                boolean success = data.createCustomTemperatureConfig(false);
+                if (success)
+                    msg(PluginData.PREFIX + "&aCreated custom config for world &e" + world + "&a.");
+                else msg(PluginData.PREFIX + "&7World &e" + world + "&7 already had a custom config.");
+            } else {
+                msg(PluginData.PREFIX + "&cInvalid use. For help use /eternal world <name>");
+            }
+        }
+
+        else if (args[0].equalsIgnoreCase("reloadWorld")) {
+            WorldProvider provider = plugin.getEngine().getWorldProvider();
+            if (args.length == 1) {
+                provider.getWorlds().forEach(WorldData::reload);
+                msg(PluginData.PREFIX + "&aReloaded all worlds data.");
+            } else {
+                WorldData world = provider.getWorld(args[1]);
+                if (world == null) {
+                    msg(PluginData.PREFIX + "&aReloaded all worlds data.");
+                } else {
+                    world.reload();
+                    msg(PluginData.PREFIX + "&aReloaded all worlds data.");
+                }
+            }
         }
 
         else if (args[0].equalsIgnoreCase("fixLeafEffect")) {
@@ -76,7 +147,7 @@ public class NatureCommand extends EternalCommand {
             msg(PluginData.PREFIX + "&7Resetting files...");
             plugin.saveResource("temperature-config.yml", true);
             plugin.saveResource("config.yml", true);
-            plugin.getEngine().getTemperatureData().loadConfigData();
+            plugin.getEngine().getDefaultTemperatures().loadData();
             plugin.getSystemConfig().reload();
             msg(PluginData.PREFIX + "&aReset config files back to default");
         }
@@ -166,7 +237,19 @@ public class NatureCommand extends EternalCommand {
     @Override
     public List<String> tabComplete(String[] args) {
         if (args.length == 1) {
-            return Arrays.asList("reload", "stats", "version", "settings", "resetConfig", "fixLeafEffect");
+            return Arrays.asList("reload", "world", "stats",
+                    "version", "settings", "resetConfig", "fixLeafEffect");
+        }
+        else if (args.length >= 2) {
+            if (args[0].equalsIgnoreCase("world")) {
+                Collection<String> names = plugin.getEngine().getWorldProvider().getWorldNames();
+                if (args.length == 2)
+                    return new ArrayList<>(names);
+
+                if (args.length == 3) {
+                    return Arrays.asList("reload", "makeCustomConfig", "info");
+                }
+            }
         }
         return super.tabComplete(args);
     }

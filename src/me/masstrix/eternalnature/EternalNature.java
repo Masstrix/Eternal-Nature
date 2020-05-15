@@ -106,8 +106,9 @@ public class EternalNature extends JavaPlugin {
 
         registerCommands(new HydrateCommand(this), new NatureCommand(this));
         registerListeners(new MoveListener(this), new ConnectionListener(this),
-                new ConsumeListener(this), new ChunkListener(this), new BlockListener(this),
-                new ItemListener(this), new DeathListener(this), new InteractListener(this));
+                new ConsumeListener(this), new BlockListener(this),
+                new ItemListener(this), new DeathListener(this),
+                new InteractListener(this));
 
         // Only check for updates if enabled.
         if (systemConfig.isEnabled(ConfigOption.UPDATES_CHECK)) {

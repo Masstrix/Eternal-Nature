@@ -80,6 +80,10 @@ public class SystemConfig {
      * @return the config value as an object.
      */
     public Object get(ConfigOption option) {
+        Object o = config.get(option.key, option.def);
+        if (o instanceof Integer && option.def instanceof Double) {
+            return (double) ((int) o);
+        }
         return config.get(option.key, option.def);
     }
 
@@ -146,7 +150,12 @@ public class SystemConfig {
      * @return a integer.
      */
     public int getInt(ConfigOption option) {
-        return config.getInt(option.key, (Integer) option.def);
+        Object o = config.get(option.key, option.def);
+        if (o == null) return (int) option.def;
+        if (o instanceof Double) {
+            return (int) ((double) o);
+        }
+        return (int) o;
     }
 
     /**
@@ -156,7 +165,12 @@ public class SystemConfig {
      * @return a double.
      */
     public double getDouble(ConfigOption option) {
-        return config.getDouble(option.key, (Double) option.def);
+        Object o = config.get(option.key, option.def);
+        if (o == null) return (double) option.def;
+        if (o instanceof Integer) {
+            return (int) o;
+        }
+        return (double) o;
     }
 
     /**

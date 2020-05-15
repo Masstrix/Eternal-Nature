@@ -20,10 +20,11 @@ import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.api.EternalUser;
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.core.HeightGradient;
-import me.masstrix.eternalnature.core.temperature.TemperatureData;
+import me.masstrix.eternalnature.core.temperature.TempModifierType;
 import me.masstrix.eternalnature.config.StatusRenderMethod;
 import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
+import me.masstrix.eternalnature.core.temperature.Temperatures;
 import me.masstrix.eternalnature.core.world.RegionScanner;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
@@ -54,10 +55,14 @@ import java.util.UUID;
 
 public class UserData implements EternalUser {
 
+    /**
+     * Hard max value for hydration thirst.
+     */
+    public static final float MAX_THIRST = 20;
+
     private static final int dehydrateChance = 500;
     private static final int dehydrateChanceRange = 50;
 
-    public static final float MAX_THIRST = 20;
     private SystemConfig config;
     private EternalNature plugin;
     private LanguageEngine le;
@@ -90,35 +95,59 @@ public class UserData implements EternalUser {
         if (player != null) {
             WorldProvider provider = plugin.getEngine().getWorldProvider();
             WorldData data = provider.getWorld(player.getWorld());
-            this.temperature = data.getTemperature(player.getLocation().toVector());
+            Location loc = player.getLocation();
+            this.temperature = data.getAmbientTemperature(5, 15,
+                    loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
         }
     }
 
     public UserData(EternalNature plugin, UUID id, double temperature, double hydration) {
         this.id = id;
         this.plugin = plugin;
+        this.le = plugin.getLanguageEngine();
         this.temperature = temperature;
         this.hydration = hydration;
         config = plugin.getSystemConfig();
         distanceNextThirst = MathUtil.randomInt(dehydrateChance, dehydrateChance + dehydrateChanceRange);
     }
 
-    public void setMotion(Vector vector) {
-        this.motion = vector;
-        this.inMotion = vector.length() > 0;
+    /**
+     * Sets the players cached motion.
+     *
+     * @param velocity current velocity of the player.
+     */
+    public void setMotion(Vector velocity) {
+        this.motion = velocity;
+        this.inMotion = velocity.length() > 0;
         lastMovementCheck = System.currentTimeMillis();
     }
 
+    /**
+     * Returns the motion vector of the player. This can be used
+     * instead of {@code Player#getVecloty()} as it will return the
+     * players true motion respecting any effects the player has and
+     * if they are sprinting.
+     *
+     * @return the players motion vector.
+     */
+    @Override
     public Vector getMotion() {
         checkMotion();
         return motion;
     }
 
+    /**
+     * @return if the player is currently moving.
+     */
     public boolean isInMotion() {
         checkMotion();
         return inMotion;
     }
 
+    /**
+     * Checks the players motion. If the player has not moved in 0.1 seconds
+     * then there motion will be reset back to 0.
+     */
     private void checkMotion() {
         if (inMotion && System.currentTimeMillis() - lastMovementCheck > 100) {
             inMotion = false;
@@ -156,9 +185,8 @@ public class UserData implements EternalUser {
         playerIdle.check(player.getLocation());
 
         WorldProvider provider = plugin.getEngine().getWorldProvider();
-        WorldData data = provider.getWorld(player.getWorld());
-        Location loc = player.getLocation();
-        TemperatureData tempData = plugin.getEngine().getTemperatureData();
+        WorldData worldData = provider.getWorld(player.getWorld());
+        Temperatures tempData = worldData.getTemperatures();
 
         // Updates the players temperature and applies damage to the player
         // if damage is enabled.
@@ -274,8 +302,8 @@ public class UserData implements EternalUser {
         }
 
         if (config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) {
-            TemperatureData tempData = plugin.getEngine().getTemperatureData();
-            TemperatureIcon icon = tempData.getClosestIconName(temperature);
+            Temperatures temps = plugin.getEngine().getDefaultTemperatures();
+            TemperatureIcon icon = TemperatureIcon.getClosest(temperature, temps);
 
             String text = config.getString(ConfigOption.TEMPERATURE_TEXT);
             text = text.replaceAll("%temp_simple%", icon.getColor() + icon.getName() + "&f");
@@ -284,8 +312,8 @@ public class UserData implements EternalUser {
             String tempInfoColor = icon.getColor().toString();
 
             if (config.isEnabled(ConfigOption.TEMPERATURE_BAR_FLASH)) {
-                int burn = tempData.getBurningPoint();
-                int freeze = tempData.getFreezingPoint();
+                double burn = temps.getBurningPoint();
+                double freeze = temps.getFreezingPoint();
                 boolean flash = this.temperature <= freeze + 2 || this.temperature >= burn - 4;
                 if (flash) {
                     tempInfoColor = flicker.isEnabled() ? "&c" : "&f";
@@ -305,8 +333,8 @@ public class UserData implements EternalUser {
                     tempBar.addPlayer(player);
                 }
                 // Update the bars progress
-                double min = Math.abs(tempData.getMinTemp());
-                double max = tempData.getMaxTemp() + min;
+                double min = Math.abs(temps.getMinTemp());
+                double max = temps.getMaxTemp() + min;
                 double temp = this.temperature + min;
                 double progress = temp / max;
                 if (progress >= 0D && progress <= 1)
@@ -335,10 +363,12 @@ public class UserData implements EternalUser {
     /**
      * @return if the player is currently in idle.
      */
+    @Override
     public boolean isIdle() {
         return playerIdle.isIdle();
     }
 
+    @Override
     public PlayerIdle getPlayerIdleInfo() {
         return playerIdle;
     }
@@ -526,19 +556,23 @@ public class UserData implements EternalUser {
         if (player == null || !player.isOnline()) return;
 
         WorldProvider provider = plugin.getEngine().getWorldProvider();
-        WorldData data = provider.getWorld(player.getWorld());
+        WorldData worldData = provider.getWorld(player.getWorld());
+
+        // Stop if world is invalid.
+        if (worldData == null) return;
+
         Location loc = player.getLocation();
-        TemperatureData tempData = plugin.getEngine().getTemperatureData();
+        Temperatures tempData = worldData.getTemperatures();
 
         // Handle temperature ticking.
-        if (data != null && config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) {
+        if (config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) {
             boolean inWater = isBlockWater(loc.getBlock());
-            float emission = 0;
-            emission += data.getBlockTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+            double emission = 0;
+            emission += worldData.getBlockTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
 
             regionScanner.tick();
-            float blockEmission = (float) regionScanner.getTemperatureEmission();
-            if (blockEmission > emission) emission = blockEmission;
+            double blockEmission = regionScanner.getTemperatureEmission();
+            emission += blockEmission;
 
             // If the world has a height gradient add it to the temperature
             HeightGradient gradient = HeightGradient.getGradient(loc.getWorld().getEnvironment());
@@ -561,22 +595,22 @@ public class UserData implements EternalUser {
             ItemStack[] armor = player.getEquipment().getArmorContents();
             for (ItemStack i : armor) {
                 if (i == null) continue;
-                emission += tempData.getArmorModifier(i.getType());
+                emission += tempData.getEmission(i.getType(), TempModifierType.CLOTHING);
             }
 
             // Add temperature depending on what the player is holding
             Material mainHand = player.getInventory().getItemInMainHand().getType();
             Material offHand = player.getInventory().getItemInOffHand().getType();
             if (mainHand != Material.AIR) {
-                float mainTemp = tempData.getBlockEmission(mainHand);
+                double mainTemp = tempData.getEmission(mainHand, TempModifierType.BLOCK);
                 emission += mainTemp / 10;
             }
             if (offHand != Material.AIR) {
-                float offTemp = tempData.getBlockEmission(offHand);
+                double offTemp = tempData.getEmission(mainHand, TempModifierType.BLOCK);
                 emission += offTemp / 10;
             }
 
-            if (!Float.isInfinite(emission) && !Float.isNaN(emission)) {
+            if (!Double.isInfinite(emission) && !Double.isNaN(emission)) {
                 this.tempExact = emission;
                 tempData.updateMinMaxTempCache(tempExact);
             }

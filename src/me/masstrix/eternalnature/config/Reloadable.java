@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Matthew Denton
+ * Copyright 2020 Matthew Denton
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,9 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.api;
+package me.masstrix.eternalnature.config;
 
-import me.masstrix.eternalnature.core.temperature.Temperatures;
+public interface Reloadable {
 
-public interface EternalWorld {
-
-    String getWorldName();
-
-    int getChunksLoaded();
-
-    Temperatures getTemperatures();
+    void reload();
 }

@@ -18,7 +18,7 @@ package me.masstrix.eternalnature;
 
 import me.masstrix.eternalnature.core.*;
 import me.masstrix.eternalnature.core.entity.EntityStorage;
-import me.masstrix.eternalnature.core.temperature.TemperatureData;
+import me.masstrix.eternalnature.core.temperature.Temperatures;
 import me.masstrix.eternalnature.core.world.*;
 import me.masstrix.eternalnature.data.UserData;
 import me.masstrix.eternalnature.menus.*;
@@ -39,7 +39,7 @@ public class EternalEngine {
     private Renderer renderer;
     private UserWorker userWorker;
     private WorldProvider worldProvider;
-    private TemperatureData temperatureData;
+    private Temperatures defaultTemps;
     private AutoPlanter autoPlanter;
     private EntityStorage entityStorage;
     private MenuManager menuManager;
@@ -58,9 +58,14 @@ public class EternalEngine {
         if (enabled) return;
         enabled  = true;
         this.plugin = plugin;
-        temperatureData = new TemperatureData(plugin);
-        entityStorage = new EntityStorage(plugin);
-        menuManager = new MenuManager(plugin);
+        this.defaultTemps = new Temperatures(plugin);
+        this.entityStorage = new EntityStorage(plugin);
+        this.menuManager = new MenuManager(plugin);
+
+        // Load default temperature data
+        this.defaultTemps.createFiles(false);
+        this.defaultTemps.loadData();
+
         try {
             entityStorage.restartSystem();
         } catch (IOException e) {
@@ -165,8 +170,11 @@ public class EternalEngine {
         return null;
     }
 
-    public TemperatureData getTemperatureData() {
-        return temperatureData;
+    /**
+     * @return the default temperature config.
+     */
+    public Temperatures getDefaultTemperatures() {
+        return defaultTemps;
     }
 
     public WorldProvider getWorldProvider() {

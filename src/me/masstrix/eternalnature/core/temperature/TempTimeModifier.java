@@ -21,13 +21,13 @@ import org.bukkit.World;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TemperatureTimeModifier implements TemperatureModifier {
+public class TempTimeModifier {
 
     private Map<Long, Double> mappings = new HashMap<>();
     private World.Environment environment;
     private World world;
 
-    public TemperatureTimeModifier(World world) {
+    public TempTimeModifier(World world) {
         this.world = world;
         this.environment = world.getEnvironment();
     }
@@ -36,7 +36,6 @@ public class TemperatureTimeModifier implements TemperatureModifier {
 
     }
 
-    @Override
     public double getTemperature(int x, int y, int z) {
         long time = world.getTime();
         return 0;

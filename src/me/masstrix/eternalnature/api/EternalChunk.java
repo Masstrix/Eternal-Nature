@@ -29,7 +29,5 @@ public interface EternalChunk {
 
     long getKey();
 
-    float getTemperature(EVector point);
-
     Collection<WaterfallEmitter> getWaterfalls();
 }

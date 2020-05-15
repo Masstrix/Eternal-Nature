@@ -20,13 +20,13 @@ import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.ChatColor;
 
 public enum TemperatureIcon {
-    BURNING(TemperatureData.ICON_HOT, "burning", 100, ChatColor.RED),
-    HOT(TemperatureData.ICON_HOT, "hot", 30, ChatColor.GOLD),
-    WARM(TemperatureData.ICON_HOT, "warm", 20, ChatColor.YELLOW),
-    PLEASANT(TemperatureData.ICON_NORMAL, "pleasant", 13, ChatColor.GREEN),
-    COOL(TemperatureData.ICON_COLD, "cool", 5, ChatColor.DARK_AQUA),
-    COLD(TemperatureData.ICON_COLD, "cold", 0, ChatColor.AQUA),
-    FREEZING(TemperatureData.ICON_COLD, "freezing", -4, ChatColor.WHITE);
+    BURNING(Temperatures.ICON_HOT, "burning", 100, ChatColor.RED),
+    HOT(Temperatures.ICON_HOT, "hot", 30, ChatColor.GOLD),
+    WARM(Temperatures.ICON_HOT, "warm", 20, ChatColor.YELLOW),
+    PLEASANT(Temperatures.ICON_NORMAL, "pleasant", 13, ChatColor.GREEN),
+    COOL(Temperatures.ICON_COLD, "cool", 5, ChatColor.DARK_AQUA),
+    COLD(Temperatures.ICON_COLD, "cold", 0, ChatColor.AQUA),
+    FREEZING(Temperatures.ICON_COLD, "freezing", -4, ChatColor.WHITE);
 
     private final String KEY;
     private final String NAME;
@@ -83,5 +83,23 @@ public enum TemperatureIcon {
             icon.nameLang = languageEngine.getText(icon.KEY);
             icon.useLang = icon.nameLang.length() > 0;
         }
+    }
+
+    /**
+     * Finds the most relevant name for the given temperature.
+     *
+     * @param temp temperature to evaluate.
+     * @return the most relevant icon.
+     */
+    public static TemperatureIcon getClosest(double temp, Temperatures config) {
+        if (temp >= config.getBurningPoint() - 4) return TemperatureIcon.BURNING;
+        if (temp <= config.getFreezingPoint() + 2) return TemperatureIcon.FREEZING;
+        if (temp <= TemperatureIcon.COLD.getTemp()) return TemperatureIcon.COLD;
+        TemperatureIcon icon = TemperatureIcon.FREEZING;
+        for (TemperatureIcon i : TemperatureIcon.values()) {
+            if (temp >= i.getTemp() && icon.getTemp() < i.getTemp())
+                icon = i;
+        }
+        return icon;
     }
 }

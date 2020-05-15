@@ -16,7 +16,36 @@
 
 package me.masstrix.eternalnature.api;
 
+import org.bukkit.util.Vector;
+
 public interface EternalUser {
+
+    /**
+     * Returns the motion vector of the player. This can be used
+     * instead of {@code Player#getVecloty()} as it will return the
+     * players true motion respecting any effects the player has and
+     * if they are sprinting.
+     *
+     * @return the players motion vector.
+     */
+    Vector getMotion();
+
+    /**
+     * Returns if the player is currently moving.
+     *
+     * @return if the player is currently in motion.
+     */
+    boolean isInMotion();
+
+    /**
+     * @return if the player is currently marked as idle.
+     */
+    boolean isIdle();
+
+    /**
+     * @return the players idle info.
+     */
+    IPlayerIdle getPlayerIdleInfo();
 
     /**
      * @return the players current temperature,

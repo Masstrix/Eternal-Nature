@@ -18,8 +18,8 @@ package me.masstrix.eternalnature;
 
 import me.masstrix.eternalnature.api.EternalUser;
 import me.masstrix.eternalnature.api.EternalWorld;
-import me.masstrix.eternalnature.core.temperature.TemperatureData;
 import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.core.temperature.Temperatures;
 import me.masstrix.eternalnature.menus.Menus;
 import org.bukkit.entity.Player;
 
@@ -73,9 +73,9 @@ public class EternalNatureAPI {
     }
 
     /**
-     * @return the temperature data.
+     * @return the default temperature data.
      */
-    public TemperatureData getTemperatureData() {
-        return plugin.getEngine().getTemperatureData();
+    public Temperatures getTemperatureData() {
+        return plugin.getEngine().getDefaultTemperatures();
     }
 }

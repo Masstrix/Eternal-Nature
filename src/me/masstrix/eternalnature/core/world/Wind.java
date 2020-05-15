@@ -18,7 +18,6 @@ package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.core.EternalWorker;
-import org.bukkit.World;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
@@ -52,7 +51,7 @@ public class Wind implements EternalWorker {
         valX -= 0.5;
         valY -= 0.5;
 
-        double temp = world.getBiomeTemperature(x, 0, y);
+        double temp = world.getBiomeEmission(x, 0, y);
 
         return new Vector(valX, temp * 0.01 - 1, valY);
     }

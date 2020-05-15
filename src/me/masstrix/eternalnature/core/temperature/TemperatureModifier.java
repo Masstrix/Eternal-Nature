@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Matthew Denton
+ * Copyright 2020 Matthew Denton
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,5 +18,5 @@ package me.masstrix.eternalnature.core.temperature;
 
 public interface TemperatureModifier {
 
-    double getTemperature(int x, int y, int z);
+    double getEmission();
 }

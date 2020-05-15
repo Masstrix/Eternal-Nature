@@ -18,148 +18,120 @@ package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.api.EternalWorld;
-import me.masstrix.eternalnature.core.temperature.TemperatureData;
+import me.masstrix.eternalnature.config.Reloadable;
+import me.masstrix.eternalnature.core.temperature.Temperatures;
 import me.masstrix.eternalnature.util.*;
 import org.bukkit.*;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.util.Vector;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-public class WorldData implements EternalWorld {
+public class WorldData implements EternalWorld, Reloadable {
 
     private Map<Long, ChunkData> chunks = new HashMap<>();
     private String worldName;
     protected EternalNature plugin;
-    private UUID world;
-    private static ExecutorService threadPool = Executors.newFixedThreadPool(20,
-            new SimpleThreadFactory("ChunkWorker"));
-    private TemperatureData temperatureData;
+    private Temperatures temperatures;
     Map<Position, WaterfallEmitter> waterfalls = new ConcurrentHashMap<>();
 
-    public WorldData(EternalNature plugin, UUID world) {
+    public WorldData(EternalNature plugin, String world) {
         this.plugin = plugin;
-        this.world = world;
-        temperatureData = plugin.getEngine().getTemperatureData();
-        worldName = asBukkit().getName();
-        loadData();
-
-        int delay = 20 * 20 * 5;
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                //saveData();
-            }
-        }.runTaskTimerAsynchronously(plugin, delay, delay);
+        this.worldName = world;
+        loadConfig();
     }
 
-    public UUID getWorldUid() {
-        return world;
+    /**
+     * Loads the config files for the world.
+     */
+    public void loadConfig() {
+        this.temperatures = new Temperatures(plugin, worldName);
+        if (temperatures.hasCustomConfig()) {
+            temperatures.loadData();
+        } else {
+            temperatures = plugin.getEngine().getDefaultTemperatures();
+        }
+    }
+
+    /**
+     * Creates a new config file for the worlds temperature.
+     *
+     * @param replace should this replace an existing config. If replaced
+     *                it will be reset to default options.
+     */
+    public boolean createCustomTemperatureConfig(boolean replace) {
+        if (!temperatures.isDefaultConfig() && !replace) {
+            return false;
+        }
+
+        // Create and load the new config
+        temperatures = new Temperatures(plugin, worldName);
+        temperatures.createFiles(true);
+        temperatures.loadData();
+        return true;
+    }
+
+    /**
+     * @return if the world uses a custom data set.
+     */
+    public boolean usesCustomConfig() {
+        return !temperatures.isDefaultConfig();
+    }
+
+    /**
+     * @return the worlds name.
+     */
+    @Override
+    public String getWorldName() {
+        return worldName;
     }
 
     public void tick() {
-        /*
-        if (plugin.getSystemConfig().isEnabled(ConfigOption.WATERFALLS)) {
-            List<WaterfallEmitter> bin = new ArrayList<>();
-            for (WaterfallEmitter waterfall : waterfalls.values()) {
-                if (!waterfall.isValid()) {
-                    bin.add(waterfall);
-                    continue;
-                }
-                waterfall.tick();
-            }
-            bin.forEach(fall -> waterfalls.remove(fall.pos));
-        }
-        */
-        chunks.forEach((l, c) -> c.tick());
+        //chunks.forEach((l, c) -> c.tick());
     }
 
     public void render() {
-        chunks.forEach((l, c) -> c.render());
+        //chunks.forEach((l, c) -> c.render());
     }
 
     public void unload() {
-        saveData();
-    }
-
-    public void saveData() {
-        File worlds = new File(plugin.getDataFolder(), "worlds");
-        File data = new File(worlds, worldName + ".etw");
-        if (!worlds.exists())
-            worlds.mkdirs();
-        try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(data));
-            writer.write("[waterfalls]");
-            writer.write(Character.LINE_SEPARATOR);
-            for (WaterfallEmitter waterfall : waterfalls.values()) {
-                writer.write("  ");
-                writer.write(waterfall.serialize());
-                writer.write(Character.LINE_SEPARATOR);
-            }
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void loadData() {
-        WorldData worldData = this;
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                File worlds = new File(plugin.getDataFolder(), "worlds");
-                File data = new File(worlds, worldName + ".etw");
-                if (!data.exists()) return;
-                try {
-                    String header = "";
-                    int waterfallsLoaded = 0;
-                    for (String s : Files.readAllLines(data.toPath())) {
-                        if (s.startsWith("[") && s.endsWith("]")) {
-                            header = s;
-                            continue;
-                        }
-                        if (header.equals("[waterfalls]")) {
-                            WaterfallEmitter emitter = WaterfallEmitter.deserialize(worldData,
-                                    s.replaceFirst(" {2}", ""));
-                            if (emitter != null) {
-                                waterfalls.put(emitter.pos, emitter);
-                                waterfallsLoaded++;
-                            }
-                        }
-                    }
-                    plugin.getLogger().info("Loaded " + waterfallsLoaded + " waterfalls");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }.runTaskAsynchronously(plugin);
-    }
-
-    public void createWaterfall(Location loc) {
-//        Block block = loc.getBlock();
-//        Position pos = new Position(block.getX(), block.getY(), block.getZ());
-//        WaterfallEmitter emitter = new WaterfallEmitter(loc);
-//        waterfalls.put(pos, emitter);
-    }
-
-    public World asBukkit() {
-        return Bukkit.getWorld(world);
+        //saveData();
     }
 
     @Deprecated
-    public void loadNearby(Vector vec) {
-        loadNearby((int) Math.floor(vec.getX()), (int) Math.floor(vec.getY()), (int) Math.floor(vec.getZ()));
+    public void saveData() {
     }
 
+    @Deprecated
+    public void loadData() {
+    }
+
+    @Override
+    public void reload() {
+        temperatures.loadData();
+    }
+
+    public void createWaterfall(Location loc) {
+    }
+
+    public World asBukkit() {
+        return Bukkit.getWorld(worldName);
+    }
+
+    /**
+     * @return the amount of chunks loaded.
+     */
+    @Override
     public int getChunksLoaded() {
         return chunks.size();
+    }
+
+    @Override
+    public Temperatures getTemperatures() {
+        return temperatures;
     }
 
     /**
@@ -168,41 +140,40 @@ public class WorldData implements EternalWorld {
      * @param x x block position.
      * @param y y block position.
      * @param z z block position.
-     * @return the blocks biome temperature or <i>NEGATIVE_INFINITY</i> if there was
-     *         an error.
+     * @return the blocks biome temperature. Defaults to the defauly biome
+     *         temperature set in the config.
      */
-    public double getBiomeTemperature(int x, int y, int z) {
-        World world = Bukkit.getWorld(this.world);
+    public double getBiomeEmission(int x, int y, int z) {
+        World world = asBukkit();
         if (world != null) {
             Biome biome = world.getBlockAt(x, y, z).getBiome();
-            return temperatureData.getBiomeModifier(biome);
+            return temperatures.getBiome(biome, world);
         }
-        return Double.NEGATIVE_INFINITY;
+        return temperatures.getBiomeDefault();
     }
 
     /**
-     * Scans around the location and includes the center for the average
-     * temperate value for surrounding biomes.
+     * Scans around in a circle
      *
-     * @param x x block position.
-     * @param y y block position.
-     * @param z z block position.
-     * @return the ambient temperature.
+     * @param points Number of points to sample in the ring.
+     * @param rad    radius to scan from.
+     * @param x      x center block position.
+     * @param y      y center block position.
+     * @param z      z center block position.
+     * @return the ambient temperature of all the combined points for the given
+     *         location.
      */
-    public double getAverageAmbientTemp(int x, int y, int z) {
-        double total = getBiomeTemperature(x, y, z);
-        int amount = 5;
-        int radius = 15;
-        double increment = (2 * Math.PI) / amount;
-        for (int i = 0; i < amount; i++) {
-            double angle = i * increment;
-            int blockX = (int) (x + (radius * Math.cos(angle)));
-            int blockZ = (int) (z + (radius * Math.sin(angle)));
+    public double getAmbientTemperature(int points, int rad, int x, int y, int z) {
+        double total = getBiomeEmission(x, y, z);
+        double increment = (2 * Math.PI) / points;
 
-            double temp = getBiomeTemperature(blockX, y, blockZ);
-            total += temp;
+        for (int i = 0; i < points; i++) {
+            double angle = i * increment;
+            int blockX = (int) (x + (rad * Math.cos(angle)));
+            int blockZ = (int) (z + (rad * Math.sin(angle)));
+            total += getBiomeEmission(blockX, y, blockZ);
         }
-        return total / (amount + 1);
+        return total / (rad + 1);
     }
 
     /**
@@ -215,14 +186,14 @@ public class WorldData implements EternalWorld {
      * @return the blocks temperature or <i>INFINITY</i> if there was an error.
      */
     public double getBlockTemperature(int x, int y, int z) {
-        World world = Bukkit.getWorld(this.world);
-        if (world == null) return Double.NEGATIVE_INFINITY;
+        World world = asBukkit();
+        if (world == null) return 0;
         Block block = world.getBlockAt(x, y, z);
-        double temp = getAverageAmbientTemp(x, y, z);
+        double temp = getAmbientTemperature(5, 15, x, y, z);
 
         // Apply modifier if block has sunlight.
         if (block.getLightFromSky() > 0) {
-            double directSunAmplifier = temperatureData.getDirectSunAmplifier() - 1;
+            double directSunAmplifier = temperatures.getDirectSunAmplifier() - 1;
             byte skyLight = block.getLightFromSky();
             double percent = skyLight / 15D;
             temp *= directSunAmplifier * percent + 1;
@@ -232,138 +203,12 @@ public class WorldData implements EternalWorld {
         if (((block.getLightFromSky() <= 6 && block.getLightLevel() < 6)
                 || block.getType() == Material.CAVE_AIR)
                 && block.getLightLevel() != 15) {
-            double amp = temperatureData.getCaveModifier() - 1;
+            double amp = temperatures.getCaveModifier() - 1;
             byte light = block.getLightLevel();
             double percent = (15D - light) / 15D;
             temp *= amp * percent + 1;
         }
         return temp;
-    }
-
-    public double getTemperature(int x, int y, int z) {
-        return getTemperature(new Vector(x, y, z));
-    }
-
-    public float getTemperature(Vector loc) {
-        ChunkData chunk = getChunkFromPosition(loc.getBlockX(), loc.getBlockZ());
-        return chunk != null ? chunk.getTemperature(new EVector(inChunk(loc.getBlockX()), loc.getBlockY(), inChunk(loc.getBlockZ()))) : 0;
-    }
-
-    /**
-     * Loads all surrounding chunk sections and chunks around the given cords. All
-     * chunks are loaded in a 3 cubed volume.
-     *
-     * @param x x position to load from.
-     * @param y y position to load from.
-     * @param z z position to load from.
-     */
-    @Deprecated
-    public void loadNearby(int x, int y, int z) {
-        x /= 16;
-        y /= 16;
-        z /= 16;
-        x -= 1;
-
-        ChunkData chunk = getChunk(x, z);
-        if (chunk == null) chunk = loadChunk(x, z);
-        //chunk.calculateSection(y);
-
-//        new CuboidScanner(1, x, y, z, (CuboidScanner.CuboidTask) (x1, section, z1) -> {
-//            if (section > 16 || section < 0) return;
-//
-//            ChunkData chunk = getChunk(x1, z1);
-//            if (chunk == null) chunk = loadChunk(x1, z1);
-//
-//            chunk.calculateSection(section);
-//        }).start();
-    }
-
-    /**
-     * @param v value to round.
-     * @return the position rounded to a chunks local coordinates.
-     */
-    int inChunk(int v) {
-        int val = v % 16;
-        return v < 0 ? 16 - -val : val;
-    }
-
-    /**
-     * @param v value to round.
-     * @return the position of a world location as a chunks location.
-     */
-    int asChunk(int v) {
-        int val = v / 16;
-        if (v < 0) val -= 1;
-        return val;
-    }
-
-    public ChunkData getChunkFromPosition(int x, int z) {
-        int chunkX = x / 16;
-        int chunkZ = z / 16;
-        if (x < 0) chunkX -= 1;
-        if (z < 0) chunkZ -= 1;
-        return loadChunk(chunkX, chunkZ);
-    }
-
-    /**
-     * @param x x position of chunk.
-     * @param z z position of chunk.
-     * @return null if no chunk data has been generated otherwise return
-     *         the chunk.
-     */
-    public ChunkData getChunk(int x, int z) {
-        long pair = pair(x, z);
-        if (isChunkLoaded(x, z)) return chunks.get(pair);
-        ChunkData chunkData = null;
-        File worldsFile = new File(plugin.getDataFolder(), "worlds");
-        File worldFile = new File(worldsFile, getWorldUid().toString());
-        File chunkFile = new File(worldFile, WorldData.pair(x, z) + ".dat");
-        if (chunkFile.exists()) {
-            FileInputStream in = null;
-            try {
-                in = new FileInputStream(chunkFile);
-                //chunkData = new ChunkData(this, x, z, in.readAllBytes());
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                if (in != null) {
-                    try {
-                        in.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            if (chunkData == null) chunkData = new ChunkData(this, x, z);
-            chunks.put(pair, chunkData);
-        }
-        return chunkData;
-    }
-
-    /**
-     * Loads a chunk.
-     *
-     * @param x x position of chunk.
-     * @param z z position of chunk.
-     */
-    public ChunkData loadChunk(int x, int z) {
-        long key = pair(x, z);
-        ChunkData data = getChunk(x, z);
-        if (data != null) return chunks.get(key);
-        data = new ChunkData(this, x, z);
-        chunks.put(key, data);
-        return data;
-    }
-
-    /**
-     * Unloads a chunk from cache.
-     *
-     * @param x x position of chunk to unload.
-     * @param z z position of chunk to unload.
-     */
-    public void unloadChunk(int x, int z) {
-        long pair = pair(x, z);
-        Object valid = chunks.remove(pair);
     }
 
     public boolean isChunkLoaded(int x, int z) {
