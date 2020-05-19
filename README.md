@@ -29,6 +29,6 @@ Adding fatures such as temperature, hydration, and more atmospheric effects a ne
  * **Environment Effects** - New effects such as falling leaves from trees are added to create more atmosphere in the world.
 
 ## Quick Links
-* [Disscord Support][discord]
+* [Discord Support][discord]
 * [Spigot Page][spigotPage]
 * [Wiki Page][wiki]
