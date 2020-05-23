@@ -19,6 +19,7 @@ package me.masstrix.eternalnature.core.temperature;
 import me.masstrix.eternalnature.util.WorldTime;
 import org.bukkit.World;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,7 +27,8 @@ public class TimeTemperature implements TemperatureModifier {
 
     public static final int TIME_IN_DAY = 24000;
 
-    private Map<Integer, Double> times = new HashMap<>();
+    private final Map<Integer, Double> TIMES = new HashMap<>();
+    private double fallback = 0;
 
     /**
      * Puts a new value in for the time modifier. If the provided
@@ -38,7 +40,8 @@ public class TimeTemperature implements TemperatureModifier {
      * @return an instance of this TimeTemperature.
      */
     public TimeTemperature put(WorldTime time, double temp) {
-        times.put(time.getTime(), temp);
+        TIMES.put(time.getTime(), temp);
+        fallback = temp;
         return this;
     }
 
@@ -52,14 +55,23 @@ public class TimeTemperature implements TemperatureModifier {
      * @return an instance of this TimeTemperature.
      */
     public TimeTemperature put(int time, double temp) {
-        if (time <= TIME_IN_DAY && time >= 0)
-            times.put(time, temp);
+        if (time <= TIME_IN_DAY && time >= 0) {
+            TIMES.put(time, temp);
+            fallback = temp;
+        }
         return this;
     }
 
     @Override
     public double getEmission() {
-        return 0;
+        return fallback;
+    }
+
+    /**
+     * @return all the stored times and temperatures as a map.
+     */
+    public Map<Integer, Double> getTimes() {
+        return TIMES;
     }
 
     /**
@@ -70,8 +82,7 @@ public class TimeTemperature implements TemperatureModifier {
      * @return the emission value for this world.
      */
     public double getLocalTemp(World world) {
-        if (times.size() == 0 || world == null) return 0;
-        if (times.size() == 1) return times.get(0);
+        if (TIMES.size() <= 1 || world == null) return fallback;
         return getEmission((int) world.getTime());
     }
 
@@ -88,7 +99,7 @@ public class TimeTemperature implements TemperatureModifier {
         int smallest = Integer.MAX_VALUE;
         int largest = Integer.MIN_VALUE;
 
-        for (int v : times.keySet()) {
+        for (int v : TIMES.keySet()) {
             if (v == time) {
                 from = v;
                 to = v;
@@ -129,6 +140,6 @@ public class TimeTemperature implements TemperatureModifier {
         double percentFrom = disTo / maxDis;
         double percentTo   = disFrom / maxDis;
 
-        return from == to ? times.get(to) : times.get(from) * percentFrom + times.get(to) * percentTo;
+        return from == to ? TIMES.get(to) : TIMES.get(from) * percentFrom + TIMES.get(to) * percentTo;
     }
 }

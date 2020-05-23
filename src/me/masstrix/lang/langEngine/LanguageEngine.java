@@ -99,14 +99,19 @@ public class LanguageEngine {
     /**
      * Reads all .lang files in the language folder. If a language has already been loaded
      * then it will update the values of that language.
+     *
+     * @return number of languages loaded.
      */
-    public void loadLanguages() {
-        if (dir == null || !dir.exists()) return;
+    public int loadLanguages() {
+        if (dir == null || !dir.exists()) return 0;
 
+        int loaded = 0;
         FileFilter filter = pathname -> pathname.getName().endsWith(".lang");
         for (File file : Objects.requireNonNull(dir.listFiles(filter))) {
+            loaded++;
             loadSingle(file);
         }
+        return loaded;
     }
 
     /**
@@ -119,7 +124,7 @@ public class LanguageEngine {
         String fn = file.getName().substring(0, nl - ".lang".length());
         if (LOADED.containsKey(fn)) {
             if (selected.equals(fn))
-                LOADED.get(fn).loadText();
+                LOADED.get(fn).read(true, true);
         } else {
             Lang lang = new Lang(file, persistent.contains(fn));
             LOADED.put(lang.getLocale(), lang);

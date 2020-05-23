@@ -76,13 +76,13 @@ public class LangSettingsMenu extends GlobalMenu {
                 .build())
                 .onClick(player -> {
                     menuManager.forceCloseAll();
-                    le.loadLanguages();
+                    int count = le.loadLanguages();
                     TemperatureIcon.reloadLang(le);
                     menuManager.forceCloseAll();
                     menuManager.rebuildAllMenus();
                     player.playSound(player.getLocation(), Sound.UI_LOOM_SELECT_PATTERN, 1, 1);
                     player.sendMessage(StringUtil.color(PluginData.PREFIX
-                            + "Reloaded language files."));
+                            + "Reloaded language &7" + count + "&f languages."));
                 }));
 
         // Load all languages into menu.

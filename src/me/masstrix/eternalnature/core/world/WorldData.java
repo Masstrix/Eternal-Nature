@@ -97,16 +97,8 @@ public class WorldData implements EternalWorld, Reloadable {
         //chunks.forEach((l, c) -> c.render());
     }
 
-    public void unload() {
-        //saveData();
-    }
-
-    @Deprecated
-    public void saveData() {
-    }
-
-    @Deprecated
-    public void loadData() {
+    public void save() {
+        temperatures.saveConfig();
     }
 
     @Override
@@ -149,7 +141,7 @@ public class WorldData implements EternalWorld, Reloadable {
             Biome biome = world.getBlockAt(x, y, z).getBiome();
             return temperatures.getBiome(biome, world);
         }
-        return temperatures.getBiomeDefault();
+        return 0;
     }
 
     /**
@@ -173,7 +165,7 @@ public class WorldData implements EternalWorld, Reloadable {
             int blockZ = (int) (z + (rad * Math.sin(angle)));
             total += getBiomeEmission(blockX, y, blockZ);
         }
-        return total / (rad + 1);
+        return total / (points + 1);
     }
 
     /**
@@ -185,7 +177,7 @@ public class WorldData implements EternalWorld, Reloadable {
      * @param z z block position.
      * @return the blocks temperature or <i>INFINITY</i> if there was an error.
      */
-    public double getBlockTemperature(int x, int y, int z) {
+    public double getBlockAmbientTemperature(int x, int y, int z) {
         World world = asBukkit();
         if (world == null) return 0;
         Block block = world.getBlockAt(x, y, z);

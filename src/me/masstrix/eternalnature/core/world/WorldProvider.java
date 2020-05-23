@@ -60,6 +60,14 @@ public class WorldProvider implements EternalWorker, Reloadable {
         return data;
     }
 
+    /**
+     * @param name name of the world to check if loaded.
+     * @return if the worlds data is loaded.
+     */
+    public boolean isLoaded(String name) {
+        return worldData.containsKey(name);
+    }
+
     @Override
     public void start() {
         ticker = new BukkitRunnable() {
@@ -77,7 +85,7 @@ public class WorldProvider implements EternalWorker, Reloadable {
     @Override
     public void end() {
         ticker.cancel();
-        worldData.forEach((n, w) -> w.unload());
+        worldData.forEach((n, w) -> w.save());
     }
 
     @Override

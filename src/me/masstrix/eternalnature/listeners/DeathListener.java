@@ -72,9 +72,9 @@ public class DeathListener implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                data.updateTemperature(true);
+                data.resetTemperature();
                 data.setHydration(20);
             }
-        }.runTaskLater(plugin, 3);
+        }.runTaskLater(plugin, 5);
     }
 }

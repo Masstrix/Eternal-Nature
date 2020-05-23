@@ -22,7 +22,7 @@ public enum TempModifierType {
     BLOCK("blocks") {
         @Override
         public TemperatureModifier makeModifier(double[] data) {
-            return new BlockTemperature(data[0], data[1]);
+            return new BlockTemperature(data[0], data.length >= 2 ? data[1] : 3);
         }
     },
     CLOTHING("clothing"),

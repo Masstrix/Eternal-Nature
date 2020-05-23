@@ -20,12 +20,10 @@ import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.api.EternalUser;
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.core.HeightGradient;
-import me.masstrix.eternalnature.core.temperature.TempModifierType;
+import me.masstrix.eternalnature.core.temperature.*;
 import me.masstrix.eternalnature.config.StatusRenderMethod;
 import me.masstrix.eternalnature.config.SystemConfig;
-import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
-import me.masstrix.eternalnature.core.temperature.Temperatures;
-import me.masstrix.eternalnature.core.world.RegionScanner;
+import me.masstrix.eternalnature.core.world.TemperatureScanner;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.listeners.DeathListener;
@@ -44,8 +42,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.io.File;
@@ -69,7 +65,7 @@ public class UserData implements EternalUser {
 
     private Stopwatch damageTimer = new Stopwatch();
     private Flicker flicker = new Flicker(300);
-    private RegionScanner regionScanner;
+    private TemperatureScanner tempScanner;
 
     private BossBar hydrationBar, tempBar;
     private UUID id;
@@ -167,7 +163,10 @@ public class UserData implements EternalUser {
      */
     public final void tick() {
         Player player = Bukkit.getPlayer(id);
-        if (player == null || !player.isOnline()) return;
+        if (player == null || !player.isOnline() || player.isDead()) return;
+
+        // Update the players idle state.
+        playerIdle.check(player.getLocation());
 
         // Stop updating if the player is dead. This will stop players who
         // stay on the respawn screen for to long using resources.
@@ -176,13 +175,10 @@ public class UserData implements EternalUser {
         }
 
         // Create a region scanner if one has not been made already.
-        if (regionScanner == null) {
-            this.regionScanner = new RegionScanner(plugin, this, player);
-            this.regionScanner.setScanScale(11, 5);
+        if (tempScanner == null) {
+            this.tempScanner = new TemperatureScanner(plugin, this, player);
+            this.tempScanner.setScanScale(11, 5);
         }
-
-        // Update the players idle state.
-        playerIdle.check(player.getLocation());
 
         WorldProvider provider = plugin.getEngine().getWorldProvider();
         WorldData worldData = provider.getWorld(player.getWorld());
@@ -194,24 +190,19 @@ public class UserData implements EternalUser {
             // Update the players temperature
             updateTemperature(false);
 
-            // Damage the player if they are to hot or cold or are dehydrated.
-            if (this.temperature >= tempData.getBurningPoint()
-                    && config.isEnabled(ConfigOption.TEMPERATURE_BURN)) {
+            boolean damageEnabled = config.isEnabled(ConfigOption.TEMPERATURE_DMG);
+            boolean isBurning = this.temperature >= tempData.getBurningPoint();
+            boolean isFreezing = this.temperature <= tempData.getFreezingPoint();
+            int damageDelay = config.getInt(ConfigOption.TEMPERATURE_DMG_DELAY);
+
+            // Check if the player should be damaged and
+            // damage them if is all true.
+            if (damageEnabled && (isBurning || isFreezing) && damageTimer.hasPassed(damageDelay)) {
                 damageTimer.startIfNew();
-                if (damageTimer.hasPassed((long) (3000 - (temperature * 2)))) {
-                    damageTimer.start();
-                    damageCustom(player, 1, le.getText("death.heat"));
-                }
-            } else if (this.temperature <= tempData.getFreezingPoint()
-                    && config.isEnabled(ConfigOption.TEMPERATURE_FREEZE)) {
-                player.removePotionEffect(PotionEffectType.SLOW);
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 120,
-                        1, true, false, true));
-                damageTimer.startIfNew();
-                if (damageTimer.hasPassed(3000)) {
-                    damageTimer.start();
-                    damageCustom(player, 1, le.getText("death.cold"));
-                }
+                damageTimer.start();
+                double dmg = config.getDouble(ConfigOption.TEMPERATURE_DMG_AMOUNT);
+                String msg = isBurning ? "death.heat" : "death.cold";
+                damageCustom(player, dmg, le.getText(msg));
             }
         }
 
@@ -546,14 +537,36 @@ public class UserData implements EternalUser {
     }
 
     /**
-     * Update the players temperature.
+     * Resets the players temperature.
+     */
+    public void resetTemperature() {
+        Player player = Bukkit.getPlayer(id);
+        if (player == null || !player.isOnline()) return;
+
+        WorldProvider provider = plugin.getEngine().getWorldProvider();
+        WorldData worldData = provider.getWorld(player.getWorld());
+
+        // Stop if world is invalid.
+        if (worldData == null) return;
+
+        // Reset the players temperature
+        Location loc = player.getLocation();
+        tempExact = worldData.getAmbientTemperature(5, 15,
+                loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+        this.temperature = tempExact;
+    }
+
+    /**
+     * Update the players temperature. This will not work if the player is offline or
+     * they are currently dead.
      *
      * @param forceNew if true this update will instantly become the
      *                 players temperature.
      */
     public void updateTemperature(boolean forceNew) {
         Player player = Bukkit.getPlayer(id);
-        if (player == null || !player.isOnline()) return;
+        if (player == null || !player.isOnline() || player.isDead()) return;
+        if (!config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) return;
 
         WorldProvider provider = plugin.getEngine().getWorldProvider();
         WorldData worldData = provider.getWorld(player.getWorld());
@@ -565,21 +578,24 @@ public class UserData implements EternalUser {
         Temperatures tempData = worldData.getTemperatures();
 
         // Handle temperature ticking.
-        if (config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) {
-            boolean inWater = isBlockWater(loc.getBlock());
-            double emission = 0;
-            emission += worldData.getBlockTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+        boolean inWater = isBlockWater(loc.getBlock());
+        double emission = 0;
 
-            regionScanner.tick();
-            double blockEmission = regionScanner.getTemperatureEmission();
-            emission += blockEmission;
+        // Add nearby block temperature if enabled.
+        if (config.isEnabled(ConfigOption.TEMPERATURE_USE_BLOCKS)) {
+            if (forceNew) tempScanner.quickUpdate();
+            else tempScanner.tick();
+            emission += tempScanner.getTemperatureEmission();
+        }
 
-            // If the world has a height gradient add it to the temperature
-            HeightGradient gradient = HeightGradient.getGradient(loc.getWorld().getEnvironment());
-            if (gradient != null) {
-                emission += gradient.getModifier(loc.getBlockY());
-            }
+        // Add average nearby biome temperature if enabled
+        if (config.isEnabled(ConfigOption.TEMPERATURE_USE_BIOMES)) {
+            int x = loc.getBlockX(), y = loc.getBlockY(), z = loc.getBlockZ();
+            emission += worldData.getBlockAmbientTemperature(x, y, z);
+        }
 
+        // Add environmental modifiers if enabled.
+        if (config.isEnabled(ConfigOption.TEMPERATURE_USE_ENVIRO)) {
             // If the player is swimming, subtract temperature from depth.
             if (inWater) {
                 int height = 0;
@@ -591,6 +607,15 @@ public class UserData implements EternalUser {
                 emission -= depthSub;
             }
 
+            // If the world has a height gradient add it to the temperature
+            HeightGradient gradient = HeightGradient.getGradient(loc.getWorld().getEnvironment());
+            if (gradient != null) {
+                emission += gradient.getModifier(loc.getBlockY());
+            }
+        }
+
+        // Add item based temperatures if enabled.
+        if (config.isEnabled(ConfigOption.TEMPERATURE_USE_ITEMS)) {
             // Add armor to temp.
             ItemStack[] armor = player.getEquipment().getArmorContents();
             for (ItemStack i : armor) {
@@ -609,24 +634,24 @@ public class UserData implements EternalUser {
                 double offTemp = tempData.getEmission(mainHand, TempModifierType.BLOCK);
                 emission += offTemp / 10;
             }
-
-            if (!Double.isInfinite(emission) && !Double.isNaN(emission)) {
-                this.tempExact = emission;
-                tempData.updateMinMaxTempCache(tempExact);
-            }
-
-            // Force the new exact temperature on the player.
-            if (forceNew) {
-                temperature = tempExact;
-                return;
-            }
-
-            // Reset the players temperature to the exact temp if it is invalid.
-            temperature = MathUtil.fix(temperature, tempExact);
-
-            // Push the
-            progressTemperature(inWater);
         }
+
+        if (!Double.isInfinite(emission) && !Double.isNaN(emission)) {
+            this.tempExact = emission;
+            tempData.updateMinMaxTempCache(tempExact);
+        }
+
+        // Force the new exact temperature on the player.
+        if (forceNew) {
+            temperature = tempExact;
+            return;
+        }
+
+        // Reset the players temperature to the exact temp if it is invalid.
+        temperature = MathUtil.fix(temperature, tempExact);
+
+        // Push the
+        progressTemperature(inWater);
     }
 
     /**
@@ -638,6 +663,7 @@ public class UserData implements EternalUser {
         // Stop updating temperature if is already exactly the same as
         // the expected value.
         if (temperature == tempExact) return;
+        if (!config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) return;
 
         // Change players temperature gradually
         double diff = MathUtil.diff(this.tempExact, this.temperature);

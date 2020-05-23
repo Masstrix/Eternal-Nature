@@ -150,7 +150,7 @@ public class Lang {
      * @param readHeader should the file header be read.
      * @param readText should the files text content be loaded.
      */
-    private void read(boolean readHeader, boolean readText) {
+    public void read(boolean readHeader, boolean readText) {
         if (!file.exists()) {
             return;
         }

@@ -18,22 +18,26 @@ package me.masstrix.eternalnature.core.temperature;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.ConfigOption;
+import me.masstrix.eternalnature.config.Reloadable;
 import me.masstrix.eternalnature.config.SystemConfig;
-import me.masstrix.eternalnature.util.BukkitUtil;
+import me.masstrix.eternalnature.util.EnumUtils;
+import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.eternalnature.util.WorldTime;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
 
-public class Temperatures {
+public class Temperatures implements Reloadable {
 
     private static final String DEF_CONFIG = "temperature-config.yml";
     private static final Pattern NUM_CHECK = Pattern.compile("[0-9]*");
@@ -46,22 +50,25 @@ public class Temperatures {
     private EternalNature plugin;
     private final boolean DEFAULT;
     private File file;
-    private YamlConfiguration config;
+    private FileConfiguration config;
     private Map<TempModifierType, Map<Material, TemperatureModifier>> modifiers = new HashMap<>();
-    private Map<Biome, TimeTemperature> biomeModifiers = new HashMap<>();
+    private Map<Biome, BiomeModifier> biomeModifiers = new HashMap<>();
+    private BiomeModifier biomeDefault;
     private double minTemp = 0;
     private double maxTemp = 1;
-    private double biomeDefault;
     private double scalar;
     private double caveModifier;
     private double directSunAmplifier;
-    private boolean timeModifier;
 
     {
         // Setup the modifier cache.
         for (TempModifierType type : TempModifierType.values()) {
             modifiers.put(type, new HashMap<>());
         }
+
+        // Setup the config file.
+        this.config = new YamlConfiguration();
+        this.config.options().copyHeader(true);
     }
 
     public Temperatures(EternalNature plugin) {
@@ -124,6 +131,11 @@ public class Temperatures {
         }
     }
 
+    @Override
+    public void reload() {
+        loadData();
+    }
+
     /**
      * Loads all config data into memory for this temperature set.
      */
@@ -132,45 +144,59 @@ public class Temperatures {
             return;
         }
 
-        // Load the config file if it has not been already.
-        if (config == null) {
-            this.config = new YamlConfiguration();
-            this.config.options().copyHeader(true);
-
-            try {
-                config.load(file);
-            } catch (IOException | InvalidConfigurationException e) {
-                e.printStackTrace();
-            }
+        try {
+            config.load(file);
+        } catch (IOException | InvalidConfigurationException e) {
+            e.printStackTrace();
         }
 
         // General options
-        this.scalar = config.getDouble("options.global-scalar",3);
+        this.scalar = config.getDouble("options.global-scalar", 3);
         this.caveModifier = config.getDouble("options.cave-modifier", 0.7);
         this.directSunAmplifier = config.getDouble("options.direct-sun-amplifier", 1.3);
-        this.timeModifier = config.getBoolean("options.time-modifier", true);
-        this.biomeDefault = config.getDouble("options.biome-default-temp", 13D);
+
+        // Load default biome temperature
+        BiomeModifier defaultBiome = loadBiome(config.getConfigurationSection("options"),
+                "biome-default-temp", "default");
+        if (biomeDefault == null) {
+            this.biomeDefault = new BiomeModifier("default");
+            this.biomeDefault
+                    .put(WorldTime.MORNING, 10)
+                    .put(WorldTime.MID_DAY, 18)
+                    .put(WorldTime.DUSK, 15)
+                    .put(WorldTime.MID_NIGHT, 12);
+        } else {
+            this.biomeDefault = defaultBiome;
+        }
 
         if (!config.contains("data")) return;
-        loadBiomes(config);
-        loadMtlSection(config, TempModifierType.BLOCK);
-        loadMtlSection(config, TempModifierType.CLOTHING);
+
+        // Loads all the temperature data into memory.
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                loadBiomes(config);
+                loadMtl(config, TempModifierType.BLOCK);
+                loadMtl(config, TempModifierType.CLOTHING);
+            }
+        }.runTaskAsynchronously(plugin);
     }
 
     /**
-     * Loads a section of the config.
+     * Loads a material based section of the config.
      *
      * @param config config to load from.
      * @param type   type of modifier to load.
      */
-    private void loadMtlSection(YamlConfiguration config, TempModifierType type) {
+    private void loadMtl(FileConfiguration config, TempModifierType type) {
         ConfigurationSection sec = config.getConfigurationSection("data." + type.getConfigName());
         if (sec == null) return;
+
         for (String key : sec.getKeys(false)) {
-            Material mtl = BukkitUtil.findMtl(key);
+            Material mtl = EnumUtils.findMatch(Material.values(), key);
             if (mtl == null) continue;
 
-            double[] data = new double[2];
+            double[] data = new double[] {0, this.scalar};
 
             // Load section
             if (sec.isConfigurationSection(key)) {
@@ -184,6 +210,7 @@ public class Temperatures {
             // Ignore blocks without emission
             if (data[0] == 0) continue;
 
+            updateMinMaxTempCache(data[0]);
             modifiers.get(type).put(mtl, type.makeModifier(data));
         }
     }
@@ -193,31 +220,16 @@ public class Temperatures {
      *
      * @param config config to load the data from.
      */
-    private void loadBiomes(YamlConfiguration config) {
-        ConfigurationSection sec = config.getConfigurationSection("data.biome");
+    private void loadBiomes(FileConfiguration config) {
+        ConfigurationSection sec = config.getConfigurationSection("data.biomes");
         if (sec == null) return;
-        for (String key : sec.getKeys(false)) {
-            Biome biome = BukkitUtil.findBiome(key, true);
-            if (biome == null) continue;
 
-            TimeTemperature mod = new TimeTemperature();
+        for (Biome biome : Biome.values()) {
+            String match = findMatchingKey(biome.name(), sec.getKeys(false));
 
-            if (sec.isConfigurationSection(key)) {
-                ConfigurationSection biomeSet = sec.getConfigurationSection(key);
-                for (String time : biomeSet.getKeys(false))  {
-                    int timeExact;
-                    if (NUM_CHECK.matcher(time).matches()) { // Load exact time
-                        timeExact = Integer.parseInt(time);
-                    } else { // Load simple time
-                        WorldTime wt = WorldTime.find(time);
-                        timeExact = wt == null ? -1 : wt.getTime();
-                    }
-                    mod.put(timeExact, biomeSet.getDouble(time, 0));
-                }
-            } else {
-               mod.put(WorldTime.MID_DAY, sec.getDouble(key));
-            }
-
+            if (match == null) continue;
+            BiomeModifier mod = loadBiome(sec, match, biome.name());
+            if (mod == null) continue;
             biomeModifiers.put(biome, mod);
         }
     }
@@ -242,6 +254,16 @@ public class Temperatures {
     }
 
     /**
+     * Returns a biome temperature modifier.
+     *
+     * @param biome biome to get the modifier of.
+     * @return the biomes modifier or null if it has none.
+     */
+    public BiomeModifier getModifier(Biome biome) {
+        return this.biomeModifiers.getOrDefault(biome, biomeDefault);
+    }
+
+    /**
      * Returns the emission value for the material.
      *
      * @param material material to get the emission value of.
@@ -255,7 +277,7 @@ public class Temperatures {
 
     public double getBiome(Biome biome, World world) {
         TimeTemperature mod = biomeModifiers.get(biome);
-        if (mod == null) return biomeDefault;
+        if (mod == null) return biomeDefault.getLocalTemp(world);
         return mod.getLocalTemp(world);
     }
 
@@ -277,10 +299,6 @@ public class Temperatures {
         return directSunAmplifier;
     }
 
-    public boolean isTimeModifier() {
-        return timeModifier;
-    }
-
     /**
      * Updates the cache for the min and max temperature for a player to reach. This
      * is calculated live due to some factors not being completely known such as armor
@@ -298,7 +316,6 @@ public class Temperatures {
             minTemp = temp;
             config.set("cache.min-temp", minTemp);
         }
-        saveConfig();
     }
 
     /**
@@ -320,7 +337,7 @@ public class Temperatures {
     /**
      * @return the default temp for a biome.
      */
-    public double getBiomeDefault() {
+    public BiomeModifier getBiomeDefault() {
         return biomeDefault;
     }
 
@@ -328,14 +345,14 @@ public class Temperatures {
      * @return the freezing threshold point.
      */
     public double getBurningPoint() {
-        return sysSonfig.getDouble(ConfigOption.TEMPERATURE_BURN_THR);
+        return sysSonfig.getDouble(ConfigOption.TEMPERATURE_DMG_THR_HEAT);
     }
 
     /**
      * @return the burning threshold point.
      */
     public double getFreezingPoint() {
-        return sysSonfig.getDouble(ConfigOption.TEMPERATURE_FREEZE_THR);
+        return sysSonfig.getDouble(ConfigOption.TEMPERATURE_DMG_THR_COLD);
     }
 
     /**
@@ -347,6 +364,94 @@ public class Temperatures {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Returns how many items have been loaded for the given
+     * modifier type.
+     *
+     * @param type type to get size of.
+     * @return the number of settings loaded.
+     */
+    public int count(TempModifierType type) {
+        if (type == TempModifierType.BIOME)
+            return biomeModifiers.size();
+        return modifiers.get(type).size();
+    }
+
+    /**
+     * Loads a biome temperature info from the config.
+     *
+     * @param sec  section the data is stored in.
+     * @param key  key to get the temperature from in sec.
+     * @param name name of biome.
+     * @return a biome modifier or null if there was an error getting the data.
+     */
+    private BiomeModifier loadBiome(ConfigurationSection sec, String key, String name) {
+        if (sec == null) return null;
+        BiomeModifier mod = new BiomeModifier(name);
+        // Load data into modifier
+        if (sec.isConfigurationSection(key)) {
+            ConfigurationSection biomeSet = sec.getConfigurationSection(key);
+            if (biomeSet == null) return null;
+            for (String time : biomeSet.getKeys(false))  {
+                int timeExact;
+                if (NUM_CHECK.matcher(time).matches()) { // Load exact time
+                    timeExact = Integer.parseInt(time);
+                } else { // Load simple time
+                    WorldTime wt = WorldTime.find(time);
+                    timeExact = wt == null ? -1 : wt.getTime();
+                }
+                double emission = biomeSet.getDouble(time, 0);
+                updateMinMaxTempCache(emission);
+                mod.put(timeExact, emission);
+            }
+        } else {
+            mod.put(WorldTime.MID_DAY, sec.getDouble(key));
+        }
+
+        return mod;
+    }
+
+    /**
+     * Matches a name in a collection of keys. This is case insensitive and
+     * will return the closest matching key from the collection.
+     *
+     * @param matchTo string to match to.
+     * @param keys    collection of keys to look through. If a key
+     *                ends eith {@code *} then it will use a closest
+     *                match. If there is no star at the end then an
+     *                exact match will be looked for only.
+     * @return the closest key or null if no matching key was found.
+     */
+    private String findMatchingKey(String matchTo, Collection<String> keys) {
+        String match = null;
+        int diff = -1;
+
+        // Search for the best matching biome setting in the config.
+        for (final String KEY : keys) {
+            // End search if an exact match is found
+            if (KEY.equalsIgnoreCase(matchTo)) {
+                return KEY;
+            }
+
+            // Use a closest match.
+            if (KEY.endsWith("*")) {
+                String mutated = KEY.toUpperCase();
+                mutated = mutated.substring(0, KEY.length() - 1);
+                if (!matchTo.contains(mutated)) continue;
+                if (matchTo.equalsIgnoreCase(mutated)) {
+                    match = KEY;
+                    break;
+                }
+                int d = StringUtil.distanceContains(matchTo, mutated, true);
+                if (diff == -1 || d < diff) {
+                    diff = d;
+                    match = KEY;
+                }
+            }
+        }
+        return match;
     }
 
     /**

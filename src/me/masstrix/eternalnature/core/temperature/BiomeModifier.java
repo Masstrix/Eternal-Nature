@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Matthew Denton
+ * Copyright 2020 Matthew Denton
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +16,18 @@
 
 package me.masstrix.eternalnature.core.temperature;
 
-import org.bukkit.World;
+public class BiomeModifier extends TimeTemperature {
 
-import java.util.HashMap;
-import java.util.Map;
+    private final String NAME;
 
-public class TempTimeModifier {
-
-    private Map<Long, Double> mappings = new HashMap<>();
-    private World.Environment environment;
-    private World world;
-
-    public TempTimeModifier(World world) {
-        this.world = world;
-        this.environment = world.getEnvironment();
+    public BiomeModifier(String name) {
+        this.NAME = name;
     }
 
-    public void set(long time, double modifier) {
-
-    }
-
-    public double getTemperature(int x, int y, int z) {
-        long time = world.getTime();
-        return 0;
+    /**
+     * @return the biomes name.
+     */
+    public String getName() {
+        return NAME;
     }
 }

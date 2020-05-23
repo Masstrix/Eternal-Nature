@@ -40,7 +40,7 @@ public class AgeCookItem implements AgeItem {
         this.item = item;
         WorldData data = plugin.getEngine().getWorldProvider().getWorld(item.getWorld());
         Location loc = item.getLocation();
-        heat = data.getBlockTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+        heat = data.getBlockAmbientTemperature(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
         this.ticksRandom = Math.min(MathUtil.randomInt(130, 240) - (((int) heat) - 25), 40);
     }
 

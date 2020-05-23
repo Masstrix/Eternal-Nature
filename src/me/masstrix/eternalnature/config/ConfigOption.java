@@ -17,10 +17,14 @@
 package me.masstrix.eternalnature.config;
 
 public enum ConfigOption {
+    // General section
     UPDATES_NOTIFY("general.notify-update-join", true),
     UPDATES_CHECK("general.check-for-updates", true),
     LANGUAGE("general.language", "en"),
 
+    //
+    // Global section
+    //
     LEAF_EFFECT("global.falling-leaves.enabled", true),
     LEAF_EFFECT_RANGE("global.falling-leaves.range", 6),
     LEAF_EFFECT_FIDELITY("global.falling-leaves.fidelity", 3),
@@ -34,6 +38,7 @@ public enum ConfigOption {
     RANDOM_TREE_SPREAD_SCANS("global.randomly-spread-trees.scans", 2),
     AGE_ITEMS("global.age-items", true),
 
+    // Auto plant settings
     AUTO_PLANT("global.auto-plant.enabled", true),
     AUTO_REPLANT("global.auto-plant.replant-crops", true),
     AUTO_PLANT_SOUND("global.auto-plant.play-sound", true),
@@ -47,25 +52,35 @@ public enum ConfigOption {
     AUTO_PLANT_SWEET_BERRY("global.auto-plant.sweet_berry", 1.0),
     AUTO_PLANT_FLOWERS("global.auto-plant.flowers", 0.2),
 
+    //
+    // Temperature section
+    //
     TEMPERATURE_ENABLED("temperature.enabled", true),
-    TEMPERATURE_DAMAGE("temperature.cause-damage", true),
-    TEMPERATURE_SPRINTING("temperature.increase-from-sprinting", true),
     TEMPERATURE_SWEAT("temperature.sweat", true),
-    TEMPERATURE_BURN("temperature.burn", true),
-    TEMPERATURE_BURN_THR("temperature.damage-threshold-heat", 50.0),
-    TEMPERATURE_FREEZE("temperature.freeze", true),
-    TEMPERATURE_FREEZE_THR("temperature.damage-threshold-cold", -5.0),
     TEMPERATURE_MAX_DELTA("temperature.max-delta-change", 15),
+
+    // Damage
+    TEMPERATURE_DMG("temperature.damage.enabled", true),
+    TEMPERATURE_DMG_DELAY("temperature.damage.damage-delay", 3000),
+    TEMPERATURE_DMG_AMOUNT("temperature.damage.damage-dealt", 0.5),
+    TEMPERATURE_DMG_THR_COLD("temperature.damage.threshold.cold", -5),
+    TEMPERATURE_DMG_THR_HEAT("temperature.damage.threshold.heat", 50),
+
+    // Display
     TEMPERATURE_TEXT("temperature.display.text", "%temperature% %temp_icon%"),
     TEMPERATURE_BAR_STYLE("temperature.display.style", StatusRenderMethod.BOSSBAR.name()),
     TEMPERATURE_BAR_FLASH("temperature.display.warning-flash", true),
-    TEMPERATURE_USE_BLOCKS("temperature.advanced.use-blocks", true),
-    TEMPERATURE_USE_BIOMES("temperature.advanced.use-biomes", true),
-    TEMPERATURE_USE_ENVIRO("temperature.advanced.use-environment", true),
-    TEMPERATURE_THREADS("temperature.advanced.thread-limit", 20),
-    TEMPERATURE_POOL_SIZE("temperature.advanced.chunk-pool-size", 20),
-    TEMPERATURE_SAVE_DATA("temperature.advanced.save-chunk-data", true),
 
+    // Scanning
+    TEMPERATURE_USE_BLOCKS("temperature.scanning.use-blocks", true),
+    TEMPERATURE_USE_BIOMES("temperature.scanning.use-biomes", true),
+    TEMPERATURE_USE_WEATHER("temperature.scanning.use-weather", true),
+    TEMPERATURE_USE_ITEMS("temperature.scanning.use-items", true),
+    TEMPERATURE_USE_ENVIRO("temperature.scanning.use-environment", true),
+
+    //
+    // Hydration section
+    //
     HYDRATION_ENABLED("hydration.enabled", true),
     HYDRATION_WALKING("hydration.increase-from-activity", true),
     HYDRATION_DAMAGE("hydration.damage-when-empty", true),

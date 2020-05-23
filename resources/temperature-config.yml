@@ -12,69 +12,114 @@
 options:
   direct-sun-amplifier: 1.3
   cave-modifier: 0.7
-  time-modifier: true
   global-scalar: 4
-  biome-default-temp: 13
+  biome-default-temp:
+    morning: 10
+    mid_day: 18
+    dusk: 15
+    mid_night: 12
 
 data:
   weather:
     clear: 0
-    rain: -5
-    storm: -8
-  
+    rain: -3
+    storm: -5
+
   biomes:
     ocean: 10
-    frozen_ocean: -10
-    cold_ocean: 2
+    deep_ocean: 8
+    frozen_ocean: -3
+    cold_ocean: 4
+    lukewarm_ocean: 14
     warm_ocean: 18
-    plains: 13
-    beach: 10
-    swamp: 17
-    snowy_mountains: -5
-    mountain: 2
-    mountain_edge: 6
-    savanna: 25
-    jungle: 30
-    badlands: 34
-    jungle_edge: 
-      6000: 25
-    desert:
-      morning: 0
-      mid_day: 40
-      dusk: 0
-      mid_night: -3
-    desert_hills: 42
-    frozen: -3
-    tiga: -5
-    snowy: -8
-    ice: -10
-    end: -10
-    river: 12
-    nether: 50
+
+    river: 13
+    frozen_river: -3
+
+    beach:
+      morning: 10
+      mid_day: 18
+      dusk: 15
+      mid_night: 12
+
+    plains:
+      morning: 10
+      mid_day: 18
+      dusk: 15
+      mid_night: 12
+    swamp*:
+      morning: 16
+      mid_day: 24
+      dusk: 20
+      mid_night: 18
     
+    mountains: 2
+    mountains_edge: 6
+    snowy_mountains: -5
+    
+    savanna*:
+      morning: 13
+      mid_day: 25
+      dusk: 20
+      mid_night: 14
+    
+    jungle*:
+      morning: 25
+      mid_day: 35
+      dusk: 30
+      mid_night: 20
+    jungle_edge*:
+      morning: 20
+      mid_day: 28
+      dusk: 24
+      mid_night: 18
+      
+    badlands*:
+      morning: 15
+      mid_day: 34
+      dusk: 25
+      mid_night: 10
+    
+    desert*:
+      morning: 15
+      mid_day: 40
+      dusk: 30
+      mid_night: -3
+    
+    frozen*: -3
+    tiga*: -5
+    snowy*: -8
+    ice*: -10
+
+    # Nether Biomes
+    nether: 20
+    nether_wastes‌: 20
+    crimson_forest: 13
+    warped_forest: 18
+    soul_sand_valley: 15
+    basalt_deltas: 25
+
+    # End Biomes
+    end: -10
+
   blocks:
     lava:
-      emission: 50
-      falloff: 6
-    fire:
-      emission: 30
+      emission: 2
       falloff: 3
-    torch:
+    fire:
       emission: 10
       falloff: 2
-    redstone_torch:
+    torch:
       emission: 2
+      falloff: 2
+    redstone_torch:
+      emission: 1
+      falloff: 1
     campfire:
-      emission: 20
-      falloff: 2
+      emission: 5
+      falloff: 3
     lantern:
-      emission: 20
-      falloff: 2
-    glowstone:
-      emission: 20
-      falloff: 2
-    netherrack:
-      emission: 20
+      emission: 1
       falloff: 2
     jack_o_lantern:
       emission: 20
@@ -83,8 +128,8 @@ data:
       emission: 20
       falloff: 2
     snow_block:
-      emission: 20
-      falloff: 2
+      emission: -0.5
+      falloff: 1
     ice:
       emission: -1
       falloff: 2
@@ -97,37 +142,46 @@ data:
     blue_ice:
       emission: -1.8
       falloff: 2
-    end_stone:
-      emission: -3
-      falloff: 2
-    end_portal:
-      emission: -5
-      falloff: 2
+
+    # Nether Items
     nether_portal:
-      emission: 20
+      emission: 5
+      falloff: 2
+    glowstone:
+      emission: 1
       falloff: 2
 
+    # End Items
+    end_stone:
+      emission: -0.1
+      falloff: 1
+    end_portal:
+      emission: -3
+      falloff: 3
+
+
   clothing:
-    turtle_helmet: 1
-    leather_helmet: 2
-    leather_chestplate: 3
-    leather_leggings: 3
-    leather_boots: 1
-    
-    iron_helmet: 1
-    iron_chestplate: 2
+    turtle_helmet: 0.4
+
+    leather_helmet: 1
+    leather_chestplate: 2.2
+    leather_leggings: 1.8
+    leather_boots: 0.5
+
+    iron_helmet: 0.3
+    iron_chestplate: 1.3
     iron_leggings: 1
-    iron_boots: 0
-    
-    gold_helmet: 1
-    gold_chestplate: 3
-    gold_leggings: 2
-    gold_boots: 1
-    
-    diamond_helmet: 1
-    diamond_chestplate: 2
-    diamond_leggings: 2
-    diamond_boots: 1
+    iron_boots: 0.3
+
+    gold_helmet: 0.3
+    gold_chestplate: 1.3
+    gold_leggings: 1
+    gold_boots: 0.3
+
+    diamond_helmet: 0.3
+    diamond_chestplate: 1.3
+    diamond_leggings: 1
+    diamond_boots: 0.3
     
 cache:
   min-temp: 0

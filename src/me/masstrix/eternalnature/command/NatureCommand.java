@@ -20,6 +20,8 @@ import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.core.render.LeafParticle;
+import me.masstrix.eternalnature.core.temperature.TempModifierType;
+import me.masstrix.eternalnature.core.temperature.Temperatures;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.data.UserData;
@@ -30,6 +32,7 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -71,18 +74,14 @@ public class NatureCommand extends EternalCommand {
         }
 
         else if (args[0].equalsIgnoreCase("world")) {
+            String world = args.length > 1 ? args[1] : "<world>";
             if (args.length == 1) {
-                msg(PluginData.PREFIX + "&cPlease specify a world.");
-                return;
-            }
-
-            String world = args[1];
-
-            if (args.length == 2) {
                 msg("");
                 msg("     &2&lEternal Nature");
                 msg("     &7&o/world options");
                 msg("");
+                msg("&a/eternal world list &7- Lists all loaded worlds.");
+                msg("&a/eternal world reloadAll &7- Reloads all worlds.");
                 msg("&a/eternal world " + world + " reload &7- Reloads the worlds configs.");
                 msg("&a/eternal world " + world + " info &7- Displays info about that world.");
                 msg("&a/eternal world " + world + " makeCustomConfig &7- " +
@@ -91,50 +90,78 @@ public class NatureCommand extends EternalCommand {
                 return;
             }
 
-            String sub = args[2];
-            WorldData data = plugin.getEngine().getWorldProvider().getWorld(world);
-            if (data == null) {
+            WorldProvider provider = plugin.getEngine().getWorldProvider();
+            String sub = args[1];
+
+            if (sub.equalsIgnoreCase("list") && args.length == 2) {
+                Collection<String> worlds = provider.getWorldNames();
+                msg("");
+                msg("     &2&lLoaded Worlds");
+                worlds.forEach(name -> msg(" &2• &f" + name));
+                msg("");
+                return;
+            }
+            else if (sub.equalsIgnoreCase("reloadAll") && args.length == 2) {
+                provider.getWorlds().forEach(WorldData::reload);
+                msg(PluginData.PREFIX + "&aReloaded all worlds data.");
+                return;
+            }
+
+            // Stop if command does not have arguments
+            if (args.length < 3) {
+                msg(PluginData.PREFIX + "&cInvalid use. For help use /eternal world");
+                return;
+            }
+
+            sub = args[2];
+
+            // Handle creating a custom config for world. This bypasses
+            // the need for a world to be loaded and lets the user
+            // define any name for the world being created.
+            if (sub.equalsIgnoreCase("makeCustomConfig")) {
+                WorldData data = provider.getWorld(world);
+                msg(PluginData.PREFIX + "&7Creating custom config for world " + world + "...");
+                boolean success = data.createCustomTemperatureConfig(false);
+                if (success)
+                    msg(PluginData.PREFIX + "&aCreated custom config for world &e" + world + "&a.");
+                else msg(PluginData.PREFIX + "&7World &e" + world + "&7 already had a custom config.");
+                return;
+            }
+
+            // Stop if the world does not exist
+            if (!provider.isLoaded(world)) {
                 msg(PluginData.PREFIX + "&cNo world was found with that name.");
                 return;
             }
 
             // Handle sub commands for /eternal world
             if (sub.equalsIgnoreCase("reload")) {
+                WorldData data = provider.getWorld(world);
                 msg(PluginData.PREFIX + "&7Reloading files...");
                 data.reload();
                 msg(PluginData.PREFIX + "&aReloaded config files");
             }
             else if (sub.equalsIgnoreCase("info")) {
+                WorldData data = provider.getWorld(world);
+                Temperatures t = data.getTemperatures();
                 msg("");
                 msg("     &2&lEternal Nature");
                 msg("     &6&o" + world + "'s info");
-                msg(" Uses custom data set: &6" + data.usesCustomConfig());
                 msg("");
-            }
-            else if (sub.equalsIgnoreCase("makeCustomConfig")) {
-                msg(PluginData.PREFIX + "&7Reloading files...");
-                boolean success = data.createCustomTemperatureConfig(false);
-                if (success)
-                    msg(PluginData.PREFIX + "&aCreated custom config for world &e" + world + "&a.");
-                else msg(PluginData.PREFIX + "&7World &e" + world + "&7 already had a custom config.");
-            } else {
-                msg(PluginData.PREFIX + "&cInvalid use. For help use /eternal world <name>");
-            }
-        }
-
-        else if (args[0].equalsIgnoreCase("reloadWorld")) {
-            WorldProvider provider = plugin.getEngine().getWorldProvider();
-            if (args.length == 1) {
-                provider.getWorlds().forEach(WorldData::reload);
-                msg(PluginData.PREFIX + "&aReloaded all worlds data.");
-            } else {
-                WorldData world = provider.getWorld(args[1]);
-                if (world == null) {
-                    msg(PluginData.PREFIX + "&aReloaded all worlds data.");
-                } else {
-                    world.reload();
-                    msg(PluginData.PREFIX + "&aReloaded all worlds data.");
+                msg("Uses custom data set: &6" + data.usesCustomConfig());
+                msg("Biomes Loaded: &6" + t.count(TempModifierType.BIOME));
+                msg("Blocks Loaded: &6" + t.count(TempModifierType.BLOCK));
+                msg("Clothing Loaded: &6" + t.count(TempModifierType.CLOTHING));
+                msg("");
+                if (wasPlayer()) {
+                    Player player = (Player) getSender();
+                    Block standing = player.getLocation().getBlock();
+                    msg("Currently in biome: &7" + t.getModifier(standing.getBiome()).getName());
+                    msg("");
                 }
+            }
+            else {
+                msg(PluginData.PREFIX + "&cInvalid use. For help use /eternal world");
             }
         }
 
@@ -164,7 +191,7 @@ public class NatureCommand extends EternalCommand {
 
         else if (args[0].equalsIgnoreCase("stats")) {
             msg("");
-            msg("     &e&lEternal Nature");
+            msg("     &2&lEternal Nature");
             msg("     &7Background Stats");
             msg("");
             msg("Players cached: &7" + plugin.getEngine().getCashedUsers().size());
@@ -243,11 +270,20 @@ public class NatureCommand extends EternalCommand {
         else if (args.length >= 2) {
             if (args[0].equalsIgnoreCase("world")) {
                 Collection<String> names = plugin.getEngine().getWorldProvider().getWorldNames();
-                if (args.length == 2)
-                    return new ArrayList<>(names);
+
+                if (args.length == 2) {
+                    List<String> worlds = new ArrayList<>(names);
+                    worlds.add("list");
+                    worlds.add("reloadAll");
+                    return worlds;
+                }
+
+                if (args.length == 3 && names.contains(args[1])) {
+                    return Arrays.asList("reload", "makeCustomConfig", "info");
+                }
 
                 if (args.length == 3) {
-                    return Arrays.asList("reload", "makeCustomConfig", "info");
+                    return Collections.singletonList("makeCustomConfig");
                 }
             }
         }

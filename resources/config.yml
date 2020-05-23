@@ -63,24 +63,22 @@ hydration:
 
 temperature:
   enabled: true
-  cause-damage: true
-  increase-from-sprinting: true
-  burn: true
-  freeze: true
   sweat: true
   max-delta-change: 15
-  damage-threshold:
-    cold: -5
-    heat: 50
+  damage:
+    enabled: true
+    damage-dealt: 1.0
+    damage-delay: 1000
+    threshold:
+      cold: -5
+      heat: 60
   display:
     text: "%temperature% %temp_icon% %temp_simple%"
     style: BOSSBAR
     warning-flash: true
-  advanced:
-    use-blocks: false
+  scanning:
+    use-blocks: true
     use-biomes: true
-    use-envronment: true
-    block-generate-method: chunk
-    save-chunk-data: false
-    thread-limit: 20
-    chunk-pool-cap: 20
+    use-weather: true
+    use-items: true
+    use-environment: true

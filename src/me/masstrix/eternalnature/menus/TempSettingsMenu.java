@@ -20,9 +20,12 @@ import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
+import me.masstrix.eternalnature.util.MathUtil;
+import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionType;
 
 public class TempSettingsMenu extends GlobalMenu {
@@ -49,6 +52,7 @@ public class TempSettingsMenu extends GlobalMenu {
     public void build() {
         addBackButton(menuManager, Menus.SETTINGS);
 
+        // Enabled toggle
         setButton(new Button(getInventory(), asSlot(1, 2), () -> new ItemBuilder(Material.REDSTONE_TORCH)
                 .setName("&a" + le.getText("menu.temp.enabled.title"))
                 .addDescription(le.getText("menu.temp.enabled.description"))
@@ -61,19 +65,37 @@ public class TempSettingsMenu extends GlobalMenu {
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(1, 3), () -> new ItemBuilder(Material.IRON_SWORD)
-                .setName("&a" + le.getText("menu.temp.damage.title"))
-                .addDescription(le.getText("menu.temp.damage.description"))
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_DAMAGE))
-                .build()).setToggle(le.getText("menu.temp.damage.title"),
-                () -> config.isEnabled(ConfigOption.TEMPERATURE_DAMAGE))
+        // Temperature damage toggle
+        setButton(new Button(getInventory(), asSlot(1, 4), () -> {
+            double damageDealt = config.getDouble(ConfigOption.TEMPERATURE_DMG_AMOUNT);
+            double coldThr = config.getDouble(ConfigOption.TEMPERATURE_DMG_THR_COLD);
+            double heatThr = config.getDouble(ConfigOption.TEMPERATURE_DMG_THR_HEAT);
+            String damageDescription = le.getText("menu.temp.damage.description");
+            damageDescription = damageDescription.replace("%cold_threshold%", "&e" + coldThr + "&7");
+            damageDescription = damageDescription.replace("%heat_threshold%", "&e" + heatThr + "&7");
+
+            int damageDelay = config.getInt(ConfigOption.TEMPERATURE_DMG_DELAY);
+            double delaySec = MathUtil.round(damageDelay / 1000D, 1);
+            double damageRounded = MathUtil.round(damageDealt, 1);
+
+            return new ItemBuilder(Material.IRON_SWORD)
+                    .setName("&a" + le.getText("menu.temp.damage.title"))
+                    .addDescription(damageDescription)
+                    .addLore(le.getText("menu.temp.damage.dealt") + ": &e" + damageRounded)
+                    .addLore(le.getText("menu.temp.damage.rate") + ": &e" + delaySec + "s")
+                    .addLore(" ")
+                    .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_DMG))
+                    .build();
+        }).setToggle(le.getText("menu.temp.damage.title"),
+                () -> config.isEnabled(ConfigOption.TEMPERATURE_DMG))
                 .onClick(player -> {
-                    config.toggle(ConfigOption.TEMPERATURE_DAMAGE);
+                    config.toggle(ConfigOption.TEMPERATURE_DMG);
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(1, 4), () -> new ItemBuilder(Material.POTION)
+        // Temperature Sweating toggle
+        setButton(new Button(getInventory(), asSlot(1, 6), () -> new ItemBuilder(Material.POTION)
                 .setPotionType(PotionType.WATER)
                 .setName("&a" + le.getText("menu.temp.sweat.title"))
                 .addDescription(le.getText("menu.temp.sweat.description"))
@@ -86,29 +108,6 @@ public class TempSettingsMenu extends GlobalMenu {
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(1, 5), () -> new ItemBuilder(Material.FLINT_AND_STEEL)
-                .setName("&a" + le.getText("menu.temp.burning.title"))
-                .addDescription(le.getText("menu.temp.burning.description"))
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_BURN))
-                .build()).setToggle(le.getText("menu.temp.burning.title"),
-                () -> config.isEnabled(ConfigOption.TEMPERATURE_BURN))
-                .onClick(player -> {
-                    config.toggle(ConfigOption.TEMPERATURE_BURN);
-                    config.save();
-                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
-                }));
-
-        setButton(new Button(getInventory(), asSlot(1, 6), () -> new ItemBuilder(Material.ICE)
-                .setName("&a" + le.getText("menu.temp.freezing.title"))
-                .addDescription(le.getText("menu.temp.freezing.description"))
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.TEMPERATURE_FREEZE))
-                .build()).setToggle(le.getText("menu.temp.freezing.title"),
-                () -> config.isEnabled(ConfigOption.TEMPERATURE_FREEZE))
-                .onClick(player -> {
-                    config.toggle(ConfigOption.TEMPERATURE_FREEZE);
-                    config.save();
-                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
-                }));
         setButton(new Button(getInventory(), asSlot(4, 4), () -> new ItemBuilder(Material.JUNGLE_SIGN)
                 .setName("&a" + le.getText("menu.temp.display.title"))
                 .addDescription(le.getText("menu.temp.display.description"))

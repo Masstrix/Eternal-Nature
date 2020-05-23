@@ -31,7 +31,10 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-public class RegionScanner {
+/**
+ * Scans around a player to calculate the temperature of surrounding blocks.
+ */
+public class TemperatureScanner {
 
     private int iteration;
     private int fidelity;
@@ -45,18 +48,15 @@ public class RegionScanner {
     private Location loc;
     private UserData user;
     private double temperature;
-    private double temperatureAvg;
     private double hottest;
     private double coldest;
-    private double tempTotal = 0;
-    private double tempTotalCool = 0;
+    private double scannedTemp = 0;
     private int tempTotalHeatCount = 0;
-    private int tempTotalCoolCount = 0;
     private int emissiveBlockCount = 0;
 
     Material cold, hot;
 
-    public RegionScanner(EternalNature plugin, UserData data, Player player) {
+    public TemperatureScanner(EternalNature plugin, UserData data, Player player) {
         this.PLUGIN = plugin;
         this.PLAYER = player;
         this.user = data;
@@ -112,6 +112,17 @@ public class RegionScanner {
     }
 
     /**
+     * Forces the a new quick scan of the players current area. This will have the
+     * lowest fidelity. Once run the temperature will be changed to the single scan
+     * using the players current location.
+     */
+    public void quickUpdate() {
+        done = true;
+        this.loc = PLAYER.getLocation();
+        tick();
+    }
+
+    /**
      * Ticks the region scanner around the players location. The scanner will update it's
      * values once it's done enought iterations to match the fidelity.
      */
@@ -150,7 +161,7 @@ public class RegionScanner {
         int areaCb = areaSq * this.height; // cubed area
         int scanSize = (areaCb / fidelity) + 1;
 
-        int dmgTemp = PLUGIN.getSystemConfig().getInt(ConfigOption.TEMPERATURE_BURN_THR);
+        int dmgTemp = PLUGIN.getSystemConfig().getInt(ConfigOption.TEMPERATURE_DMG_AMOUNT);
 
         for (int j = 0; j < scanSize; j++) {
             int i = j * fidelity + iteration;
@@ -193,27 +204,20 @@ public class RegionScanner {
                 }
             }
 
-            if (fallOff < 0) {
-                tempTotalCool += fallOff;
-                tempTotalCoolCount++;
-            }
-
             // Update temperature averaging.
             if (fallOff != 0) {
                 emissiveBlockCount++;
-                tempTotal += fallOff;
+                scannedTemp += fallOff;
             }
 
             // Apply temperatures to hot and cold values
             if (i == 0) {
                 hottest = fallOff;
                 coldest = fallOff;
-            }
-            else if (fallOff > hottest) {
+            } else if (fallOff > hottest) {
                 hottest = fallOff;
                 hot = block.getType();
-            }
-            else if (fallOff < coldest) {
+            } else if (fallOff < coldest) {
                 coldest = fallOff;
                 cold = block.getType();
             }
@@ -257,30 +261,23 @@ public class RegionScanner {
 
         // recalculate the temperature.
         if (done || iteration >= fidelity) {
-            iteration = 0;
-            done = true;
-            setLoc = false;
-
-            // Average out temperature around scan.
-            temperatureAvg = tempTotal / emissiveBlockCount;
-
-            double averageHeat = hottest;
-
-            // Make heat become stronger as there are more heating
-            // blocks around.
-            averageHeat *= Math.max(0.6, Math.min(tempTotalHeatCount / 3D, 1D));
-
-            if (Double.isNaN(averageHeat)) averageHeat = 0;
-
-            this.temperature = tempTotal;
-
-            // reset the base values.
-            lastScanTime = System.currentTimeMillis();
-            tempTotal = 0;
-            emissiveBlockCount = 0;
-            tempTotalHeatCount = 0;
-            tempTotalCoolCount = 0;
-            tempTotalCool = 0;
+            done();
         }
+    }
+
+    /**
+     * Sets the scanners state to complete and updates the temperature value.
+     */
+    private void done() {
+        temperature = scannedTemp;
+
+        // Resets values
+        lastScanTime = System.currentTimeMillis();
+        iteration = 0;
+        scannedTemp = 0;
+        emissiveBlockCount = 0;
+        tempTotalHeatCount = 0;
+        done = true;
+        setLoc = false;
     }
 }

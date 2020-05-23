@@ -62,15 +62,27 @@ public class ItemBuilder {
         return this;
     }
 
+    /**
+     * Adds a description to the item. Descriptions are padded on the top and bottom and
+     * will auto-wrap words when over a threshold length.
+     *
+     * @param desc description text to append to the items lore.
+     * @return an instance of the item builder.
+     */
     public ItemBuilder addDescription(String desc) {
         StringBuilder line = new StringBuilder();
         addLore("");
         boolean complete = false;
-        for (String s : desc.split(" ")) {
-            if (line.length() >= 25) {
+        String[] words = desc.split(" ");
+        for (int i = 0; i < words.length; i++) {
+            String s = words[i];
+            // Subtract the color codes from lines length
+            int trulLen = line.length() - StringUtil.getColorCodeCount(line.toString()) * 2;
+            if (trulLen >= 25) {
                 addLore(line.toString());
                 line = new StringBuilder();
-                complete = true;
+                if (i >= words.length - 1)
+                    complete = true;
             } else {
                 complete = false;
             }
