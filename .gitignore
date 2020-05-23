@@ -4,3 +4,5 @@
 .DS_Store
 .editorconfig
 _config.yml
+build.xml
+build.number
