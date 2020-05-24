@@ -1,6 +1,6 @@
 name: EternalNature
 main: me.masstrix.eternalnature.EternalNature
-version: 2.1
+version: @VERSION@
 author: Masstrix
 api-version: 1.14
 

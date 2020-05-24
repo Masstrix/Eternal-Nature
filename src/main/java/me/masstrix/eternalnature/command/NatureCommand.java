@@ -26,6 +26,7 @@ import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.data.UserData;
 import me.masstrix.eternalnature.menus.Menus;
+import me.masstrix.eternalnature.util.BuildInfo;
 import me.masstrix.version.checker.VersionCheckInfo;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -204,7 +205,11 @@ public class NatureCommand extends EternalCommand {
             msg("     &e&lEternal Nature");
             msg("     &7Version Info");
             msg("");
-            msg(" Current Version: &7" + plugin.getDescription().getVersion());
+            msg(" Build: &7" + BuildInfo.getBuild());
+            msg(" Current Version: &7" + BuildInfo.getVersion());
+            if (BuildInfo.isSnapshot()) {
+                msg("   &7&oThis version is a snapshot.");
+            }
             if (plugin.getVersionInfo() == null) {
                 if (plugin.getSystemConfig().isEnabled(ConfigOption.UPDATES_CHECK)) {
                     msg("&cUnable to check plugin version.");

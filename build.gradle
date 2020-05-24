@@ -1,0 +1,92 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id 'java'
+}
+
+group 'me.masstrix'
+version '2.1'
+
+sourceCompatibility = 1.8
+
+// Sets up project settings
+ext {
+    buildVersion = -1
+    fileSuffix = ""
+    isSnapshot = false
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compileOnly group: 'org.spigotmc', name: 'spigot', version: '1.15.2-R0.1-SNAPSHOT'
+}
+
+task readVersionProp {
+    // Load the version properties and increment it
+    def versionFile = file('version.properties')
+
+    if (!versionFile.exists()) {
+        BufferedWriter writer = versionFile.newWriter()
+        writer.write("BUILD_VERSION=0")
+        writer.flush()
+        writer.close()
+    }
+
+    // Read the version file.
+    if (versionFile.canRead()) {
+        Properties versionProps = new Properties();
+
+        versionProps.load(new FileInputStream(versionFile))
+
+        if (versionProps.containsKey("BUILD_VERSION")) {
+            buildVersion = Integer.parseInt(versionProps['BUILD_VERSION'] as String) + 1
+        }
+
+        versionProps['BUILD_VERSION'] = buildVersion.toString()
+        versionProps.store(versionFile.newWriter(), null)
+    } else {
+        throw new GradleException("Could not read version.properties!")
+    }
+}
+
+task compileForSnapshot() {
+    doFirst {
+        isSnapshot = true
+        fileSuffix = "-snapshot"
+        println 'Building snapshot...'
+    }
+    finalizedBy('makeJar')
+}
+
+task compileForRelease() {
+    doFirst {
+        fileSuffix = ""
+        println 'Building release...'
+    }
+    finalizedBy('makeJar')
+}
+
+jar {
+    doFirst {
+        archiveFileName = "${project.name}-${project.version}${fileSuffix}.jar"
+    }
+}
+
+// Replaces tokens in resource files
+processResources {
+    doFirst {
+        filter(ReplaceTokens, tokens: [VERSION: project.version,
+                                       BUILD: buildVersion.toString(),
+                                       IS_SNAPSHOT: isSnapshot.toString()])
+    }
+}
+
+// Package sources into a jar
+task makeJar {
+    dependsOn(clean, jar)
+}

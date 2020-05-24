@@ -1,8 +1,16 @@
+#IntelliJ
 /out
 /.idea
 *.iml
-.DS_Store
 .editorconfig
 _config.yml
-build.xml
-build.number
+
+# Java
+*.class
+
+# OSX Specific
+.DS_Store
+
+# Gradle
+/build/
+/.gradle/

@@ -22,6 +22,7 @@ import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.metric.Metrics;
 import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
 import me.masstrix.eternalnature.listeners.*;
+import me.masstrix.eternalnature.util.BuildInfo;
 import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.lang.langEngine.LanguageEngine;
 import me.masstrix.version.MinecraftRelease;
@@ -75,6 +76,7 @@ public class EternalNature extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        BuildInfo.init();
         MinecraftVersion serverVer = MinecraftRelease.getServerVersion();
 
         // Make sure the server is new enough to run the plugin
