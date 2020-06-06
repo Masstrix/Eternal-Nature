@@ -21,6 +21,7 @@ import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.metric.Metrics;
 import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
+import me.masstrix.eternalnature.external.PlaceholderSupport;
 import me.masstrix.eternalnature.listeners.*;
 import me.masstrix.eternalnature.util.BuildInfo;
 import me.masstrix.eternalnature.util.StringUtil;
@@ -139,6 +140,11 @@ public class EternalNature extends JavaPlugin {
         
         // Enable metrics
         new Metrics(this);
+
+        // Register placeholders if plugin is installed
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new PlaceholderSupport(this).register();
+        }
     }
 
     /**

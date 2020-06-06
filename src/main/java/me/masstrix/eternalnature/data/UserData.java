@@ -293,7 +293,9 @@ public class UserData implements EternalUser {
         }
 
         if (config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) {
-            Temperatures temps = plugin.getEngine().getDefaultTemperatures();
+            WorldProvider provider = plugin.getEngine().getWorldProvider();
+            WorldData worldData = provider.getWorld(player.getWorld());
+            Temperatures temps = worldData.getTemperatures();
             TemperatureIcon icon = TemperatureIcon.getClosest(temperature, temps);
 
             String text = config.getString(ConfigOption.TEMPERATURE_TEXT);

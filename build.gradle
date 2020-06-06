@@ -19,11 +19,15 @@ ext {
 repositories {
     mavenCentral()
     mavenLocal()
+    maven {
+        url = 'https://repo.extendedclip.com/content/repositories/placeholderapi/'
+    }
 }
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     compileOnly group: 'org.spigotmc', name: 'spigot', version: '1.15.2-R0.1-SNAPSHOT'
+    compileOnly 'me.clip:placeholderapi:2.10.6'
 }
 
 task readVersionProp {
@@ -39,7 +43,7 @@ task readVersionProp {
 
     // Read the version file.
     if (versionFile.canRead()) {
-        Properties versionProps = new Properties();
+        Properties versionProps = new Properties()
 
         versionProps.load(new FileInputStream(versionFile))
 

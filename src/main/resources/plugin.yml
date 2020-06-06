@@ -4,6 +4,8 @@ version: @VERSION@
 author: Masstrix
 api-version: 1.14
 
+softdepend: [PlaceholderAPI]
+
 commands:
   eternalnature:
     aliases:
