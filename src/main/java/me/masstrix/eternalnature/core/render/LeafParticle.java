@@ -23,6 +23,7 @@ import me.masstrix.eternalnature.core.EntityCleanup;
 import me.masstrix.eternalnature.core.entity.CachedEntity;
 import me.masstrix.eternalnature.core.entity.EntityOption;
 import me.masstrix.eternalnature.core.entity.EntityStorage;
+import me.masstrix.eternalnature.core.item.CustomItem;
 import me.masstrix.eternalnature.events.LeafSpawnEvent;
 import me.masstrix.eternalnature.util.MathUtil;
 import org.bukkit.Bukkit;
@@ -31,7 +32,6 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.util.EulerAngle;
 
@@ -70,11 +70,11 @@ public class LeafParticle extends CachedEntity implements CleanableEntity, Leaf 
             a.setSilent(true);
             a.setVisible(false);
             a.setGravity(false);
-            a.setItemInHand(new ItemStack(Material.KELP));
+            a.getEquipment().setItemInMainHand(CustomItem.LEAF.get());
             a.setRightArmPose(new EulerAngle(
-                    getAngle(MathUtil.randomInt(90)),
-                    getAngle(MathUtil.randomInt(90)),
-                    getAngle(MathUtil.randomInt(90))));
+                    degreesToEuler(MathUtil.randomInt(90)),
+                    degreesToEuler(MathUtil.randomInt(90)),
+                    degreesToEuler(MathUtil.randomInt(90))));
         });
         alive = true;
 
@@ -121,28 +121,23 @@ public class LeafParticle extends CachedEntity implements CleanableEntity, Leaf 
     }
 
     private double updateAngle() {
-        return getAngle(MathUtil.chance(2) ? -MathUtil.random().nextInt(3)
+        return degreesToEuler(MathUtil.chance(2) ? -MathUtil.random().nextInt(3)
                 : MathUtil.random().nextInt(3));
     }
 
-    private double getAngle(double v) {
+    /**
+     * Converts an angle in degrees to euler.
+     *
+     * @param v angle in degrees.
+     * @return the angle as a euler unit.
+     */
+    private double degreesToEuler(double v) {
         return (v / 180) * Math.PI;
     }
 
     @Override
     public Entity[] getEntities() {
         return new Entity[] {leaf};
-    }
-
-    private static boolean removeIfMatches(Entity entity) {
-        if (!(entity instanceof ArmorStand)) return false;
-        ArmorStand stand = (ArmorStand) entity;
-        if (stand.hasMetadata("session") &&
-                stand.getMetadata("session").get(0).asInt()
-                == EntityStorage.SESSION_ID.hashCode())
-            return false;
-        return stand.isMarker() && !stand.hasGravity()
-                && stand.getItemInHand().getType() == Material.KELP;
     }
 
     /**
@@ -165,5 +160,16 @@ public class LeafParticle extends CachedEntity implements CleanableEntity, Leaf 
             }
         }
         return countCleaned;
+    }
+
+    private static boolean removeIfMatches(Entity entity) {
+        if (!(entity instanceof ArmorStand)) return false;
+        ArmorStand stand = (ArmorStand) entity;
+        if (stand.hasMetadata("session") &&
+                stand.getMetadata("session").get(0).asInt()
+                        == EntityStorage.SESSION_ID.hashCode())
+            return false;
+        return stand.isMarker() && !stand.hasGravity()
+                && stand.getItemInHand().getType() == Material.KELP;
     }
 }

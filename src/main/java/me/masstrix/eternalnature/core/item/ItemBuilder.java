@@ -37,6 +37,7 @@ public class ItemBuilder {
     private List<String> lore = new ArrayList<>();
     private PotionType potionType;
     private boolean glowing;
+    private int customModel = -1;
 
     public ItemBuilder(Material type) {
         this.type = type;
@@ -121,12 +122,26 @@ public class ItemBuilder {
         return this;
     }
 
+    /**
+     * Sets the custom model id used for a resource pack.
+     *
+     * @param id id of the custom model.
+     * @return an instance of this item builder.
+     */
+    public ItemBuilder setCustomModelData(int id) {
+        this.customModel = id;
+        return this;
+    }
+
     public ItemStack build() {
         ItemStack item = stack == null ? new ItemStack(type) : stack;
 
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(name);
         meta.setLore(lore);
+        if (customModel > 0) {
+            meta.setCustomModelData(customModel);
+        }
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS,
                 ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_UNBREAKABLE);
         if (glowing) {

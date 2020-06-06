@@ -139,7 +139,7 @@ public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
             scanner.setLocation(player.getLocation());
             scanner.scan(block -> {
                 Block below = block.getRelative(BlockFace.DOWN);
-                if (block.getBlockData() instanceof Leaves && below.isPassable())
+                if (block.getBlockData() instanceof Leaves && below.isPassable() && !below.isLiquid())
                     locations.add(block.getLocation().add(0.5, 0, 0.5));
             });
         }
