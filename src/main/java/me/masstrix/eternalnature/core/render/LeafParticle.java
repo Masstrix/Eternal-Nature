@@ -32,13 +32,16 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.util.EulerAngle;
 
+import java.util.UUID;
 import java.util.logging.Level;
 
 public class LeafParticle extends CachedEntity implements CleanableEntity, Leaf {
 
+    private UUID entityId;
     private ArmorStand leaf;
     private boolean alive;
     private int lifeTime;
@@ -76,6 +79,7 @@ public class LeafParticle extends CachedEntity implements CleanableEntity, Leaf 
                     degreesToEuler(MathUtil.randomInt(90)),
                     degreesToEuler(MathUtil.randomInt(90))));
         });
+        entityId = leaf.getUniqueId();
         alive = true;
 
         // Add current session id to entity to keep it living if a flush is run.
@@ -99,11 +103,22 @@ public class LeafParticle extends CachedEntity implements CleanableEntity, Leaf 
         return alive;
     }
 
+    /**
+     * Returns if the entity used for generating the laf is still in
+     * the world or not.
+     *
+     * @return if the entity exists for the particle.
+     */
+    public boolean doesEntityExist() {
+        return Bukkit.getEntity(entityId) != null;
+    }
+
     @Override
     public void remove() {
         alive = false;
         leaf.remove();
-        getStorage().remove(this);
+        if (!doesEntityExist())
+            getStorage().remove(this);
     }
 
     public void tick() {
@@ -165,11 +180,8 @@ public class LeafParticle extends CachedEntity implements CleanableEntity, Leaf 
     private static boolean removeIfMatches(Entity entity) {
         if (!(entity instanceof ArmorStand)) return false;
         ArmorStand stand = (ArmorStand) entity;
-        if (stand.hasMetadata("session") &&
-                stand.getMetadata("session").get(0).asInt()
-                        == EntityStorage.SESSION_ID.hashCode())
-            return false;
-        return stand.isMarker() && !stand.hasGravity()
-                && stand.getItemInHand().getType() == Material.KELP;
+        EntityEquipment equipment = stand.getEquipment();
+        return stand.isMarker() && !stand.hasGravity() && equipment != null
+                && equipment.getItemInMainHand().getType() == Material.KELP;
     }
 }
