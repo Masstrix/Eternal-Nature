@@ -18,11 +18,12 @@ package me.masstrix.eternalnature.core;
 
 import me.masstrix.eternalnature.EternalEngine;
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.data.UserData;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-public class Renderer implements EternalWorker {
+public class Renderer implements EternalWorker, ConfigReloadUpdate {
 
     private EternalNature plugin;
     private EternalEngine engine;
@@ -43,7 +44,7 @@ public class Renderer implements EternalWorker {
             public void run() {
                 render();
             }
-        }.runTaskTimer(plugin, 0, 20);
+        }.runTaskTimer(plugin, 0, plugin.getSystemConfig().getInt(ConfigOption.RENDER_DELAY_TICKS));
     }
 
     /**
@@ -61,5 +62,12 @@ public class Renderer implements EternalWorker {
         if (renderTask != null)
             renderTask.cancel();
         entityCleanup.run();
+    }
+
+    @Override
+    public void updateSettings() {
+        if (renderTask != null)
+            renderTask.cancel();
+        start();
     }
 }

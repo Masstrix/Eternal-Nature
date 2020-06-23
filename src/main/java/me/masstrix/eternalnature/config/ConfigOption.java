@@ -37,6 +37,7 @@ public enum ConfigOption {
     RANDOM_TREE_SPREAD_RANGE("global.randomly-spread-trees.range", 20),
     RANDOM_TREE_SPREAD_SCANS("global.randomly-spread-trees.scans", 2),
     AGE_ITEMS("global.age-items", true),
+    RENDER_DELAY_TICKS("global.render-delay-ticks", 20),
 
     // Auto plant settings
     AUTO_PLANT("global.auto-plant.enabled", true),
