@@ -52,6 +52,7 @@ global:
     beetroot: 1.0
     sweet_berry: 1.0
     flowers: 0.2
+  render-delay-ticks: 20
     
 hydration:
   enabled: true
