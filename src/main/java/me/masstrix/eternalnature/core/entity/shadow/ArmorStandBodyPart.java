@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Matthew Denton
+ * Copyright 2020 Matthew Denton
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,8 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.events;
+package me.masstrix.eternalnature.core.entity.shadow;
 
-import me.masstrix.eternalnature.api.Leaf;
-
-public class LeafSpawnEvent extends EternalEvent {
-
-    private Leaf leaf;
-
-    public LeafSpawnEvent(Leaf leaf) {
-        this.leaf = leaf;
-    }
-
-    public Leaf getLeaf() {
-        return leaf;
-    }
+public enum ArmorStandBodyPart {
+    HEAD, BODY, LEFT_ARM, RIGHT_ARM, LEFT_LEG, RIGHT_LEG
 }

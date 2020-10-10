@@ -16,37 +16,37 @@
 
 package me.masstrix.eternalnature.core.render;
 
-import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.EternalEngine;
 import me.masstrix.eternalnature.api.Leaf;
-import me.masstrix.eternalnature.core.CleanableEntity;
-import me.masstrix.eternalnature.core.EntityCleanup;
-import me.masstrix.eternalnature.core.entity.CachedEntity;
-import me.masstrix.eternalnature.core.entity.EntityOption;
-import me.masstrix.eternalnature.core.entity.EntityStorage;
-import me.masstrix.eternalnature.core.item.CustomItem;
+import me.masstrix.eternalnature.core.entity.shadow.ArmorStandBodyPart;
+import me.masstrix.eternalnature.core.entity.shadow.ItemSlot;
+import me.masstrix.eternalnature.core.entity.shadow.ShadowArmorStand;
+import me.masstrix.eternalnature.core.world.wind.Wind;
 import me.masstrix.eternalnature.events.LeafSpawnEvent;
 import me.masstrix.eternalnature.util.MathUtil;
+import me.masstrix.eternalnature.util.SimplexNoiseOctave;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
-import org.bukkit.inventory.EntityEquipment;
-import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.util.EulerAngle;
+import org.bukkit.block.data.Levelled;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Vector;
 
-import java.util.UUID;
-import java.util.logging.Level;
+public class LeafParticle implements Leaf {
 
-public class LeafParticle extends CachedEntity implements CleanableEntity, Leaf {
-
-    private UUID entityId;
-    private ArmorStand leaf;
+    private SimplexNoiseOctave movementNoise;
+    private ShadowArmorStand leaf;
+    private Wind wind;
+    private double animationOffset;
     private boolean alive;
+    private boolean hasSettled;
+    private boolean inWater;
     private int lifeTime;
     private int ticks;
     private double fallRate;
+    private Vector velocity = new Vector();
+    private double randomArmOffset = degreesToEuler(MathUtil.randomDouble() * 360);
 
     /**
      * Creates a new leaf effect. Leaves when ticked will slowly fall until they hit a
@@ -54,48 +54,66 @@ public class LeafParticle extends CachedEntity implements CleanableEntity, Leaf 
      *
      * @param loc location to spawn the effect at.
      */
-    public LeafParticle(EntityStorage storage, EternalNature plugin, Location loc) {
-        super(storage);
-        super.options(EntityOption.REMOVE_ON_RESTART);
+    public LeafParticle(Location loc) {
+        this(loc, null);
+    }
+
+    /**
+     * Creates a new leaf effect. Leaves when ticked will slowly fall until they hit a
+     * non passable block or there lifetime has ended. Using this method will also call
+     * the {@link LeafSpawnEvent}.
+     *
+     * @param loc    location to spawn the effect at.
+     * @param engine engine for the plugin, when this is set wind forces will be applied
+     *               to the effect.
+     */
+    public LeafParticle(Location loc, EternalEngine engine) {
+        if (loc == null) return;
+        if (engine != null) {
+            // Call the spawn ever.
+            Bukkit.getScheduler().callSyncMethod(engine.getPlugin(), () -> {
+                LeafSpawnEvent event = new LeafSpawnEvent(this);
+                Bukkit.getPluginManager().callEvent(event);
+                return true;
+            });
+        }
         lifeTime = MathUtil.randomInt(60, 120);
         fallRate = MathUtil.random().nextDouble() / 10;
+        movementNoise = new SimplexNoiseOctave(MathUtil.randomInt(10000));
 
-        LeafSpawnEvent event = new LeafSpawnEvent(this);
-        Bukkit.getPluginManager().callEvent(event);
-        if (event.isCancelled()) {
-            return;
+        loc.setYaw(MathUtil.randomInt(0, 360));
+        leaf = new ShadowArmorStand(loc);
+        leaf.setSmall(true);
+        leaf.setMarker(true);
+        leaf.setArms(true);
+        leaf.setInvisible(true);
+        leaf.setSlot(ItemSlot.MAINHAND, new ItemStack(Material.KELP));
+
+        // Sets how far away a player has to be to see the particle.
+        // This will not be sent to a player if they suddenly become in range of it.
+        int renderDistance = 32;
+
+        //noinspection ConstantConditions
+        for (Player player : loc.getWorld().getPlayers()) {
+            if (loc.distanceSquared(player.getLocation()) < renderDistance * renderDistance) {
+                leaf.sendTo(player);
+            }
         }
-
-        leaf = loc.getWorld().spawn(loc.add(0, -0.5, 0), ArmorStand.class, a -> {
-            a.setMarker(true);
-            a.setSmall(true);
-            a.setSmall(true);
-            a.setSilent(true);
-            a.setVisible(false);
-            a.setGravity(false);
-            a.getEquipment().setItemInMainHand(CustomItem.LEAF.get());
-            a.setRightArmPose(new EulerAngle(
-                    degreesToEuler(MathUtil.randomInt(90)),
-                    degreesToEuler(MathUtil.randomInt(90)),
-                    degreesToEuler(MathUtil.randomInt(90))));
-        });
-        entityId = leaf.getUniqueId();
         alive = true;
+    }
 
-        // Add current session id to entity to keep it living if a flush is run.
-        leaf.setMetadata("session", new FixedMetadataValue(plugin, EntityStorage.SESSION_ID.hashCode()));
-
-        super.setWorld(loc.getWorld().getUID());
-        super.setEntityId(leaf.getUniqueId());
-
-        // Cleans up the entity at start and stop of plugin
-        new EntityCleanup(plugin, this);
-        super.cache();
+    /**
+     * Sets the wind force that will be applied to the stand.
+     *
+     * @param wind force to apply to this particle.
+     */
+    public void setForces(Wind wind) {
+        this.wind = wind;
     }
 
     @Override
     public boolean hasSettled() {
-        return false;
+        return hasSettled;
     }
 
     @Override
@@ -103,22 +121,10 @@ public class LeafParticle extends CachedEntity implements CleanableEntity, Leaf 
         return alive;
     }
 
-    /**
-     * Returns if the entity used for generating the laf is still in
-     * the world or not.
-     *
-     * @return if the entity exists for the particle.
-     */
-    public boolean doesEntityExist() {
-        return Bukkit.getEntity(entityId) != null;
-    }
-
     @Override
     public void remove() {
         alive = false;
         leaf.remove();
-        if (!doesEntityExist())
-            getStorage().remove(this);
     }
 
     public void tick() {
@@ -127,17 +133,50 @@ public class LeafParticle extends CachedEntity implements CleanableEntity, Leaf 
             lifeTime = 0;
         }
 
-        double x, z;
-        x = MathUtil.random().nextDouble() / 20;
-        z = MathUtil.random().nextDouble() / 20;
-        leaf.setRightArmPose(leaf.getRightArmPose().add(updateAngle(), updateAngle(), updateAngle()));
-        leaf.teleport(leaf.getLocation().add(x, -fallRate, z));
+        Location loc = leaf.getLocation().clone().add(0, 0.3, 0);
+        hasSettled = !loc.getBlock().isPassable();
+        inWater = loc.getBlock().getType() == Material.WATER;
 
-    }
+        // Burn the particle
+        if (loc.getBlock().getType() == Material.LAVA) {
+            Levelled levelled = (Levelled) loc.getBlock().getBlockData();
+            double y = loc.getBlock().getY() + (levelled.getLevel() / (double) levelled.getMaximumLevel());
 
-    private double updateAngle() {
-        return degreesToEuler(MathUtil.chance(2) ? -MathUtil.random().nextInt(3)
-                : MathUtil.random().nextInt(3));
+            // Remove particle if in the lava
+            if (loc.getY() < y) {
+                this.alive = false;
+                remove();
+                return;
+            }
+        }
+
+        animationOffset += 0.1;
+
+        if (wind != null) {
+            Vector force = wind.getForce(loc.getBlockX(), loc.getBlockZ())
+                    .divide(new Vector(70, 100, 70));
+            velocity.add(force);
+        }
+
+        velocity.add(new Vector(0, !hasSettled ? -fallRate / 6 : 0, 0));
+
+        if (!hasSettled) {
+            velocity.add(new Vector(
+                    movementNoise.noise(animationOffset) * 0.01,
+                    0,
+                    movementNoise.noise(animationOffset + 50) * 0.01));
+            leaf.move(velocity.getX(), velocity.getY(), velocity.getZ());
+            double poseX = movementNoise.noise(animationOffset) * 0.5;
+            double poseY = movementNoise.noise(animationOffset) * 10;
+            double poseZ = movementNoise.noise(animationOffset) * 10;
+            leaf.setPose(ArmorStandBodyPart.RIGHT_ARM, new Vector(poseX + randomArmOffset, poseY, poseZ));
+        } else {
+            Vector pose = leaf.getPose(ArmorStandBodyPart.RIGHT_ARM);
+            pose.divide(new Vector(1.2, 1.2, 1.2));
+            leaf.setPose(ArmorStandBodyPart.RIGHT_ARM, pose);
+        }
+        velocity.divide(new Vector(2, 2,2 ));
+        animationOffset += 0.01;
     }
 
     /**
@@ -148,40 +187,5 @@ public class LeafParticle extends CachedEntity implements CleanableEntity, Leaf 
      */
     private double degreesToEuler(double v) {
         return (v / 180) * Math.PI;
-    }
-
-    @Override
-    public Entity[] getEntities() {
-        return new Entity[] {leaf};
-    }
-
-    /**
-     * Removes entities based on what they are holding and the options set on the armor stand.
-     * This is a dirty method of removing them if there are any issues of leaf particles being
-     * glitched.
-     *
-     * @return how many entities were removed.
-     */
-    public static int removeBrokenParticles() {
-        EternalNature.getPlugin(EternalNature.class).getLogger().log(Level.INFO,
-                "Doing dirty cleaning of potentially glitched leaf effects...");
-        int countCleaned = 0;
-        for (World world : Bukkit.getWorlds()) {
-            for (Entity e : world.getEntities()) {
-                if (removeIfMatches(e)) {
-                    e.remove();
-                    countCleaned++;
-                }
-            }
-        }
-        return countCleaned;
-    }
-
-    private static boolean removeIfMatches(Entity entity) {
-        if (!(entity instanceof ArmorStand)) return false;
-        ArmorStand stand = (ArmorStand) entity;
-        EntityEquipment equipment = stand.getEquipment();
-        return stand.isMarker() && !stand.hasGravity() && equipment != null
-                && equipment.getItemInMainHand().getType() == Material.KELP;
     }
 }

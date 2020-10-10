@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Matthew Denton
+ * Copyright 2020 Matthew Denton
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.core.world;
+package me.masstrix.eternalnature.core.world.wind;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.core.EternalWorker;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
+import me.masstrix.eternalnature.Ticking;
+import me.masstrix.eternalnature.core.world.WorldData;
 import org.bukkit.util.Vector;
 import org.bukkit.util.noise.SimplexOctaveGenerator;
 
-public class Wind implements EternalWorker {
+public class Wind implements Ticking {
 
     private EternalNature plugin;
     private WorldData world;
     private SimplexOctaveGenerator xMap;
     private SimplexOctaveGenerator yMap;
-    private float fre;
-    private float amp;
-    private BukkitTask task;
+    private float fre = 0.03F;
+    private float amp = 0.01F;
+    private double offset;
+    private byte offsetDir;
 
     public Wind(WorldData world, EternalNature plugin, long seed) {
         this.world = world;
@@ -45,30 +45,36 @@ public class Wind implements EternalWorker {
         yMap.setWScale(2);
     }
 
-    public Vector getForce(int x, int y) {
-        double valX = xMap.noise(x, y, fre, amp);
-        double valY = yMap.noise(x, y, fre, amp);
-        valX -= 0.5;
-        valY -= 0.5;
+    public Wind setFrequency(float fre) {
+        this.fre = fre;
+        return this;
+    }
 
-        double temp = world.getBiomeEmission(x, 0, y);
+    public Wind setAmplitude(float amp) {
+        this.amp = amp;
+        return this;
+    }
 
-        return new Vector(valX, temp * 0.01 - 1, valY);
+    public Vector getForce(int x, int z) {
+        return this.getForce((double) x, z);
+    }
+
+    public Vector getForce(double x, double z) {
+        double valX = xMap.noise(x, offset, z, fre, amp);
+        double valZ = xMap.noise(x, offset + 5, z, fre, amp);
+
+        double temp = world.getBiomeEmission((int) x, 0, (int) z);
+        return new Vector(valX, temp * 0.01 - 1, valZ);
     }
 
     @Override
-    public void start() {
-        if (task != null) return;
-        this.task = new BukkitRunnable() {
-            @Override
-            public void run() {
-
-            }
-        }.runTaskTimer(plugin, 20, 20);
-    }
-
-    @Override
-    public void end() {
-
+    public void tick() {
+        int range = 10000;
+        offset += offsetDir < 0 ? -0.1 : 0.1;
+        if (offset >= range && offsetDir > 0) {
+            offsetDir = -1;
+        } else if (offset < range && offsetDir < 0) {
+            offsetDir = 1;
+        }
     }
 }

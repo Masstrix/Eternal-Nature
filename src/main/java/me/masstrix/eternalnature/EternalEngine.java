@@ -18,6 +18,7 @@ package me.masstrix.eternalnature;
 
 import me.masstrix.eternalnature.core.*;
 import me.masstrix.eternalnature.core.entity.EntityStorage;
+import me.masstrix.eternalnature.core.entity.shadow.ShadowEntityManager;
 import me.masstrix.eternalnature.core.temperature.Temperatures;
 import me.masstrix.eternalnature.core.world.*;
 import me.masstrix.eternalnature.data.UserData;
@@ -43,6 +44,8 @@ public class EternalEngine {
     private AutoPlanter autoPlanter;
     private EntityStorage entityStorage;
     private MenuManager menuManager;
+    private ShadowEntityManager entityManager;
+    private EternalHeartbeat heartbeat;
 
     private List<EternalWorker> workers = new ArrayList<>();
     private Map<UUID, UserData> users = new HashMap<>();
@@ -61,6 +64,7 @@ public class EternalEngine {
         this.defaultTemps = new Temperatures(plugin);
         this.entityStorage = new EntityStorage(plugin);
         this.menuManager = new MenuManager(plugin);
+        heartbeat = new EternalHeartbeat(plugin, 10);
 
         // Load default temperature data
         this.defaultTemps.createFiles(false);
@@ -71,10 +75,12 @@ public class EternalEngine {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        registerWorkers(userWorker = new UserWorker(plugin, this),
+        registerWorkers(
+                userWorker = new UserWorker(plugin, this),
                 renderer = new Renderer(plugin, this),
                 worldProvider = new WorldProvider(plugin),
                 autoPlanter = new AutoPlanter(plugin),
+                entityManager = new ShadowEntityManager(plugin),
                 new AgingItemWorker(plugin),
                 new LeafEmitter(plugin, entityStorage),
                 new TreeSpreader(plugin));
@@ -88,6 +94,14 @@ public class EternalEngine {
                 new LangSettingsMenu(plugin, menuManager),
                 new LeafParticleMenu(plugin, menuManager),
                 new OtherSettingsMenu(plugin, menuManager));
+    }
+
+    public EternalNature getPlugin() {
+        return plugin;
+    }
+
+    public EternalHeartbeat getHeartbeat() {
+        return heartbeat;
     }
 
     public MenuManager getMenuManager() {

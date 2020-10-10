@@ -20,6 +20,7 @@ import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.api.EternalWorld;
 import me.masstrix.eternalnature.config.Reloadable;
 import me.masstrix.eternalnature.core.temperature.Temperatures;
+import me.masstrix.eternalnature.core.world.wind.Wind;
 import me.masstrix.eternalnature.util.*;
 import org.bukkit.*;
 import org.bukkit.block.Biome;
@@ -36,12 +37,23 @@ public class WorldData implements EternalWorld, Reloadable {
     private String worldName;
     protected EternalNature plugin;
     private Temperatures temperatures;
+    private Wind wind;
     Map<Position, WaterfallEmitter> waterfalls = new ConcurrentHashMap<>();
 
     public WorldData(EternalNature plugin, String world) {
         this.plugin = plugin;
         this.worldName = world;
         loadConfig();
+        this.wind = new Wind(this, plugin, MathUtil.randomInt(10000));
+
+        plugin.getEngine().getHeartbeat().subscribe(wind);
+    }
+
+    /**
+     * @return the wind for this world.
+     */
+    public Wind getWind() {
+        return wind;
     }
 
     /**
