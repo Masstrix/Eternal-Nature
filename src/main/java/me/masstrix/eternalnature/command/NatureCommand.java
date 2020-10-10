@@ -26,6 +26,7 @@ import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.data.UserData;
 import me.masstrix.eternalnature.menus.Menus;
+import me.masstrix.eternalnature.testing.TestCommand;
 import me.masstrix.eternalnature.util.BuildInfo;
 import me.masstrix.version.checker.VersionCheckInfo;
 import net.md_5.bungee.api.ChatColor;
@@ -61,7 +62,6 @@ public class NatureCommand extends EternalCommand {
             msg("&a/eternal stats &7- Shows background stats.");
             msg("&a/eternal version &7- View version and update info.");
             msg("&a/eternal setting &7- Opens a GUI to edit settings.");
-            msg("&a/eternal fixLeafEffect &7- Removes any stuck leaf particles.");
             msg("&a/hydrate <user> &7- Hydrates a user to max.");
             msg("");
             return;
@@ -72,6 +72,10 @@ public class NatureCommand extends EternalCommand {
             plugin.getEngine().getDefaultTemperatures().loadData();
             plugin.getSystemConfig().reload();
             msg(PluginData.PREFIX + "&aReloaded config files");
+        }
+
+        else if (args[0].equalsIgnoreCase("test") && wasPlayer()) {
+            new TestCommand(plugin).execute((Player) getSender(), args);
         }
 
         else if (args[0].equalsIgnoreCase("world")) {
@@ -164,11 +168,6 @@ public class NatureCommand extends EternalCommand {
             else {
                 msg(PluginData.PREFIX + "&cInvalid use. For help use /eternal world");
             }
-        }
-
-        else if (args[0].equalsIgnoreCase("fixLeafEffect")) {
-            int count = LeafParticle.removeBrokenParticles();
-            msg(PluginData.PREFIX + "Removed " + count + " leaf particles from the world.");
         }
 
         else if (args[0].equalsIgnoreCase("resetConfig")) {

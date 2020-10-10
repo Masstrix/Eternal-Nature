@@ -17,6 +17,7 @@
 package me.masstrix.eternalnature.core;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.core.entity.CleanableEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;

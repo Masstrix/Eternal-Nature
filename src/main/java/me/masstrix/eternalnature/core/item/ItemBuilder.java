@@ -17,6 +17,7 @@
 package me.masstrix.eternalnature.core.item;
 
 import me.masstrix.eternalnature.util.StringUtil;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
@@ -71,6 +72,18 @@ public class ItemBuilder {
      * @return an instance of the item builder.
      */
     public ItemBuilder addDescription(String desc) {
+        return addDescription(desc, ChatColor.GRAY);
+    }
+
+    /**
+     * Adds a description to the item. Descriptions are padded on the top and bottom and
+     * will auto-wrap words when over a threshold length.
+     *
+     * @param desc  description text to append to the items lore.
+     * @param color sets the colour of this description section.
+     * @return an instance of the item builder.
+     */
+    public ItemBuilder addDescription(String desc, ChatColor color) {
         StringBuilder line = new StringBuilder();
         addLore("");
         boolean complete = false;
@@ -91,7 +104,7 @@ public class ItemBuilder {
             line.append(" ");
         }
         if (!complete)
-            addLore(line.toString());
+            addLore(color.toString() + line.toString());
         addLore("");
         return this;
     }

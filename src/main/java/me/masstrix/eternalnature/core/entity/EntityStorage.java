@@ -67,10 +67,6 @@ public class EntityStorage {
     }
 
     public void restartSystem() throws IOException {
-        if (!dataFile.exists()) {
-            LeafParticle.removeBrokenParticles();
-            return;
-        }
         plugin.getLogger().log(Level.INFO, "Reading entity storage data...");
         List<String> data = Files.readAllLines(dataFile.toPath());
         int line = 0;

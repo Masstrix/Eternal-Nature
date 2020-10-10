@@ -52,17 +52,6 @@ public class MoveListener implements Listener {
         // Updates the players motion vector
         data.setMotion(from.toVector().subtract(to.toVector()));
 
-        // Does the players chunk section change
-        if (from.getChunk() != to.getChunk() || ChunkData.getSection(from.getY())
-                != ChunkData.getSection(to.getY())) {
-            // Load nearby sections
-            WorldProvider provider = plugin.getEngine().getWorldProvider();
-            WorldData worldData = provider.getWorld(player.getWorld());
-            if (worldData != null) {
-
-            }
-        }
-
         // Ignore movement if player is a passenger.
         if (!player.isInsideVehicle() && !player.isGliding() && !player.isRiptiding()) {
             data.addWalkDistance((float) distance, player.isSprinting());

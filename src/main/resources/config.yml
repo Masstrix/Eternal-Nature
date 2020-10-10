@@ -28,7 +28,7 @@ general:
   
 global:
   falling-leaves:
-    enabled: true
+    enabled: false
     range: 12
     fidelity: 3
     max-particles: 300

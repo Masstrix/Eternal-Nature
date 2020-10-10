@@ -42,7 +42,7 @@ public class LeafParticleMenu extends GlobalMenu {
 
     @Override
     public String getTitle() {
-        return le.getText("menu.leaf-particle.title");
+        return le.getText("menu.leaf-particles.title");
     }
 
     @Override
@@ -51,7 +51,7 @@ public class LeafParticleMenu extends GlobalMenu {
         addBackButton(menuManager, Menus.SETTINGS);
 
         setButton(new Button(getInventory(), asSlot(1, 3), () -> new ItemBuilder(Material.REDSTONE_TORCH)
-                .setName("&a" + le.getText("menu.leaf-particles.enabled.title.title"))
+                .setName("&a" + le.getText("menu.leaf-particles.enabled.title"))
                 .addDescription(le.getText("menu.leaf-particles.enabled.description"))
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.LEAF_EFFECT))
                 .build()).setToggle(le.getText("menu.leaf-particles.enabled.title.title"), () -> config.isEnabled(ConfigOption.LEAF_EFFECT))
@@ -69,8 +69,8 @@ public class LeafParticleMenu extends GlobalMenu {
         spawnChances.add("&a" + le.getText("menu.leaf-particles.spawn.low"), 0.001);
         spawnChances.selectClosest(config.getDouble(ConfigOption.LEAF_EFFECT_CHANCE));
 
-        setButton(new Button(getInventory(), asSlot(1, 4), () -> new ItemBuilder(Material.ENDER_EYE)
-                .setName("&a" + le.getText("menu.leaf-particles.spawn.title.title"))
+        setButton(new Button(getInventory(), asSlot(1, 5), () -> new ItemBuilder(Material.ENDER_EYE)
+                .setName("&a" + le.getText("menu.leaf-particles.spawn.title"))
                 .addDescription(le.getText("menu.leaf-particles.spawn.description"))
                 .addLore("Currently: " +  spawnChances.getSelected().getName())
                 .addLore("&eChange to " +  spawnChances.getNext().getName())

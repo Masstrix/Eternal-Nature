@@ -57,6 +57,10 @@ public class MathUtil {
         return randomInt(range) == 1;
     }
 
+    public static double randomDouble() {
+        return random.nextDouble();
+    }
+
     /**
      * Returns a random int between 0 and <code>max</code>.
      *

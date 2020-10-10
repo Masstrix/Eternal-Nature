@@ -31,7 +31,6 @@ public class ChunkData implements EternalChunk {
 
     private static final int VERSION = 2;
     private static final int sections = 16;
-    private static final int sectionVolume = 4096;
 
     private Set<WaterfallEmitter> waterfallEmitters = new HashSet<>();
     private WorldData worldData;
@@ -112,7 +111,6 @@ public class ChunkData implements EternalChunk {
     }
 
     void tick() {
-        World world = worldData.asBukkit();
 
     }
 

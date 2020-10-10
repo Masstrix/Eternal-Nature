@@ -77,7 +77,7 @@ public class EternalNature extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        BuildInfo.init();
+        BuildInfo.load(this);
         MinecraftVersion serverVer = MinecraftRelease.getServerVersion();
 
         // Make sure the server is new enough to run the plugin

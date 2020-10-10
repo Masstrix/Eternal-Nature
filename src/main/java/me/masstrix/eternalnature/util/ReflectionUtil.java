@@ -1,12 +1,34 @@
 package me.masstrix.eternalnature.util;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
 
 public class ReflectionUtil {
 
     private static String version = null;
     private static byte[] versionUnsafe = null;
 
+    private static Class<?> packetClass; // Cache packet class.
+    private static Class<?> craftPlayer; // Cache CraftPlayer class.
+    private static Method getHandlePlayerMethod;
+
+    static {
+        try {
+            packetClass = getNmsClass("Packet");
+            craftPlayer = getCraftClass("entity.CraftPlayer");
+            getHandlePlayerMethod = craftPlayer.getMethod("getHandle");
+        } catch (NoSuchMethodException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * @return the servers version as a safe string.
+     */
     public static String getVersion() {
         if (version == null || version.length() == 0) {
             String ver = Bukkit.getServer().getClass().getPackage().getName();
@@ -15,6 +37,9 @@ public class ReflectionUtil {
         return version;
     }
 
+    /**
+     * @return the servers version in a unsafe method.
+     */
     public static byte[] getVersionUnsafe() {
         if (versionUnsafe == null) {
             String version = Bukkit.getVersion();
@@ -27,5 +52,58 @@ public class ReflectionUtil {
             }
         }
         return versionUnsafe;
+    }
+
+    /**
+     * Returns a class from the base server directory.
+     *
+     * @param name name of the class.
+     * @return the class.
+     * @throws ClassNotFoundException
+     */
+    public static Class<?> getNmsClass(String name) throws ClassNotFoundException {
+        return Class.forName("net.minecraft.server." + getVersion() + "." + name);
+    }
+
+    /**
+     * Returns a class from the craft bukkit section of the server.
+     *
+     * @param name name of the class.
+     * @return the class.
+     * @throws ClassNotFoundException
+     */
+    public static Class<?> getCraftClass(String name) throws ClassNotFoundException {
+        return Class.forName("org.bukkit.craftbukkit." + getVersion() + "." + name);
+    }
+
+    /**
+     * Get a players connection that is currently online. This connection
+     * can be used to send the packets to the player.
+     *
+     * @param player who's connection you are getting.
+     * @return the players connection.
+     */
+    public static Object getConnection(Player player) {
+        try {
+            Object craft = craftPlayer.cast(player);
+            Object handle = getHandlePlayerMethod.invoke(craft);
+            return handle.getClass().getField("playerConnection").get(handle);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static void sendPacket(Player to, Object... packet) {
+        if (to == null || packet == null || packet.length == 0) return;
+        Object pc = getConnection(to);
+        if (pc == null) return;
+        try {
+            Method sendMethod = pc.getClass().getDeclaredMethod("sendPacket", packetClass);
+            for (Object p : packet)
+                sendMethod.invoke(pc, p);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
     }
 }

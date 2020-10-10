@@ -96,7 +96,7 @@ public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
                     }
                 }
             }
-        }.runTaskTimer(plugin, 10, 1);
+        }.runTaskTimerAsynchronously(plugin, 10, 1);
 
         // Stop a spawner if it has already been started.
         if (spawner != null)
@@ -116,12 +116,17 @@ public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
                 if (effects.size() >= maxParticles) return;
                 if (!plugin.getSystemConfig().isEnabled(ConfigOption.LEAF_EFFECT)) return;
                 for (Location loc : locations) {
-                    if (MathUtil.chance(spawnChance)) {
-                        effects.add(new LeafParticle(storage, plugin, loc));
-                    }
+                    if (!MathUtil.chance(spawnChance)) continue;
+                    double offsetX = MathUtil.randomDouble() - 0.5;
+                    double offsetZ = MathUtil.randomDouble() - 0.5;
+                    WorldData worldData = plugin.getEngine().getWorldProvider().getWorld(loc.getWorld());
+                    Location spawnLoc = loc.clone().add(offsetX, -1.2, offsetZ);
+                    LeafParticle particle = new LeafParticle(spawnLoc);
+                    particle.setForces(worldData.getWind());
+                    effects.add(particle);
                 }
             }
-        }.runTaskTimer(plugin, 30, 1);
+        }.runTaskTimerAsynchronously(plugin, 30, 1);
     }
 
     /**

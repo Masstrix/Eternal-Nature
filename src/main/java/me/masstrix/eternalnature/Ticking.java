@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Matthew Denton
+ * Copyright 2020 Matthew Denton
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.core;
+package me.masstrix.eternalnature;
 
-import org.bukkit.entity.Entity;
+public interface Ticking {
 
-public interface CleanableEntity {
-
-    Entity[] getEntities();
+    void tick();
 }
