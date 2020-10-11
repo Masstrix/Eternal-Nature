@@ -17,7 +17,18 @@
 package me.masstrix.eternalnature.config;
 
 public enum StatusRenderMethod {
-    ACTIONBAR("Actionbar", "Displays above the players hotbar."),
+    ACTIONBAR("Actionbar", "Displays above the players hotbar.") {
+        @Override
+        public StatusRenderMethod next() {
+            return XP_BAR;
+        }
+    },
+    XP_BAR("XP Bar", "Uses the players experience bar.") {
+        @Override
+        public StatusRenderMethod next() {
+            return BOSSBAR;
+        }
+    },
     BOSSBAR("Bossbar", "Shown at the top of the players screen.");
 
     private String simple;
@@ -34,6 +45,10 @@ public enum StatusRenderMethod {
 
     public String getDescription() {
         return description;
+    }
+
+    public StatusRenderMethod next() {
+        return ACTIONBAR;
     }
 
     public StatusRenderMethod opposite() {

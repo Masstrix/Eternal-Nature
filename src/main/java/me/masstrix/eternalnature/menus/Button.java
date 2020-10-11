@@ -128,6 +128,9 @@ public class Button {
         boolean toggle();
     }
 
+    /**
+     * Called by the button when it is clicked on.
+     */
     interface ClickEvent {
         void click(Player player);
     }

@@ -58,8 +58,36 @@ hydration:
   increase-from-activity: true
   damage-when-empty: true
   display:
+    enabled: true
     style: BOSSBAR
     warning-flash: true
+  drink_from_open_water: true
+  thirst-effect:
+    enabled: true
+    dehydrate-by: 0.1
+  consumables:
+    water_bottle: 2
+    potion: 1.5
+    milk_bucket: 5
+    cooked_beef: 0.5
+    cooked_pork: 0.5
+    cooked_chicken: 0.5
+    cooked_rabbit: 0.5
+    cooked_mutton: 0.5
+    cooked_cod: 0.5
+    cooked_salmon: 0.5
+    bread: -1
+    honey_bottle: 1
+    melon_slice: 1
+    mushroom_stew: 2
+    rabbit_stew: 1.5
+    beetroot_soup: 2
+    dried_kelp: -0.3
+    cookie: -0.1
+    apple: 0.5
+    golden_apple: 0.5
+    enchanted_golden_apple: 2
+
 
 temperature:
   enabled: true
@@ -73,6 +101,7 @@ temperature:
       cold: -5
       heat: 60
   display:
+    enabled: true
     text: "%temperature% %temp_icon% %temp_simple%"
     style: BOSSBAR
     warning-flash: true

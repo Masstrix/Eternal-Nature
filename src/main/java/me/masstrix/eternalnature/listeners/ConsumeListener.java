@@ -17,6 +17,7 @@
 package me.masstrix.eternalnature.listeners;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.data.UserData;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -30,9 +31,11 @@ import org.bukkit.potion.PotionType;
 public class ConsumeListener implements Listener {
 
     private EternalNature plugin;
+    private SystemConfig config;
 
     public ConsumeListener(EternalNature plugin) {
         this.plugin = plugin;
+        config = plugin.getSystemConfig();
     }
 
     @EventHandler
@@ -48,11 +51,16 @@ public class ConsumeListener implements Listener {
             PotionMeta meta = (PotionMeta) stack.getItemMeta();
             if (meta != null) {
                 PotionType potionType = meta.getBasePotionData().getType();
-                user.hydrate(5);
+                double val = config.getHydrationConsumableValue("potion");
+                if (potionType == PotionType.WATER) {
+                    val = config.getHydrationConsumableValue("water_bottle");
+                }
+                user.hydrate((float) val);
             }
         }
-        else if (type == Material.MILK_BUCKET) {
-            user.hydrate(7);
+        double val = config.getHydrationConsumableValue(type.name());
+        if (val != 0) {
+            user.hydrate((float) val);
         }
     }
 }

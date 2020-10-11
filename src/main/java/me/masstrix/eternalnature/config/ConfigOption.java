@@ -67,6 +67,7 @@ public enum ConfigOption {
     TEMPERATURE_DMG_THR_HEAT("temperature.damage.threshold.heat", 50),
 
     // Display
+    TEMPERATURE_DISPLAY_ENABLED("temperature.display.enabled", true),
     TEMPERATURE_TEXT("temperature.display.text", "%temperature% %temp_icon%"),
     TEMPERATURE_BAR_STYLE("temperature.display.style", StatusRenderMethod.BOSSBAR.name()),
     TEMPERATURE_BAR_FLASH("temperature.display.warning-flash", true),
@@ -84,6 +85,14 @@ public enum ConfigOption {
     HYDRATION_ENABLED("hydration.enabled", true),
     HYDRATION_WALKING("hydration.increase-from-activity", true),
     HYDRATION_DAMAGE("hydration.damage-when-empty", true),
+
+    DRINK_FROM_OPEN_WATER("hydration.drink_from_open_water", true),
+
+    THIRST_EFFECT("hydration.thirst-effect.enabled", true),
+    THIRST_MOD("hydration.thirst-effect.dehydrate-by", 0.1),
+
+    // Display
+    HYDRATION_BAR_DISPLAY_ENABLED("hydration.display.enabled", true),
     HYDRATION_BAR_STYLE("hydration.display.style", StatusRenderMethod.BOSSBAR.name()),
     HYDRATION_BAR_FLASH("hydration.display.warning-flash", true);
 

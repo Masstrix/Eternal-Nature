@@ -39,6 +39,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
 
@@ -46,8 +47,8 @@ public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
     private int maxParticles = 200;
     private int scanDelay = 20 * 5;
     private EternalNature plugin;
-    private Set<Location>  locations = new HashSet<>();
-    private Set<LeafParticle> effects = new HashSet<>();
+    private Set<Location>  locations = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private Set<LeafParticle> effects = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private BukkitTask updater, spawner;
     private EntityStorage storage;
     private BlockScanner scanner;

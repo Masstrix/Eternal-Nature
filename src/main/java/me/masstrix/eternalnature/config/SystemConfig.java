@@ -17,6 +17,7 @@
 package me.masstrix.eternalnature.config;
 
 import me.masstrix.eternalnature.EternalNature;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
@@ -35,6 +36,7 @@ public class SystemConfig {
     private static final int configVersion = 2;
     private EternalNature plugin;
     private FileConfiguration config;
+    private Map<String, Double> hydrationConsumables = new HashMap<>();
 
     public SystemConfig(EternalNature plugin) {
         this.plugin = plugin;
@@ -71,6 +73,25 @@ public class SystemConfig {
         if (!config.contains("version") || config.getInt("version") != configVersion) {
             rebuildConfig();
         }
+        ConfigurationSection section = this.config.getConfigurationSection("hydration.consumables");
+        if (section != null) {
+            for (String item : section.getKeys(false)) {
+                String key = "hydration.consumables." + item;
+                if (config.isConfigurationSection(key)) continue;
+                if (!config.isInt(key) && !config.isDouble(key)) continue;
+                hydrationConsumables.put(item.toLowerCase(), config.getDouble(key));
+            }
+        }
+    }
+
+    /**
+     * Returns the hydration effect of a item. This will default to 0 if nothing is set for the item.
+     *
+     * @param key item to get the consumable value for.
+     * @return the hydration effect or 0 if it has none.
+     */
+    public double getHydrationConsumableValue(String key) {
+        return hydrationConsumables.getOrDefault(key.toLowerCase(), 0D);
     }
 
     /**

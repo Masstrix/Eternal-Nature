@@ -152,4 +152,15 @@ public class MathUtil {
     public static double fix(double v, double fix) {
         return Double.isNaN(v) || Double.isInfinite(v) ? fix : v;
     }
+
+    public static double minMax(double v, double min, double max) {
+        return v > max ? max : Math.max(v, min);
+    }
+
+    public static float minMax(float v, float min, float max) {
+        return v > max ? max : Math.max(v, min);
+    }
+    public static int minMax(int v, int min, int max) {
+        return v > max ? max : Math.max(v, min);
+    }
 }

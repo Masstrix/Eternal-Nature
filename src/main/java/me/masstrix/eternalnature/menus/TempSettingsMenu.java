@@ -120,5 +120,18 @@ public class TempSettingsMenu extends GlobalMenu {
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
+
+        setButton(new Button(getInventory(), asSlot(4, 5), () -> {
+            boolean isDisplayEnabled = config.isEnabled(ConfigOption.TEMPERATURE_DISPLAY_ENABLED);
+            return new ItemBuilder(isDisplayEnabled ? Material.LIME_BANNER : Material.GRAY_BANNER)
+                    .setName("&a" + le.getText("menu.display.enabled.title"))
+                    .addDescription(le.getText("menu.display.enabled.description"))
+                    .addSwitch("Currently:", isDisplayEnabled)
+                    .build();
+        }).onClick(player -> {
+            config.toggle(ConfigOption.TEMPERATURE_DISPLAY_ENABLED);
+            config.save();
+            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+        }));
     }
 }

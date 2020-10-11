@@ -54,7 +54,7 @@ public class LeafParticleMenu extends GlobalMenu {
                 .setName("&a" + le.getText("menu.leaf-particles.enabled.title"))
                 .addDescription(le.getText("menu.leaf-particles.enabled.description"))
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.LEAF_EFFECT))
-                .build()).setToggle(le.getText("menu.leaf-particles.enabled.title.title"), () -> config.isEnabled(ConfigOption.LEAF_EFFECT))
+                .build()).setToggle(le.getText("menu.leaf-particles.enabled.title"), () -> config.isEnabled(ConfigOption.LEAF_EFFECT))
                 .onClick(player -> {
                     config.toggle(ConfigOption.LEAF_EFFECT);
                     config.save();

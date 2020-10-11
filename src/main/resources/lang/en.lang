@@ -95,6 +95,10 @@ menu.hydration.activity.description=If enabled players hydration will decrease f
 menu.hydration.display.title=Display Mode
 menu.hydration.display.description=Set where hydration is displayed for players.
 
+// Misc Menu
+menu.display.enabled.title=Display Mode Toggle
+menu.display.enabled.description=Set if the default display from the plugin is used. If disabled the display in the actionbar or boss bar will not show.
+
 // Other Menu
 menu.other.title=Other Settings
 menu.other.update-notify.title=Update Notifications

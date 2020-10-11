@@ -90,12 +90,25 @@ public class HydrationSettingsMenu extends GlobalMenu {
                 .addDescription(le.getText("menu.hydration.display.description"))
                 .addLore("Currently: &f" + config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE).getSimple(),
                         config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE).getDescription())
-                .addLore("&eClick to switch to &7" + config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE).opposite().getSimple())
+                .addLore("&eClick to switch to &7" + config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE).next().getSimple())
                 .build())
                 .onClick(player -> {
-                    config.set(ConfigOption.HYDRATION_BAR_STYLE, config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE).opposite().name());
+                    config.set(ConfigOption.HYDRATION_BAR_STYLE, config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE).next().name());
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
+
+        setButton(new Button(getInventory(), asSlot(4, 5), () -> {
+            boolean isDisplayEnabled = config.isEnabled(ConfigOption.HYDRATION_BAR_DISPLAY_ENABLED);
+            return new ItemBuilder(isDisplayEnabled ? Material.LIME_BANNER : Material.GRAY_BANNER)
+                    .setName("&a" + le.getText("menu.display.enabled.title"))
+                    .addDescription(le.getText("menu.display.enabled.description"))
+                    .addSwitch("Currently:", isDisplayEnabled)
+                    .build();
+        }).onClick(player -> {
+            config.toggle(ConfigOption.HYDRATION_BAR_DISPLAY_ENABLED);
+            config.save();
+            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+        }));
     }
 }

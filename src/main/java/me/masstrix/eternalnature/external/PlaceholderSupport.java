@@ -24,6 +24,7 @@ import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.data.UserData;
 import me.masstrix.eternalnature.util.BuildInfo;
+import me.masstrix.eternalnature.util.SecondsFormat;
 import org.bukkit.entity.Player;
 
 public class PlaceholderSupport extends PlaceholderExpansion {
@@ -82,6 +83,11 @@ public class PlaceholderSupport extends PlaceholderExpansion {
         if (identifier.equals("temperature_name")) {
             TemperatureIcon icon = getTemperatureIcon(player, data);
             return icon.getColor() + icon.getName();
+        }
+
+        if (identifier.equals("thirst_effect_timer")) {
+            if (!data.isThirsty()) return "";
+            return new SecondsFormat().format(data.getThirstTime());
         }
 
         return null;

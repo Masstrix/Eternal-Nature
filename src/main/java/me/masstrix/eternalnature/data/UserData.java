@@ -47,6 +47,7 @@ import org.bukkit.util.Vector;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.SimpleDateFormat;
 import java.util.UUID;
 
 public class UserData implements EternalUser {
@@ -55,9 +56,9 @@ public class UserData implements EternalUser {
      * Hard max value for hydration thirst.
      */
     public static final float MAX_THIRST = 20;
-
     private static final int dehydrateChance = 500;
     private static final int dehydrateChanceRange = 50;
+    private static SecondsFormat TIME_FORMAT = new SecondsFormat();
 
     private SystemConfig config;
     private EternalNature plugin;
@@ -209,10 +210,11 @@ public class UserData implements EternalUser {
         // Updates the players hydration levels and applys damage id damage is enabled
         // for hydration.
         if (config.isEnabled(ConfigOption.HYDRATION_ENABLED)
-                && player.getGameMode() != GameMode.CREATIVE) {
+                && player.getGameMode() != GameMode.CREATIVE
+                && player.getGameMode() != GameMode.SPECTATOR) {
             // Sweat randomly. Becomes more common the warmer you are.
             if (plugin.getSystemConfig().isEnabled(ConfigOption.TEMPERATURE_SWEAT)) {
-                if (MathUtil.randomInt((int) (1000 * 1.5)) <= temperature * (temperature * 0.005)) {
+                if (MathUtil.randomInt(1500) <= temperature * (temperature * 0.005)) {
                     dehydrate(0.25);
                 }
             }
@@ -227,15 +229,16 @@ public class UserData implements EternalUser {
             }
         }
 
-        // Keeps a consistent 1s tick rate
+        // Quickly start dehydrating the player when the thirst effect is applied.
+        if (thirstTimer > 0 && MathUtil.chance(2) && config.isEnabled(ConfigOption.THIRST_EFFECT)) {
+            dehydrate(config.getDouble(ConfigOption.THIRST_MOD));
+        }
+
+        // Keeps a constant tick rate of 1 second.
         if (System.currentTimeMillis() - constantTick >= 1000) {
             // Count down the thirst timer
             if (thirstTimer > 0) {
                 thirstTimer--;
-
-                if (MathUtil.chance(6)) {
-                    dehydrate(0.5);
-                }
             }
             constantTick = System.currentTimeMillis();
         }
@@ -252,23 +255,32 @@ public class UserData implements EternalUser {
 
         // Render user info.
         StringBuilder actionBar = new StringBuilder();
-        if (config.isEnabled(ConfigOption.HYDRATION_ENABLED)) {
-            if (config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE) == StatusRenderMethod.BOSSBAR) {
+
+        // Render the players hydration is the display is enabled for it.
+        if (config.isEnabled(ConfigOption.HYDRATION_ENABLED)
+                && config.isEnabled(ConfigOption.HYDRATION_BAR_DISPLAY_ENABLED)) {
+            StatusRenderMethod renderMethod = config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE);
+
+            if (renderMethod != StatusRenderMethod.BOSSBAR && hydrationBar != null) {
+                hydrationBar.removeAll();
+                hydrationBar = null;
+            }
+
+            if (renderMethod == StatusRenderMethod.BOSSBAR) {
+                // Render the hydration bar as a boss bar.
                 if (hydrationBar == null) {
-                    BarColor color = isThirsty() ? BarColor.GREEN : BarColor.BLUE;
-                    hydrationBar = Bukkit.createBossBar("h2-", color, BarStyle.SEGMENTED_12);
-                    hydrationBar.addPlayer(player);
+                    hydrationBar = Bukkit.createBossBar("Hydration", BarColor.BLUE, BarStyle.SEGMENTED_12);
                 }
+                hydrationBar.addPlayer(player);
                 hydrationBar.setProgress(Math.abs(hydration / 20));
                 int percent = (int) ((hydration / 20F) * 100);
                 String flash = hydration <= 4 && config.getBoolean(ConfigOption.HYDRATION_BAR_FLASH)
                         && flicker.isEnabled() ? "c" : "f";
-                hydrationBar.setTitle(StringUtil.color("H²O &" + flash + percent + "%"));
-            } else {
-                if (hydrationBar != null) {
-                    hydrationBar.removeAll();
-                    hydrationBar = null;
-                }
+                String thirsty = isThirsty() ? String.format(" &7(&aThirst Effect &7%s)", TIME_FORMAT.format(thirstTimer)) : "";
+
+                hydrationBar.setTitle(StringUtil.color("H²O &" + flash + percent + "%" + thirsty));
+            } else if (renderMethod == StatusRenderMethod.ACTIONBAR) {
+                // Render the hydration bar in the action bar.
                 String flash = hydration <= 4 && config.getBoolean(ConfigOption.HYDRATION_BAR_FLASH)
                         && flicker.isEnabled() ? "c" : "f";
                 StringBuilder h20 = new StringBuilder("\u00A7" + flash + "H²O ");
@@ -287,12 +299,19 @@ public class UserData implements EternalUser {
                     h20.append(bubble);
                 }
                 actionBar.append(h20);
+            } else {
+                // Render in the players XP bar.
+                float percentage = (float) (hydration / 20F);
+                player.setExp(MathUtil.minMax(percentage, 0, 1));
+                player.setLevel(0);
             }
         } else if (hydrationBar != null) {
             hydrationBar.removeAll();
         }
 
-        if (config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) {
+        // Render the players temperature if the display is enabled for it.
+        if (config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)
+                && config.isEnabled(ConfigOption.TEMPERATURE_DISPLAY_ENABLED)) {
             WorldProvider provider = plugin.getEngine().getWorldProvider();
             WorldData worldData = provider.getWorld(player.getWorld());
             Temperatures temps = worldData.getTemperatures();
@@ -323,8 +342,8 @@ public class UserData implements EternalUser {
             if (config.getRenderMethod(ConfigOption.TEMPERATURE_BAR_STYLE) == StatusRenderMethod.BOSSBAR) {
                 if (tempBar == null) {
                     tempBar = Bukkit.createBossBar("Loading...", BarColor.GREEN, BarStyle.SOLID);
-                    tempBar.addPlayer(player);
                 }
+                tempBar.addPlayer(player);
                 // Update the bars progress
                 double min = Math.abs(temps.getMinTemp());
                 double max = temps.getMaxTemp() + min;
@@ -417,8 +436,14 @@ public class UserData implements EternalUser {
     /**
      * @return if the user is currently thirsty.
      */
+    @Override
     public boolean isThirsty() {
         return thirstTimer > 0;
+    }
+
+    @Override
+    public int getThirstTime() {
+        return thirstTimer;
     }
 
     /**
@@ -427,8 +452,10 @@ public class UserData implements EternalUser {
      * @param sec time in seconds on how long to add to the players
      *            thirst effect.
      */
+    @Override
     public void addThirst(int sec) {
         thirstTimer += sec;
+        if (thirstTimer < 0) thirstTimer = 0;
     }
 
     @Override
