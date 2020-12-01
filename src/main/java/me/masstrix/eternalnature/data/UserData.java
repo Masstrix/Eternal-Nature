@@ -23,7 +23,7 @@ import me.masstrix.eternalnature.core.HeightGradient;
 import me.masstrix.eternalnature.core.temperature.*;
 import me.masstrix.eternalnature.config.StatusRenderMethod;
 import me.masstrix.eternalnature.config.SystemConfig;
-import me.masstrix.eternalnature.core.world.TemperatureScanner;
+import me.masstrix.eternalnature.core.temperature.TemperatureScanner;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.listeners.DeathListener;
@@ -47,7 +47,6 @@ import org.bukkit.util.Vector;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.SimpleDateFormat;
 import java.util.UUID;
 
 public class UserData implements EternalUser {

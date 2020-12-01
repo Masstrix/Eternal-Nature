@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.core.world;
+package me.masstrix.eternalnature.core.temperature;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.core.temperature.BlockTemperature;
-import me.masstrix.eternalnature.core.temperature.TempModifierType;
-import me.masstrix.eternalnature.core.temperature.Temperatures;
 import me.masstrix.eternalnature.data.PlayerIdle;
 import me.masstrix.eternalnature.data.UserData;
 import org.bukkit.Color;
@@ -28,6 +25,9 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Lightable;
+import org.bukkit.block.data.type.Campfire;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -43,10 +43,10 @@ public class TemperatureScanner {
     private boolean done;
     private boolean setLoc;
     private final Player PLAYER;
+    private final UserData USER;
     private final EternalNature PLUGIN;
-    private Temperatures tempData;
+    private final Temperatures TEMPS;
     private Location loc;
-    private UserData user;
     private double temperature;
     private double hottest;
     private double coldest;
@@ -54,13 +54,11 @@ public class TemperatureScanner {
     private int tempTotalHeatCount = 0;
     private int emissiveBlockCount = 0;
 
-    Material cold, hot;
-
     public TemperatureScanner(EternalNature plugin, UserData data, Player player) {
         this.PLUGIN = plugin;
         this.PLAYER = player;
-        this.user = data;
-        this.tempData = plugin.getEngine().getDefaultTemperatures();
+        this.USER = data;
+        this.TEMPS = plugin.getEngine().getDefaultTemperatures();
         setFidelity(4);
         setScanScale(2, 2);
     }
@@ -134,7 +132,7 @@ public class TemperatureScanner {
             this.loc = PLAYER.getLocation().clone();
         }
 
-        PlayerIdle idleInfo = user.getPlayerIdleInfo();
+        PlayerIdle idleInfo = USER.getPlayerIdleInfo();
 
         // Reduce the number of calls being done when a player is in idle
         if (idleInfo.isAfk() && System.currentTimeMillis() - lastScanTime < 5000)
@@ -145,8 +143,8 @@ public class TemperatureScanner {
         int fidelity = idleInfo.isDeepIdle() ? this.fidelity + 2 : this.fidelity;
 
         // Updates scan area size and location if they are in motion.
-        if (user.isInMotion()) {
-            double velocity = user.getMotion().length();
+        if (USER.isInMotion()) {
+            double velocity = USER.getMotion().length();
             area *= velocity > 0.8 ? 0.3 : velocity > 0.26 ? 0.5 : 0.7;
             this.loc = PLAYER.getLocation().clone();
         }
@@ -172,8 +170,11 @@ public class TemperatureScanner {
 
             Block block = center.getRelative(x, y, z);
 
+            // Don't check the block if it is not in an emitting state.
+            if (!isValidState(block)) continue;
+
             // Calculate block emission temperature
-            BlockTemperature blockTemp = (BlockTemperature) tempData.getModifier(
+            BlockTemperature blockTemp = (BlockTemperature) TEMPS.getModifier(
                     block.getType(), TempModifierType.BLOCK);
             if (blockTemp == null) continue;
             double temp = blockTemp.getEmission();
@@ -216,45 +217,15 @@ public class TemperatureScanner {
                 coldest = fallOff;
             } else if (fallOff > hottest) {
                 hottest = fallOff;
-                hot = block.getType();
             } else if (fallOff < coldest) {
                 coldest = fallOff;
-                cold = block.getType();
             }
         }
 
-        // Draws the scan area around the player when
-        // debug mode is enabled.
-        if (user.isDebugEnabled()) {
-            double density = 0.5;
-
-            double minX = center.getX() + -areaHalf;
-            double minY = center.getY() + -heightHalf;
-            double minZ = center.getZ() + -areaHalf;
-            double maxX = center.getX() + areaHalf;
-            double maxY = center.getY() + heightHalf;
-            double maxZ = center.getZ() + areaHalf;
-
-            for (double x = minX; x <= maxX; x += density) {
-                for (double y = minY; y <= maxY; y += density) {
-                    for (double z = minZ; z <= maxZ; z += density) {
-                        int components = 0;
-                        if (x == minX || x == maxX) components++;
-                        if (y == minY || y == maxY) components++;
-                        if (z == minZ || z == maxZ) components++;
-                        if (components >= 2) {
-
-                            PLAYER.spawnParticle(Particle.REDSTONE,
-                                    x + 0.5,
-                                    y + 0.5,
-                                    z + 0.5,
-                                    1, 0, 0, 0, 1,
-                                    new Particle.DustOptions(Color.fromRGB(
-                                            0, 255, 255), 1));
-                        }
-                    }
-                }
-            }
+        // Draw the debug box around the area if debugging is enabled
+        // for the player.
+        if (USER.isDebugEnabled()) {
+            drawDebugBox(center, areaHalf, heightHalf);
         }
 
         iteration++;
@@ -262,6 +233,64 @@ public class TemperatureScanner {
         // recalculate the temperature.
         if (done || iteration >= fidelity) {
             done();
+        }
+    }
+
+    /**
+     * Returns if the block is valid for checking and it is of the emitting state.
+     * Some blocks like campfires have multiple states where they might not emit
+     * any heat, this will return if the block is in an emitting state.
+     * <p>
+     * Node: This will eventually be changed to instead use a configurable method
+     * instead of hard coding the states.
+     *
+     * @param block block to check the state of.
+     * @return if the block is in it's emitting state.
+     */
+    private static boolean isValidState(Block block) {
+        BlockData data = block.getBlockData();
+        if (data instanceof Lightable)
+            return ((Lightable) data).isLit();
+        return true;
+    }
+
+    /**
+     * Draws a box around the area for debugging purposes. This will show the area at which the scanning
+     * is taking place letting you visually see all the blocks being included in the scan.
+     *
+     * @param center     center block the scan is taking place.
+     * @param areaHalf   half of the area size of the scanned area.
+     * @param heightHalf half of the height of the scanned area.
+     */
+    private void drawDebugBox(Block center, double areaHalf, double heightHalf) {
+        double density = 0.5;
+
+        double minX = center.getX() + -areaHalf;
+        double minY = center.getY() + -heightHalf;
+        double minZ = center.getZ() + -areaHalf;
+        double maxX = center.getX() + areaHalf;
+        double maxY = center.getY() + heightHalf;
+        double maxZ = center.getZ() + areaHalf;
+
+        for (double x = minX; x <= maxX; x += density) {
+            for (double y = minY; y <= maxY; y += density) {
+                for (double z = minZ; z <= maxZ; z += density) {
+                    int components = 0;
+                    if (x == minX || x == maxX) components++;
+                    if (y == minY || y == maxY) components++;
+                    if (z == minZ || z == maxZ) components++;
+                    if (components >= 2) {
+
+                        PLAYER.spawnParticle(Particle.REDSTONE,
+                                x + 0.5,
+                                y + 0.5,
+                                z + 0.5,
+                                1, 0, 0, 0, 1,
+                                new Particle.DustOptions(Color.fromRGB(
+                                        0, 255, 255), 1));
+                    }
+                }
+            }
         }
     }
 

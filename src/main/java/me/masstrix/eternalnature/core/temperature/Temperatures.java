@@ -34,7 +34,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 public class Temperatures implements Reloadable {
