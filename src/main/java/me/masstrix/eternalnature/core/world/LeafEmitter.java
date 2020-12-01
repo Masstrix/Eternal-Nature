@@ -73,7 +73,7 @@ public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
             config.save();
         }
         int range = config.getInt(ConfigOption.LEAF_EFFECT_RANGE);
-        scanner.setScanScale(range, range);
+        scanner.setScanScale(range, range + 4);
         scanner.setFidelity(config.getInt(ConfigOption.LEAF_EFFECT_FIDELITY));
     }
 
@@ -97,7 +97,7 @@ public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
                     }
                 }
             }
-        }.runTaskTimerAsynchronously(plugin, 10, 1);
+        }.runTaskTimerAsynchronously(plugin, 10, 40);
 
         // Stop a spawner if it has already been started.
         if (spawner != null)
@@ -127,7 +127,7 @@ public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
                     effects.add(particle);
                 }
             }
-        }.runTaskTimerAsynchronously(plugin, 30, 1);
+        }.runTaskTimerAsynchronously(plugin, 10, 1);
     }
 
     /**
@@ -139,7 +139,7 @@ public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
         for (Player player : Bukkit.getOnlinePlayers()) {
             // Ignore afk players.
             UserData userData = plugin.getEngine().getUserData(player.getUniqueId());
-            if (userData.getPlayerIdleInfo().isDeepIdle()) continue;
+            if (userData.getPlayerIdleInfo().isAfk()) continue;
 
             // Set the location of the player and scan around them.
             scanner.setLocation(player.getLocation());

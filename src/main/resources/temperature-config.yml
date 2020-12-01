@@ -93,7 +93,7 @@ data:
 
     # Nether Biomes
     nether: 20
-    nether_wastes‌: 20
+    nether_wastes: 20
     crimson_forest: 13
     warped_forest: 18
     soul_sand_valley: 15

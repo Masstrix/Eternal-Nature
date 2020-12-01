@@ -17,17 +17,9 @@
 package me.masstrix.eternalnature.testing;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.core.entity.shadow.ArmorStandBodyPart;
-import me.masstrix.eternalnature.core.entity.shadow.ItemSlot;
 import me.masstrix.eternalnature.core.entity.shadow.ShadowArmorStand;
-import me.masstrix.eternalnature.core.render.LeafParticle;
-import me.masstrix.eternalnature.util.SimplexNoiseOctave;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.util.Vector;
 
 public class TestCommand {
 

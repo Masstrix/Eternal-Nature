@@ -94,10 +94,14 @@ menu.hydration.activity.title=High Activity Sweating
 menu.hydration.activity.description=If enabled players hydration will decrease faster when doing high activity tasks such as sprinting.
 menu.hydration.display.title=Display Mode
 menu.hydration.display.description=Set where hydration is displayed for players.
+menu.hydration.open_water.title=Drinking from Ocean
+menu.hydration.open_water.description=When enabled players can drink from open water such as the ocean.
+menu.hydration.thirst.title=Thirst Effect
+menu.hydration.thirst.description=When enabled players may become thirsty after drinking or eating some items.
 
 // Misc Menu
 menu.display.enabled.title=Display Mode Toggle
-menu.display.enabled.description=Set if the default display from the plugin is used. If disabled the display in the actionbar or boss bar will not show.
+menu.display.enabled.description=Set if the default display from the plugin is used. If disabled the display in the actionbar or boss bar will not show. This can be useful to disable if displaying it somewhere else with another plugin like PlaceHolderAPI.
 
 // Other Menu
 menu.other.title=Other Settings

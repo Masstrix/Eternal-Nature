@@ -18,6 +18,7 @@ package me.masstrix.eternalnature.listeners;
 
 import me.masstrix.eternalnature.EternalEngine;
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.data.UserData;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -43,6 +44,10 @@ public class InteractListener implements Listener {
     @EventHandler
     public void onDrink(PlayerInteractEvent event) {
         Player player = event.getPlayer();
+
+        // Don't do any checks if drinking from open water is diabled.
+        if (!plugin.getSystemConfig().isEnabled(ConfigOption.DRINK_FROM_OPEN_WATER))
+            return;
 
         // If the player is underwater stop them from drinking it.
         // If the player is swimming on the surface they can still drink from

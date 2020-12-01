@@ -21,6 +21,7 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -218,6 +219,15 @@ public abstract class ShadowEntity {
      */
     public void move(double x, double y, double z) {
         setLocation(this.location.clone().add(x, y, z));
+    }
+
+    /**
+     * Moves the entity in a direction relative to where it currently is.
+     *
+     * @param vector vector to add to the entities current location.
+     */
+    public void move(Vector vector) {
+        move(vector.getX(), vector.getY(), vector.getZ());
     }
 
     /**

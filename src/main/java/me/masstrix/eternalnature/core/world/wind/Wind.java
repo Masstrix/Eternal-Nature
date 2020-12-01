@@ -37,11 +37,11 @@ public class Wind implements Ticking {
         this.world = world;
         this.plugin = plugin;
         xMap = new SimplexOctaveGenerator(seed, 2);
-        xMap.setScale(20);
+        xMap.setScale(0.1);
         xMap.setWScale(2);
 
         yMap = new SimplexOctaveGenerator(seed + 6543, 2);
-        yMap.setScale(20);
+        yMap.setScale(0.1);
         yMap.setWScale(2);
     }
 
@@ -60,11 +60,12 @@ public class Wind implements Ticking {
     }
 
     public Vector getForce(double x, double z) {
-        double valX = xMap.noise(x, offset, z, fre, amp);
-        double valZ = xMap.noise(x, offset + 5, z, fre, amp);
+        double valX = xMap.noise(x, offset, z, fre, amp) / 5;
+        double valZ = xMap.noise(x, offset, z, fre, amp) / 5;
 
         double temp = world.getBiomeEmission((int) x, 0, (int) z);
-        return new Vector(valX, temp * 0.01 - 1, valZ);
+        //return new Vector(valX, temp * 0.01 - 1, valZ);
+        return new Vector(0.1, 0, 0.1);
     }
 
     @Override

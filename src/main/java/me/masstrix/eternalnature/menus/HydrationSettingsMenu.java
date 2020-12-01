@@ -49,7 +49,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
         // Back button
         addBackButton(menuManager, Menus.SETTINGS);
 
-        setButton(new Button(getInventory(), asSlot(1, 3), () -> new ItemBuilder(Material.REDSTONE_TORCH)
+        setButton(new Button(getInventory(), asSlot(1, 2), () -> new ItemBuilder(Material.REDSTONE_TORCH)
                 .setName("&a" + le.getText("menu.hydration.enabled.title"))
                 .addDescription(le.getText("menu.hydration.enabled.description"))
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.HYDRATION_ENABLED))
@@ -61,7 +61,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(1, 4), () -> new ItemBuilder(Material.IRON_SWORD)
+        setButton(new Button(getInventory(), asSlot(1, 3), () -> new ItemBuilder(Material.IRON_SWORD)
                 .setName("&a" + le.getText("menu.hydration.damage.title"))
                 .addDescription(le.getText("menu.hydration.damage.description"))
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.HYDRATION_DAMAGE))
@@ -73,7 +73,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(1, 5), () -> new ItemBuilder(Material.RABBIT_FOOT)
+        setButton(new Button(getInventory(), asSlot(1, 4), () -> new ItemBuilder(Material.RABBIT_FOOT)
                 .setName("&a" + le.getText("menu.hydration.activity.title"))
                 .addDescription(le.getText("menu.hydration.activity.description"))
                 .addSwitch("Currently:", config.isEnabled(ConfigOption.HYDRATION_WALKING))
@@ -81,6 +81,31 @@ public class HydrationSettingsMenu extends GlobalMenu {
                 () -> config.isEnabled(ConfigOption.HYDRATION_WALKING))
                 .onClick(player -> {
                     config.toggle(ConfigOption.HYDRATION_WALKING);
+                    config.save();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
+
+        setButton(new Button(getInventory(), asSlot(1, 5), () -> new ItemBuilder(Material.LINGERING_POTION)
+                .setName("&a" + le.getText("menu.hydration.thirst.title"))
+                .addDescription(le.getText("menu.hydration.thirst.description")
+                        .replace("%amount%", "" + config.getDouble(ConfigOption.THIRST_MOD)))
+                .addSwitch("Currently:", config.isEnabled(ConfigOption.THIRST_EFFECT))
+                .build()).setToggle(le.getText("menu.hydration.thirst.title"),
+                () -> config.isEnabled(ConfigOption.THIRST_EFFECT))
+                .onClick(player -> {
+                    config.toggle(ConfigOption.THIRST_EFFECT);
+                    config.save();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
+
+        setButton(new Button(getInventory(), asSlot(1, 6), () -> new ItemBuilder(Material.WATER_BUCKET)
+                .setName("&a" + le.getText("menu.hydration.open_water.title"))
+                .addDescription(le.getText("menu.hydration.open_water.description"))
+                .addSwitch("Currently:", config.isEnabled(ConfigOption.DRINK_FROM_OPEN_WATER))
+                .build()).setToggle(le.getText("menu.hydration.open_water.title"),
+                () -> config.isEnabled(ConfigOption.DRINK_FROM_OPEN_WATER))
+                .onClick(player -> {
+                    config.toggle(ConfigOption.DRINK_FROM_OPEN_WATER);
                     config.save();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
