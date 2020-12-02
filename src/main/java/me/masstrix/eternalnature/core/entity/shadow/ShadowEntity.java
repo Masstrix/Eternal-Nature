@@ -44,6 +44,8 @@ public abstract class ShadowEntity {
     private static Constructor<?> packetRelEntityMove;
     private static Method getCraftWorldHandle;
     private static Method setPositionMethod;
+    private static Method setSilentMethod;
+    private static Method setNoGravityMethod;
 
     static {
         try {
@@ -70,6 +72,9 @@ public abstract class ShadowEntity {
             getCraftWorldHandle = craftWorldClass.getDeclaredMethod("getHandle");
             setPositionMethod = entityClass.getMethod("setPositionRotation",
                     double.class, double.class, double.class, float.class, float.class);
+            setSilentMethod = entityClass.getMethod("setSilent", boolean.class);
+            setNoGravityMethod = entityClass.getMethod("setNoGravity", boolean.class);
+
         } catch (ClassNotFoundException | NoSuchMethodException e) {
             e.printStackTrace();
         }
@@ -124,6 +129,14 @@ public abstract class ShadowEntity {
             }
         }
         return id;
+    }
+
+    public void setSilent(boolean silent) {
+        try {
+            setSilentMethod.invoke(entity, silent);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
     }
 
     public void setYaw(float yaw) {

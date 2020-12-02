@@ -45,17 +45,15 @@ public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
 
     private double spawnChance = 0.3;
     private int maxParticles = 200;
-    private int scanDelay = 20 * 5;
+    private int scanDelay = 2;
     private EternalNature plugin;
     private Set<Location>  locations = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private Set<LeafParticle> effects = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private BukkitTask updater, spawner;
-    private EntityStorage storage;
     private BlockScanner scanner;
 
-    public LeafEmitter(EternalNature plugin, EntityStorage storage) {
+    public LeafEmitter(EternalNature plugin) {
         this.plugin = plugin;
-        this.storage = storage;
         this.scanner = new BlockScanner(plugin);
         updateSettings();
     }
@@ -93,11 +91,11 @@ public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
                     // Reduce the amount of scans being done as more players are online
                     int online = Bukkit.getOnlinePlayers().size();
                     if (online > 20) {
-                        ticks = (online / 5) + scanDelay;
+                        ticks = (online / 20) + scanDelay;
                     }
                 }
             }
-        }.runTaskTimerAsynchronously(plugin, 10, 40);
+        }.runTaskTimerAsynchronously(plugin, 10, 20);
 
         // Stop a spawner if it has already been started.
         if (spawner != null)

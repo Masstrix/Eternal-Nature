@@ -56,15 +56,14 @@ public enum CustomItem {
     }
 
     CustomItem(String name, Material type, int model) {
-        ITEM = new ItemBuilder(type).setName("&f" + name).build();
-        customModel = model;
-        defineItem();
+        this(name, type, model, null);
     }
 
     CustomItem(String name, Material type, int model, BooleanCompare<ItemStack> compare) {
-        ITEM = new ItemBuilder(type).setName("&f" + name).build();
+        ITEM = new ItemBuilder(type).setName("&f" + name).setCustomModelData(model).build();
         customModel = model;
-        this.compare = compare;
+        if (compare != null)
+            this.compare = compare;
         defineItem();
     }
 

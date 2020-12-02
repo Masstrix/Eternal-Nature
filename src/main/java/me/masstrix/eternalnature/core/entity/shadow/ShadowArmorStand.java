@@ -107,6 +107,9 @@ public class ShadowArmorStand extends ShadowEntity {
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
+
+        // Make sure the armor stand is silent by default
+        setSilent(true);
     }
 
     /**

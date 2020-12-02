@@ -82,7 +82,7 @@ public class EternalEngine {
                 autoPlanter = new AutoPlanter(plugin),
                 entityManager = new ShadowEntityManager(plugin),
                 new AgingItemWorker(plugin),
-                new LeafEmitter(plugin, entityStorage),
+                new LeafEmitter(plugin),
                 new TreeSpreader(plugin));
         getWorker(TreeSpreader.class);
 
