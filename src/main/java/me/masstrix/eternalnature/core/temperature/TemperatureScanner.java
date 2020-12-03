@@ -18,8 +18,8 @@ package me.masstrix.eternalnature.core.temperature;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.Configurable;
-import me.masstrix.eternalnature.data.PlayerIdle;
-import me.masstrix.eternalnature.data.UserData;
+import me.masstrix.eternalnature.player.PlayerIdle;
+import me.masstrix.eternalnature.player.UserData;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;

@@ -23,7 +23,7 @@ import me.masstrix.eternalnature.core.temperature.TempModifierType;
 import me.masstrix.eternalnature.core.temperature.Temperatures;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
-import me.masstrix.eternalnature.data.UserData;
+import me.masstrix.eternalnature.player.UserData;
 import me.masstrix.eternalnature.menus.Menus;
 import me.masstrix.eternalnature.testing.TestCommand;
 import me.masstrix.eternalnature.util.BuildInfo;

@@ -19,7 +19,7 @@ package me.masstrix.eternalnature.listeners;
 import me.masstrix.eternalnature.EternalEngine;
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.Configurable;
-import me.masstrix.eternalnature.data.UserData;
+import me.masstrix.eternalnature.player.UserData;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;

@@ -23,7 +23,7 @@ import me.masstrix.eternalnature.core.UserWorker;
 import me.masstrix.eternalnature.core.entity.shadow.ShadowEntityManager;
 import me.masstrix.eternalnature.core.temperature.Temperatures;
 import me.masstrix.eternalnature.core.world.*;
-import me.masstrix.eternalnature.data.UserData;
+import me.masstrix.eternalnature.player.UserData;
 import me.masstrix.eternalnature.menus.*;
 import me.masstrix.eternalnature.menus.settings.*;
 import me.masstrix.eternalnature.util.Stopwatch;

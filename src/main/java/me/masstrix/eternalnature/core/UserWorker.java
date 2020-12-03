@@ -18,7 +18,7 @@ package me.masstrix.eternalnature.core;
 
 import me.masstrix.eternalnature.EternalEngine;
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.data.UserData;
+import me.masstrix.eternalnature.player.UserData;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 

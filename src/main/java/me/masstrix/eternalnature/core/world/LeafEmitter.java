@@ -20,7 +20,7 @@ import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.core.EternalWorker;
 import me.masstrix.eternalnature.core.particle.LeafParticle;
-import me.masstrix.eternalnature.data.UserData;
+import me.masstrix.eternalnature.player.UserData;
 import me.masstrix.eternalnature.util.BlockScanner;
 import me.masstrix.eternalnature.util.MathUtil;
 import org.bukkit.Bukkit;

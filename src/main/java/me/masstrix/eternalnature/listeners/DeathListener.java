@@ -17,7 +17,7 @@
 package me.masstrix.eternalnature.listeners;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.data.UserData;
+import me.masstrix.eternalnature.player.UserData;
 import me.masstrix.eternalnature.util.StringUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

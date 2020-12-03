@@ -17,7 +17,7 @@
 package me.masstrix.eternalnature.command;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.data.UserData;
+import me.masstrix.eternalnature.player.UserData;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 

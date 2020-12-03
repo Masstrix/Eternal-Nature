@@ -22,7 +22,7 @@ import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
 import me.masstrix.eternalnature.core.temperature.Temperatures;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
-import me.masstrix.eternalnature.data.UserData;
+import me.masstrix.eternalnature.player.UserData;
 import me.masstrix.eternalnature.util.BuildInfo;
 import me.masstrix.eternalnature.util.SecondsFormat;
 import org.bukkit.entity.Player;
