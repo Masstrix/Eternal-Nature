@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.data;
+package me.masstrix.eternalnature.player;
 
 import me.masstrix.eternalnature.api.IPlayerIdle;
 import org.bukkit.Location;

@@ -14,25 +14,23 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.data;
+package me.masstrix.eternalnature.player;
 
 import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.config.StatusRenderMethod;
-import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
-import me.masstrix.eternalnature.core.temperature.Temperatures;
-import me.masstrix.eternalnature.core.world.WorldData;
-import me.masstrix.eternalnature.util.BossBarUtil;
 import me.masstrix.eternalnature.util.MathUtil;
 import me.masstrix.eternalnature.util.StringUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
-@Configurable.Path("temperature")
-public class TemperatureRender implements StatRenderer {
+@ActionbarItem.Before("temperature")
+@Configurable.Path("hydration")
+public class HydrationRenderer implements StatRenderer {
 
     private final UserData USER;
     private final Player player;
@@ -41,10 +39,8 @@ public class TemperatureRender implements StatRenderer {
     private BossBar bossBar;
     private boolean isEnabled;
     private boolean warningFlash;
-    private String displayFormat = "";
-    private double lastTemp = Integer.MAX_VALUE;
 
-    public TemperatureRender(Player player, UserData data) {
+    public HydrationRenderer(Player player, UserData data) {
         this.player = player;
         this.USER = data;
     }
@@ -55,7 +51,6 @@ public class TemperatureRender implements StatRenderer {
         isEnabled = section.getBoolean("enabled") && section.getBoolean("display.enabled");
         renderMethod = StatusRenderMethod.valueOf(section.getString("display.style"));
         warningFlash = section.getBoolean("display.warning-flash");
-        displayFormat = section.getString("display.format");
 
         if (beforeMethod != renderMethod) {
             reset();
@@ -65,7 +60,7 @@ public class TemperatureRender implements StatRenderer {
 
     @Override
     public String getName() {
-        return null;
+        return "hydration";
     }
 
     @Override
@@ -80,25 +75,9 @@ public class TemperatureRender implements StatRenderer {
             return;
         }
 
-        WorldData worldData = USER.getWorld();
-        if (worldData == null) return;
-        Temperatures temps = worldData.getTemperatures();
-        TemperatureIcon icon = TemperatureIcon.getClosest(USER.getTemperature(), temps);
-
-        boolean flash = warningFlash && FLASH.update();
-        double temperature = USER.getTemperature();
-
-        String text = displayFormat;
-        text = text.replaceAll("%temp_simple%", icon.getColor() + icon.getName() + "&f");
-        text = text.replaceAll("%temp_icon%", icon.getColor() + icon.getIcon() + "&f");
-
-
-        double burn = temps.getBurningPoint();
-        double freeze = temps.getFreezingPoint();
-        boolean willDamage = temperature <= freeze + 5 || temperature >= burn - 5;
-        String tempInfoColor = flash && willDamage ? "&c" : icon.getColor().toString();
-
-        text = text.replaceAll("%temperature%", tempInfoColor + String.format("%.1f°", temperature));
+        double hydration = USER.getHydration();
+        boolean flash = warningFlash && hydration <= 4 && FLASH.update();
+        boolean isThirsty = USER.isThirsty();
 
         if (renderMethod == StatusRenderMethod.BOSSBAR) {
             if (bossBar == null) {
@@ -106,15 +85,17 @@ public class TemperatureRender implements StatRenderer {
                 bossBar.addPlayer(player);
             }
 
-            // Update the bars progress
-            double min = Math.abs(temps.getMinTemp());
-            double max = temps.getMaxTemp() + min;
-            double temp = temperature + min;
-            double progress = temp / max;
+            bossBar.setProgress(Math.abs(hydration / 20));
+            int percent = (int) ((hydration / 20F) * 100);
+            StringBuilder text = new StringBuilder();
 
-            bossBar.setProgress(MathUtil.minMax(progress, 0, 1));
-            bossBar.setTitle(StringUtil.color(text));
-            bossBar.setColor(BossBarUtil.fromBukkitColor(icon.getColor()));
+            text.append("H²O ");
+            text.append(flash ? "&c" : "&f").append(percent).append("%");
+
+            if (isThirsty)
+                text.append(String.format(" &7(&aThirst Effect &7%s)", TIME_FORMAT.format(USER.getThirstTime())));
+
+            bossBar.setTitle(StringUtil.color(text.toString()));
             return;
         } else if (bossBar != null){
             bossBar.removeAll();
@@ -122,10 +103,33 @@ public class TemperatureRender implements StatRenderer {
         }
 
         if (renderMethod == StatusRenderMethod.ACTIONBAR) {
-            if (temperature == lastTemp) return;
-            barText = StringUtil.color(text);
-            lastTemp = temperature;
-            USER.ACTIONBAR.prepare();
+            String textBefore = this.barText;
+            StringBuilder text = new StringBuilder();
+            text.append(flash ? "&c" : "&f").append("H²O ");
+
+            float mid = Math.round(hydration / 2);
+            char bubble = '\u2B58'; // Unicode 11096
+            for (int i = 0; i < 10; i++) {
+                if (i < mid) {
+                    if (isThirsty) text.append(ChatColor.GREEN);
+                    else text.append(ChatColor.AQUA);
+                } else if (i > mid) {
+                    text.append("\u00A78");
+                } else {
+                    if (isThirsty) text.append(ChatColor.DARK_GREEN);
+                    else text.append(ChatColor.DARK_AQUA);
+                }
+                text.append(bubble);
+            }
+            barText = StringUtil.color(text.toString());
+            if (!barText.equals(textBefore)) USER.ACTIONBAR.prepare();
+            return;
+        }
+
+        if (renderMethod == StatusRenderMethod.XP_BAR) {
+            float percentage = (float) (hydration / 20F);
+            player.setExp(MathUtil.minMax(percentage, 0, 1));
+            player.setLevel(0);
         }
     }
 

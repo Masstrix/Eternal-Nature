@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.data;
+package me.masstrix.eternalnature.player;
 
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
