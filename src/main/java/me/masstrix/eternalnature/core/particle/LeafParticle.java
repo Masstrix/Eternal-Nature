@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.core.render;
+package me.masstrix.eternalnature.core.particle;
 
 import me.masstrix.eternalnature.EternalEngine;
 import me.masstrix.eternalnature.api.Leaf;

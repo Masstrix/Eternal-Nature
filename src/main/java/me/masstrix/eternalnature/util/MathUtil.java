@@ -43,6 +43,7 @@ public class MathUtil {
      */
     public static boolean chance(double percent) {
         if (percent >= 1) return true;
+        if (percent <= 0) return false;
         return random.nextDouble() <= percent;
     }
 

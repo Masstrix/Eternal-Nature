@@ -18,35 +18,40 @@ package me.masstrix.eternalnature.listeners;
 
 import me.masstrix.eternalnature.EternalEngine;
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.config.ConfigOption;
+import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.data.UserData;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.util.Vector;
 
-public class InteractListener implements Listener {
+public class InteractListener implements Listener, Configurable {
 
-    private EternalNature plugin;
-    private EternalEngine engine;
+    private final EternalEngine ENGINE;
+    private boolean canDrinkFromOcean;
 
     public InteractListener(EternalNature plugin) {
-        this.plugin = plugin;
-        this.engine = plugin.getEngine();
+        this.ENGINE = plugin.getEngine();
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        canDrinkFromOcean = section.getBoolean("hydration.drink-from-open-water");
     }
 
     @EventHandler
     public void onDrink(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        // Don't do any checks if drinking from open water is diabled.
-        if (!plugin.getSystemConfig().isEnabled(ConfigOption.DRINK_FROM_OPEN_WATER))
+        // Don't do any checks if drinking from open water is disabled.
+        if (!canDrinkFromOcean)
             return;
 
         // If the player is underwater stop them from drinking it.
@@ -66,7 +71,7 @@ public class InteractListener implements Listener {
             origin.add(direction);
             Block block = origin.getBlock();
             if (block.isLiquid() && block.getType() == Material.WATER) {
-                UserData data = engine.getUserData(player.getUniqueId());
+                UserData data = ENGINE.getUserData(player.getUniqueId());
                 if (!data.isHydrationFull()) {
                     data.hydrate(1);
                     data.addThirst(10);

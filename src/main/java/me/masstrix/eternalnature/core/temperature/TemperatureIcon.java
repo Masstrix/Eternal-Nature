@@ -20,13 +20,13 @@ import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.ChatColor;
 
 public enum TemperatureIcon {
-    BURNING(Temperatures.ICON_HOT, "burning", 100, ChatColor.RED),
-    HOT(Temperatures.ICON_HOT, "hot", 30, ChatColor.GOLD),
-    WARM(Temperatures.ICON_HOT, "warm", 20, ChatColor.YELLOW),
-    PLEASANT(Temperatures.ICON_NORMAL, "pleasant", 13, ChatColor.GREEN),
-    COOL(Temperatures.ICON_COLD, "cool", 5, ChatColor.DARK_AQUA),
-    COLD(Temperatures.ICON_COLD, "cold", 0, ChatColor.AQUA),
-    FREEZING(Temperatures.ICON_COLD, "freezing", -4, ChatColor.WHITE);
+    BURNING(Temperatures.iconHot, "burning", 100, ChatColor.RED),
+    HOT(Temperatures.iconHot, "hot", 30, ChatColor.GOLD),
+    WARM(Temperatures.iconHot, "warm", 20, ChatColor.YELLOW),
+    PLEASANT(Temperatures.iconNormal, "pleasant", 13, ChatColor.GREEN),
+    COOL(Temperatures.iconCold, "cool", 5, ChatColor.DARK_AQUA),
+    COLD(Temperatures.iconCold, "cold", 0, ChatColor.AQUA),
+    FREEZING(Temperatures.iconCold, "freezing", -4, ChatColor.WHITE);
 
     private final String KEY;
     private final String NAME;

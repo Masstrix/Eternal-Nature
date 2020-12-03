@@ -16,8 +16,6 @@
 
 package me.masstrix.eternalnature.core.world;
 
-import me.masstrix.eternalnature.EternalNatureAPI;
-import me.masstrix.eternalnature.config.ConfigOption;
 import me.masstrix.eternalnature.events.ItemPlantEvent;
 import me.masstrix.eternalnature.util.MathUtil;
 import org.bukkit.Bukkit;
@@ -38,14 +36,15 @@ public class Plant {
     public final static byte GROUND_VALID = 1;
     public final static byte GROUND_NONE = 0;
 
+    private final AutoPlanter PLANTER;
     private Item item;
     private Sound sound;
     private PlantType plantType;
     private int ticks;
     private int plantTime;
 
-    public Plant(Item linked) {
-        this(linked, PlantType.fromMaterial(linked.getItemStack().getType()));
+    public Plant(AutoPlanter planter, Item linked) {
+        this(planter, linked, PlantType.fromMaterial(linked.getItemStack().getType()));
     }
 
     /**
@@ -54,7 +53,8 @@ public class Plant {
      * @param linked item to be planted.
      * @param plantType the plant type. This determines what block it can be placed on.
      */
-    public Plant(Item linked, PlantType plantType) {
+    public Plant(AutoPlanter planter, Item linked, PlantType plantType) {
+        this.PLANTER = planter;
         this.item = linked;
         this.plantType = plantType;
         this.plantTime = MathUtil.randomInt(20, 120);
@@ -137,7 +137,7 @@ public class Plant {
                 Block replace = place.getBlock();
                 if (isBlockReplaceable(replace.getType())) {
                     place.getBlock().setType(block);
-                    if (new EternalNatureAPI().getSystemConfig().isEnabled(ConfigOption.AUTO_PLANT_SOUND))
+                    if (PLANTER.getPlaySounds())
                         place.getWorld().playSound(place, getPlaceSound(), 1, 1);
                 }
             }
@@ -212,32 +212,36 @@ public class Plant {
      * @param type type to get config section for.
      * @return the config option or null if not valid.
      */
-    public static ConfigOption configOptionFromPlant(Material type) {
-        if (PlantType.isFlower(type)) return ConfigOption.AUTO_PLANT_FLOWERS;
-        if (PlantType.isSapling(type)) return ConfigOption.AUTO_PLANT_SAPLING;
+    public static String configPathFromPlant(Material type) {
+        if (PlantType.isFlower(type)) return plantPath("flowers");
+        if (PlantType.isSapling(type)) return plantPath("saplings");
         switch (type) {
             case CARROT:
             case CARROTS:
-                return ConfigOption.AUTO_PLANT_CARROT;
+                return plantPath("carrot");
             case POTATO:
             case POTATOES:
-                return ConfigOption.AUTO_PLANT_POTATO;
+                return plantPath("potato");
             case WHEAT:
             case WHEAT_SEEDS:
-                return ConfigOption.AUTO_PLANT_WHEAT;
+                return plantPath("wheat");
             case BEETROOT_SEEDS:
             case BEETROOTS:
-                return ConfigOption.AUTO_PLANT_BEETROOT;
+                return plantPath("beetroot");
             case MELON_SEEDS:
             case MELON_STEM:
-                return ConfigOption.AUTO_PLANT_MELON;
+                return plantPath("melon");
             case PUMPKIN_SEEDS:
             case  PUMPKIN_STEM:
-                return ConfigOption.AUTO_PLANT_PUMPKIN;
+                return plantPath("pumpkin");
             case SWEET_BERRIES:
             case SWEET_BERRY_BUSH:
-                return ConfigOption.AUTO_PLANT_SWEET_BERRY;
+                return plantPath("sweet-berry");
             default: return null;
         }
+    }
+
+    private static String plantPath(String name) {
+        return "global.auto-plant." + name;
     }
 }

@@ -18,7 +18,6 @@ package me.masstrix.eternalnature;
 
 import me.masstrix.eternalnature.api.EternalUser;
 import me.masstrix.eternalnature.api.EternalWorld;
-import me.masstrix.eternalnature.config.SystemConfig;
 import me.masstrix.eternalnature.core.temperature.Temperatures;
 import me.masstrix.eternalnature.menus.Menus;
 import org.bukkit.entity.Player;
@@ -27,26 +26,10 @@ import java.util.UUID;
 
 public class EternalNatureAPI {
 
-    private static boolean enabled = false;
-    private static EternalNature plugin;
-
-    EternalNatureAPI(EternalNature instance) {
-        if (enabled) return;
-        enabled = true;
-        plugin = instance;
-    }
+    private final EternalNature PLUGIN;
 
     public EternalNatureAPI() {
-    }
-
-    /**
-     * Returns the plugins config. You can edit any aspect of the config from
-     * {@link SystemConfig}.
-     *
-     * @return the system config.
-     */
-    public SystemConfig getSystemConfig() {
-        return plugin.getSystemConfig();
+        PLUGIN = EternalNature.getPlugin(EternalNature.class);
     }
 
     /**
@@ -57,7 +40,7 @@ public class EternalNatureAPI {
      * @param player who to open the settings menu for.
      */
     public void openSettingsMenu(Player player) {
-        plugin.getEngine().getMenuManager().getMenu(Menus.SETTINGS).open(player);
+        PLUGIN.getEngine().getMenuManager().getMenu(Menus.SETTINGS).open(player);
     }
 
     /**
@@ -65,7 +48,7 @@ public class EternalNatureAPI {
      * @return a players data or null if there is no data found for that uuid.
      */
     public EternalUser getUserData(UUID userId) {
-        return plugin.getEngine().getUserData(userId);
+        return PLUGIN.getEngine().getUserData(userId);
     }
 
     public EternalWorld getWorldData(UUID worldId) {
@@ -76,6 +59,6 @@ public class EternalNatureAPI {
      * @return the default temperature data.
      */
     public Temperatures getTemperatureData() {
-        return plugin.getEngine().getDefaultTemperatures();
+        return PLUGIN.getEngine().getDefaultTemperatures();
     }
 }

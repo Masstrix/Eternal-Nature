@@ -22,7 +22,5 @@ public interface EternalWorld {
 
     String getWorldName();
 
-    int getChunksLoaded();
-
     Temperatures getTemperatures();
 }

@@ -16,10 +16,12 @@
 
 package me.masstrix.eternalnature.menus;
 
+import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -30,7 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public abstract class GlobalMenu {
+public abstract class GlobalMenu implements Configurable {
 
     static final ItemStack BACK_ICON = new ItemBuilder(Material.ARROW)
             .setName("&a⬅ Back").build();
@@ -59,6 +61,11 @@ public abstract class GlobalMenu {
     public GlobalMenu(String id, int rows) {
         this.ID = id;
         this.slots = rows * 9;
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        build();
     }
 
     public final String getID() {

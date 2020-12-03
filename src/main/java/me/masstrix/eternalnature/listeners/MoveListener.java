@@ -17,16 +17,12 @@
 package me.masstrix.eternalnature.listeners;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.core.world.ChunkData;
-import me.masstrix.eternalnature.core.world.WorldData;
-import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.data.UserData;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.util.Vector;
 
 public class MoveListener implements Listener {
 

@@ -17,26 +17,50 @@
 package me.masstrix.eternalnature.menus;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.config.*;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
 import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.potion.PotionType;
 
+@Configurable.Path("hydration")
 public class HydrationSettingsMenu extends GlobalMenu {
 
-    private EternalNature plugin;
     private MenuManager menuManager;
-    private SystemConfig config;
     private LanguageEngine le;
+    private final Configuration CONFIG;
+
+    private boolean enabled;
+    private boolean doDamage;
+    private boolean doActivity;
+    private boolean doThirst;
+    private boolean doSweat;
+    private boolean canDrinkOcean;
+    private boolean displayEnabled;
+    private StatusRenderMethod renderMethod;
+    private double thirstMod;
 
     public HydrationSettingsMenu(EternalNature plugin, MenuManager menuManager) {
         super(Menus.HYDRATION_SETTINGS, 5);
-        this.plugin = plugin;
+        this.CONFIG = plugin.getRootConfig();
         this.menuManager = menuManager;
-        this.config = plugin.getSystemConfig();
         this.le = plugin.getLanguageEngine();
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        enabled = section.getBoolean("enabled");
+        doDamage = section.getBoolean("damage.enabled");
+        doActivity = section.getBoolean("increase-from-activity");
+        doThirst = section.getBoolean("thirst-effect.enabled");
+        thirstMod = section.getDouble("thirst-effect.amount");
+        canDrinkOcean = section.getBoolean("drink-from-open-water");
+        displayEnabled = section.getBoolean("display.enabled");
+        renderMethod = StatusRenderMethod.valueOf(section.getString("display.style"));
+        doSweat = section.getBoolean("sweat");
+        build();
     }
 
     @Override
@@ -52,87 +76,99 @@ public class HydrationSettingsMenu extends GlobalMenu {
         setButton(new Button(getInventory(), asSlot(1, 2), () -> new ItemBuilder(Material.REDSTONE_TORCH)
                 .setName("&a" + le.getText("menu.hydration.enabled.title"))
                 .addDescription(le.getText("menu.hydration.enabled.description"))
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.HYDRATION_ENABLED))
+                .addSwitch("Currently:", enabled)
                 .build()).setToggle(le.getText("menu.hydration.enabled.title"),
-                () -> config.isEnabled(ConfigOption.HYDRATION_ENABLED))
+                () -> enabled)
                 .onClick(player -> {
-                    config.toggle(ConfigOption.HYDRATION_ENABLED);
-                    config.save();
+                    CONFIG.toggle("hydration.enabled");
+                    CONFIG.save().reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
         setButton(new Button(getInventory(), asSlot(1, 3), () -> new ItemBuilder(Material.IRON_SWORD)
                 .setName("&a" + le.getText("menu.hydration.damage.title"))
                 .addDescription(le.getText("menu.hydration.damage.description"))
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.HYDRATION_DAMAGE))
+                .addSwitch("Currently:", doDamage)
                 .build()).setToggle(le.getText("menu.hydration.damage.title"),
-                () -> config.isEnabled(ConfigOption.HYDRATION_DAMAGE))
+                () -> doDamage)
                 .onClick(player -> {
-                    config.toggle(ConfigOption.HYDRATION_DAMAGE);
-                    config.save();
+                    CONFIG.set("hydration.damage.enabled", !doDamage);
+                    CONFIG.save().reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
         setButton(new Button(getInventory(), asSlot(1, 4), () -> new ItemBuilder(Material.RABBIT_FOOT)
                 .setName("&a" + le.getText("menu.hydration.activity.title"))
                 .addDescription(le.getText("menu.hydration.activity.description"))
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.HYDRATION_WALKING))
+                .addSwitch("Currently:", doActivity)
                 .build()).setToggle(le.getText("menu.hydration.activity.title"),
-                () -> config.isEnabled(ConfigOption.HYDRATION_WALKING))
+                () -> doActivity)
                 .onClick(player -> {
-                    config.toggle(ConfigOption.HYDRATION_WALKING);
-                    config.save();
+                    CONFIG.toggle("hydration.increase-from-activity");
+                    CONFIG.save().reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
         setButton(new Button(getInventory(), asSlot(1, 5), () -> new ItemBuilder(Material.LINGERING_POTION)
                 .setName("&a" + le.getText("menu.hydration.thirst.title"))
                 .addDescription(le.getText("menu.hydration.thirst.description")
-                        .replace("%amount%", "" + config.getDouble(ConfigOption.THIRST_MOD)))
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.THIRST_EFFECT))
+                        .replace("%amount%", "" + thirstMod))
+                .addSwitch("Currently:", doThirst)
                 .build()).setToggle(le.getText("menu.hydration.thirst.title"),
-                () -> config.isEnabled(ConfigOption.THIRST_EFFECT))
+                () -> doThirst)
                 .onClick(player -> {
-                    config.toggle(ConfigOption.THIRST_EFFECT);
-                    config.save();
+                    CONFIG.toggle("hydration.thirst-effect.enabled");
+                    CONFIG.save().reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
         setButton(new Button(getInventory(), asSlot(1, 6), () -> new ItemBuilder(Material.WATER_BUCKET)
                 .setName("&a" + le.getText("menu.hydration.open_water.title"))
                 .addDescription(le.getText("menu.hydration.open_water.description"))
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.DRINK_FROM_OPEN_WATER))
+                .addSwitch("Currently:", canDrinkOcean)
                 .build()).setToggle(le.getText("menu.hydration.open_water.title"),
-                () -> config.isEnabled(ConfigOption.DRINK_FROM_OPEN_WATER))
+                () -> canDrinkOcean)
                 .onClick(player -> {
-                    config.toggle(ConfigOption.DRINK_FROM_OPEN_WATER);
-                    config.save();
+                    CONFIG.toggle("hydration.drink-from-open-water");
+                    CONFIG.save().reload();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
+
+        // Temperature Sweating toggle
+        setButton(new Button(getInventory(), asSlot(1, 7), () -> new ItemBuilder(Material.POTION)
+                .setPotionType(PotionType.WATER)
+                .setName("&a" + le.getText("menu.temp.sweat.title"))
+                .addDescription(le.getText("menu.temp.sweat.description"))
+                .addSwitch("Currently:", doSweat)
+                .build()).setToggle(le.getText("menu.temp.sweat.title"),
+                () -> doSweat)
+                .onClick(player -> {
+                    CONFIG.toggle("hydration.sweat");
+                    CONFIG.save().reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
         setButton(new Button(getInventory(), asSlot(4, 4), () -> new ItemBuilder(Material.JUNGLE_SIGN)
                 .setName("&a" + le.getText("menu.hydration.display.title"))
                 .addDescription(le.getText("menu.hydration.display.description"))
-                .addLore("Currently: &f" + config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE).getSimple(),
-                        config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE).getDescription())
-                .addLore("&eClick to switch to &7" + config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE).next().getSimple())
+                .addLore("Currently: &f" + renderMethod.getSimple(),
+                        renderMethod.getDescription())
+                .addLore("&eClick to switch to &7" + renderMethod.next().getSimple())
                 .build())
                 .onClick(player -> {
-                    config.set(ConfigOption.HYDRATION_BAR_STYLE, config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE).next().name());
-                    config.save();
+                    CONFIG.set("hydration.display.style", renderMethod.next().name());
+                    CONFIG.save().reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(4, 5), () -> {
-            boolean isDisplayEnabled = config.isEnabled(ConfigOption.HYDRATION_BAR_DISPLAY_ENABLED);
-            return new ItemBuilder(isDisplayEnabled ? Material.LIME_BANNER : Material.GRAY_BANNER)
-                    .setName("&a" + le.getText("menu.display.enabled.title"))
-                    .addDescription(le.getText("menu.display.enabled.description"))
-                    .addSwitch("Currently:", isDisplayEnabled)
-                    .build();
-        }).onClick(player -> {
-            config.toggle(ConfigOption.HYDRATION_BAR_DISPLAY_ENABLED);
-            config.save();
+        setButton(new Button(getInventory(), asSlot(4, 5), () ->
+                new ItemBuilder(displayEnabled ? Material.LIME_BANNER : Material.GRAY_BANNER)
+                        .setName("&a" + le.getText("menu.display.enabled.title"))
+                        .addDescription(le.getText("menu.display.enabled.description"))
+                        .addSwitch("Currently:", displayEnabled)
+                        .build()).onClick(player -> {
+            CONFIG.toggle("hydration.display.enabled");
+            CONFIG.save().reload();
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
         }));
     }

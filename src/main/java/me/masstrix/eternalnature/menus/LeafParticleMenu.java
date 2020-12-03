@@ -17,69 +17,81 @@
 package me.masstrix.eternalnature.menus;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.config.ConfigPath;
+import me.masstrix.eternalnature.config.Configurable;
+import me.masstrix.eternalnature.config.Configuration;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
 import me.masstrix.eternalnature.util.ChangeToggleUtil;
 import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.configuration.ConfigurationSection;
 
+@Configurable.Path("global.falling-leaves")
 public class LeafParticleMenu extends GlobalMenu {
 
-    private EternalNature plugin;
-    private MenuManager menuManager;
-    private SystemConfig config;
-    private LanguageEngine le;
+    private final EternalNature PLUGIN;
+    private final MenuManager MANAGER;
+    private final LanguageEngine LANG;
+    private final Configuration CONFIG;
+
+    private boolean enabled;
+    private double chance;
 
     public LeafParticleMenu(EternalNature plugin, MenuManager menuManager) {
         super(Menus.LEAF_PARTICLE_SETTINGS, 5);
-        this.config = plugin.getSystemConfig();
-        this.plugin = plugin;
-        this.menuManager = menuManager;
-        this.le = plugin.getLanguageEngine();
+        this.PLUGIN = plugin;
+        this.MANAGER = menuManager;
+        this.LANG = plugin.getLanguageEngine();
+        this.CONFIG = plugin.getRootConfig();
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        enabled = section.getBoolean("enabled");
+        chance = section.getDouble("spawn-chance");
+        build();
     }
 
     @Override
     public String getTitle() {
-        return le.getText("menu.leaf-particles.title");
+        return LANG.getText("menu.leaf-particles.title");
     }
 
     @Override
     public void build() {
         // Back button
-        addBackButton(menuManager, Menus.SETTINGS);
+        addBackButton(MANAGER, Menus.SETTINGS);
 
         setButton(new Button(getInventory(), asSlot(1, 3), () -> new ItemBuilder(Material.REDSTONE_TORCH)
-                .setName("&a" + le.getText("menu.leaf-particles.enabled.title"))
-                .addDescription(le.getText("menu.leaf-particles.enabled.description"))
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.LEAF_EFFECT))
-                .build()).setToggle(le.getText("menu.leaf-particles.enabled.title"), () -> config.isEnabled(ConfigOption.LEAF_EFFECT))
+                .setName("&a" + LANG.getText("menu.leaf-particles.enabled.title"))
+                .addDescription(LANG.getText("menu.leaf-particles.enabled.description"))
+                .addSwitch("Currently:", enabled)
+                .build()).setToggle(LANG.getText("menu.leaf-particles.enabled.title"), () -> enabled)
                 .onClick(player -> {
-                    config.toggle(ConfigOption.LEAF_EFFECT);
-                    config.save();
-                    plugin.getEngine().updateSettings();
+                    CONFIG.set(ConfigPath.LEAF_EFFECT_ENABLED, (enabled = !enabled));
+                    CONFIG.save().reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
         ChangeToggleUtil spawnChances = new ChangeToggleUtil();
-        spawnChances.add("&c" + le.getText("menu.leaf-particles.spawn.extreme"), 0.05);
-        spawnChances.add("&c" + le.getText("menu.leaf-particles.spawn.high"), 0.01);
-        spawnChances.add("&e" + le.getText("menu.leaf-particles.spawn.medium"), 0.005);
-        spawnChances.add("&a" + le.getText("menu.leaf-particles.spawn.low"), 0.001);
-        spawnChances.selectClosest(config.getDouble(ConfigOption.LEAF_EFFECT_CHANCE));
+        spawnChances.add("&c" + LANG.getText("menu.leaf-particles.spawn.extreme"), 0.05);
+        spawnChances.add("&c" + LANG.getText("menu.leaf-particles.spawn.high"), 0.01);
+        spawnChances.add("&e" + LANG.getText("menu.leaf-particles.spawn.medium"), 0.005);
+        spawnChances.add("&a" + LANG.getText("menu.leaf-particles.spawn.low"), 0.001);
+        spawnChances.selectClosest(chance);
 
         setButton(new Button(getInventory(), asSlot(1, 5), () -> new ItemBuilder(Material.ENDER_EYE)
-                .setName("&a" + le.getText("menu.leaf-particles.spawn.title"))
-                .addDescription(le.getText("menu.leaf-particles.spawn.description"))
+                .setName("&a" + LANG.getText("menu.leaf-particles.spawn.title"))
+                .addDescription(LANG.getText("menu.leaf-particles.spawn.description"))
                 .addLore("Currently: " +  spawnChances.getSelected().getName())
                 .addLore("&eChange to " +  spawnChances.getNext().getName())
                 .build())
                 .onClick(player -> {
                     spawnChances.next();
-                    config.set(ConfigOption.LEAF_EFFECT_CHANCE, spawnChances.getSelected().getChance());
-                    config.save();
-                    plugin.getEngine().updateSettings();
+                    double chance = spawnChances.getSelected().getChance();
+                    CONFIG.set(ConfigPath.LEAF_EFFECT_MAX_PARTICLES, chance);
+                    CONFIG.save().reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
     }

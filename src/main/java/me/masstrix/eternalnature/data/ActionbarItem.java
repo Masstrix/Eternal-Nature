@@ -14,9 +14,20 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.core;
+package me.masstrix.eternalnature.data;
 
-public interface ConfigReloadUpdate {
+import java.lang.annotation.*;
 
-    void updateSettings();
+public interface ActionbarItem {
+    
+    String getName();
+    
+    String getActionbarText();
+    
+    @Inherited
+    @Target(ElementType.TYPE)
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface Before {
+        String value();
+    }
 }

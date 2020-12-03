@@ -18,38 +18,33 @@ package me.masstrix.eternalnature.data;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.api.EternalUser;
-import me.masstrix.eternalnature.config.ConfigOption;
+import me.masstrix.eternalnature.config.Configurable;
+import me.masstrix.eternalnature.config.Configuration;
 import me.masstrix.eternalnature.core.HeightGradient;
-import me.masstrix.eternalnature.core.temperature.*;
-import me.masstrix.eternalnature.config.StatusRenderMethod;
-import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.core.temperature.TempModifierType;
 import me.masstrix.eternalnature.core.temperature.TemperatureScanner;
+import me.masstrix.eternalnature.core.temperature.Temperatures;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.listeners.DeathListener;
-import me.masstrix.eternalnature.util.*;
+import me.masstrix.eternalnature.util.MathUtil;
+import me.masstrix.eternalnature.util.Stopwatch;
 import me.masstrix.lang.langEngine.LanguageEngine;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Waterlogged;
-import org.bukkit.boss.BarColor;
-import org.bukkit.boss.BarStyle;
-import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
-public class UserData implements EternalUser {
+public class UserData implements EternalUser, Configurable {
 
     /**
      * Hard max value for hydration thirst.
@@ -57,17 +52,15 @@ public class UserData implements EternalUser {
     public static final float MAX_THIRST = 20;
     private static final int dehydrateChance = 500;
     private static final int dehydrateChanceRange = 50;
-    private static SecondsFormat TIME_FORMAT = new SecondsFormat();
 
-    private SystemConfig config;
-    private EternalNature plugin;
-    private LanguageEngine le;
+    private final EternalNature PLUGIN;
+    private final LanguageEngine LANG;
 
     private Stopwatch damageTimer = new Stopwatch();
-    private Flicker flicker = new Flicker(300);
     private TemperatureScanner tempScanner;
+    final Actionbar ACTIONBAR;
+    private Set<StatRenderer> statRenderers = new HashSet<>();
 
-    private BossBar hydrationBar, tempBar;
     private UUID id;
     private double temperature = 0, tempExact = 0;
     private double hydration = 20; // max is 20
@@ -81,11 +74,37 @@ public class UserData implements EternalUser {
     private boolean inMotion;
     private long lastMovementCheck = 0;
 
+    //
+    // Configuration
+    //
+
+    // Hydration settings
+    private boolean isHydEnabled;
+    private boolean doHydDamage;
+    private double hydDamageAmount;
+    private int hydDamageDelay;
+    private boolean hydSweat;
+    private boolean isThirstEnabled;
+    private double thirstAmount;
+
+    // Temperature settings
+    private boolean isTmpEnabled;
+    private boolean doTmpDamage;
+    private double tmpDamageAmount;
+    private int tmpDamageDelay;
+    private int tmpMaxDelta;
+
+    private boolean tmpUseBlocks;
+    private boolean tmpUseBiomes;
+    private boolean tmpUseWeather;
+    private boolean tmpUseItems;
+    private boolean tmpUseEnvironment;
+
     public UserData(EternalNature plugin, UUID id) {
         this.id = id;
-        this.plugin = plugin;
-        this.le = plugin.getLanguageEngine();
-        config = plugin.getSystemConfig();
+        this.PLUGIN = plugin;
+        this.LANG = plugin.getLanguageEngine();
+        this.ACTIONBAR = new Actionbar(Bukkit.getPlayer(id));
 
         Player player = Bukkit.getPlayer(id);
         if (player != null) {
@@ -95,16 +114,168 @@ public class UserData implements EternalUser {
             this.temperature = data.getAmbientTemperature(5, 15,
                     loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
         }
+        setup();
     }
 
     public UserData(EternalNature plugin, UUID id, double temperature, double hydration) {
         this.id = id;
-        this.plugin = plugin;
-        this.le = plugin.getLanguageEngine();
+        this.PLUGIN = plugin;
+        this.LANG = plugin.getLanguageEngine();
         this.temperature = temperature;
         this.hydration = hydration;
-        config = plugin.getSystemConfig();
+        this.ACTIONBAR = new Actionbar(Bukkit.getPlayer(id));
         distanceNextThirst = MathUtil.randomInt(dehydrateChance, dehydrateChance + dehydrateChanceRange);
+        setup();
+    }
+
+    /**
+     * Setups the common objects for the player.
+     */
+    private void setup() {
+        Player player = Bukkit.getPlayer(id);
+        statRenderers.add(new HydrationRenderer(player, this));
+        statRenderers.add(new TemperatureRender(player, this));
+        statRenderers.forEach(ACTIONBAR::add);
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        // hydration
+        isHydEnabled = section.getBoolean("hydration.enabled", true);
+        doHydDamage = section.getBoolean("hydration.damage.enabled", true);
+        hydDamageAmount = section.getDouble("hydration.damage.amount");
+        hydDamageDelay = section.getInt("hydration.damage.delay");
+        hydSweat = section.getBoolean("hydration.sweat");
+        isThirstEnabled = section.getBoolean("hydration.thirst-effect.enabled", true);
+        thirstAmount = section.getDouble("hydration.thirst-effect.amount");
+
+        // temp
+        isTmpEnabled = section.getBoolean("temperature.enabled", true);
+        doTmpDamage = section.getBoolean("temperature.damage.enabled", true);
+        tmpDamageAmount = section.getDouble("temperature.damage.amount");
+        tmpDamageDelay = section.getInt("temperature.damage.delay");
+        tmpMaxDelta = section.getInt("temperature.max-delta-chance");
+
+        tmpUseBlocks = section.getBoolean("temperature.scanning.use-blocks");
+        tmpUseBiomes = section.getBoolean("temperature.scanning.use-biomes");
+        tmpUseItems = section.getBoolean("temperature.scanning.use-weather");
+        tmpUseWeather = section.getBoolean("temperature.scanning.use-items");
+        tmpUseEnvironment = section.getBoolean("temperature.scanning.use-environment");
+
+        // Reload all the stat renderers as well.
+        Configuration config = PLUGIN.getRootConfig();
+        statRenderers.forEach(config::reload);
+
+        // Reload temperature scanner settings.
+        if (tempScanner != null) config.reload(tempScanner);
+    }
+
+    /**
+     * Performs a tick for the player. This will update all enabled settings for
+     * the player and perform any related actions. This includes handling of
+     * temperature scanning and updating, hydration changes and idle updating.
+     */
+    public final void tick() {
+        Player player = Bukkit.getPlayer(id);
+        if (player == null || !player.isOnline() || player.isDead()) return;
+
+        // Update the players idle state.
+        playerIdle.check(player.getLocation());
+
+        // Stop updating if the player is dead. This will stop players who
+        // stay on the respawn screen for to long using resources.
+        if (player.isDead()) {
+            return;
+        }
+
+        // Create a region scanner if one has not been made already.
+        if (tempScanner == null) {
+            this.tempScanner = new TemperatureScanner(PLUGIN, this, player);
+            this.tempScanner.setScanScale(11, 5);
+        }
+
+        WorldProvider provider = PLUGIN.getEngine().getWorldProvider();
+        WorldData worldData = provider.getWorld(player.getWorld());
+        Temperatures tempProfile = worldData.getTemperatures();
+        this.tempScanner.useTemperatureProfile(tempProfile);
+
+        // Updates the players temperature and applies damage to the player
+        // if damage is enabled.
+        if (isTmpEnabled) {
+            // Update the players temperature
+            updateTemperature(false);
+
+            boolean isBurning = this.temperature >= tempProfile.getBurningPoint();
+            boolean isFreezing = this.temperature <= tempProfile.getFreezingPoint();
+
+            // Check if the player should be damaged and
+            // damage them if is all true.
+            if (doTmpDamage && (isBurning || isFreezing) && damageTimer.hasPassed(tmpDamageDelay)) {
+                damageTimer.startIfNew();
+                damageTimer.start();
+                String msg = isBurning ? "death.heat" : "death.cold";
+                damageCustom(player, tmpDamageAmount, LANG.getText(msg));
+            }
+        }
+
+        // Updates the players hydration levels and applys damage id damage is enabled
+        // for hydration.
+        if (isHydEnabled
+                && player.getGameMode() != GameMode.CREATIVE
+                && player.getGameMode() != GameMode.SPECTATOR) {
+            // Sweat randomly. Becomes more common the warmer you are.
+            if (hydSweat) {
+                if (MathUtil.randomInt(1500) <= temperature * (temperature * 0.005)) {
+                    dehydrate(0.25);
+                }
+            }
+
+            // Handle damage tick if player is dehydrated or to hot/cold
+            if (doHydDamage && hydration <= 0) {
+                damageTimer.startIfNew();
+                if (damageTimer.hasPassed(hydDamageDelay)) {
+                    damageTimer.start();
+                    damageCustom(player, hydDamageAmount, LANG.getText("death.dehydrate"));
+                }
+            }
+        }
+
+        // Quickly start dehydrating the player when the thirst effect is applied.
+        if (isThirstEnabled && thirstTimer > 0 && MathUtil.chance(2)) {
+            dehydrate(thirstAmount);
+        }
+
+        // Keeps a constant tick rate of 1 second.
+        if (System.currentTimeMillis() - constantTick >= 1000) {
+            // Count down the thirst timer
+            if (thirstTimer > 0) {
+                thirstTimer--;
+            }
+            constantTick = System.currentTimeMillis();
+        }
+    }
+
+    /**
+     * Called by {@link me.masstrix.eternalnature.core.Renderer} to render all components
+     * for the players perspective.
+     */
+    public final void render() {
+        Player player = Bukkit.getPlayer(id);
+        if (player == null) return;
+        statRenderers.forEach(StatRenderer::render);
+        ACTIONBAR.send();
+    }
+
+    /**
+     * Returns the {@link WorldData} for the world the player is currently in.
+     *
+     * @return the world data that the player is currently in.
+     */
+    public WorldData getWorld() {
+        WorldProvider provider = PLUGIN.getEngine().getWorldProvider();
+        Player p = Bukkit.getPlayer(id);
+        if (p == null) return provider.getFirstWorld();
+        return provider.getWorld(p.getWorld());
     }
 
     /**
@@ -154,221 +325,6 @@ public class UserData implements EternalUser {
     public UserData setThirstTimer(int time) {
         this.thirstTimer = time;
         return this;
-    }
-
-    /**
-     * Performs a tick for the player. This will update all enabled settings for
-     * the player and perform any related actions. This includes handling of
-     * temperature scanning and updating, hydration changes and idle updating.
-     */
-    public final void tick() {
-        Player player = Bukkit.getPlayer(id);
-        if (player == null || !player.isOnline() || player.isDead()) return;
-
-        // Update the players idle state.
-        playerIdle.check(player.getLocation());
-
-        // Stop updating if the player is dead. This will stop players who
-        // stay on the respawn screen for to long using resources.
-        if (player.isDead()) {
-            return;
-        }
-
-        // Create a region scanner if one has not been made already.
-        if (tempScanner == null) {
-            this.tempScanner = new TemperatureScanner(plugin, this, player);
-            this.tempScanner.setScanScale(11, 5);
-        }
-
-        WorldProvider provider = plugin.getEngine().getWorldProvider();
-        WorldData worldData = provider.getWorld(player.getWorld());
-        Temperatures tempData = worldData.getTemperatures();
-
-        // Updates the players temperature and applies damage to the player
-        // if damage is enabled.
-        if (config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) {
-            // Update the players temperature
-            updateTemperature(false);
-
-            boolean damageEnabled = config.isEnabled(ConfigOption.TEMPERATURE_DMG);
-            boolean isBurning = this.temperature >= tempData.getBurningPoint();
-            boolean isFreezing = this.temperature <= tempData.getFreezingPoint();
-            int damageDelay = config.getInt(ConfigOption.TEMPERATURE_DMG_DELAY);
-
-            // Check if the player should be damaged and
-            // damage them if is all true.
-            if (damageEnabled && (isBurning || isFreezing) && damageTimer.hasPassed(damageDelay)) {
-                damageTimer.startIfNew();
-                damageTimer.start();
-                double dmg = config.getDouble(ConfigOption.TEMPERATURE_DMG_AMOUNT);
-                String msg = isBurning ? "death.heat" : "death.cold";
-                damageCustom(player, dmg, le.getText(msg));
-            }
-        }
-
-        // Updates the players hydration levels and applys damage id damage is enabled
-        // for hydration.
-        if (config.isEnabled(ConfigOption.HYDRATION_ENABLED)
-                && player.getGameMode() != GameMode.CREATIVE
-                && player.getGameMode() != GameMode.SPECTATOR) {
-            // Sweat randomly. Becomes more common the warmer you are.
-            if (plugin.getSystemConfig().isEnabled(ConfigOption.TEMPERATURE_SWEAT)) {
-                if (MathUtil.randomInt(1500) <= temperature * (temperature * 0.005)) {
-                    dehydrate(0.25);
-                }
-            }
-
-            // Handle damage tick if player is dehydrated or to hot/cold
-            if (hydration <= 0 && config.isEnabled(ConfigOption.HYDRATION_DAMAGE)) {
-                damageTimer.startIfNew();
-                if (damageTimer.hasPassed(3000)) {
-                    damageTimer.start();
-                    damageCustom(player, 1, le.getText("death.dehydrate"));
-                }
-            }
-        }
-
-        // Quickly start dehydrating the player when the thirst effect is applied.
-        if (thirstTimer > 0 && MathUtil.chance(2) && config.isEnabled(ConfigOption.THIRST_EFFECT)) {
-            dehydrate(config.getDouble(ConfigOption.THIRST_MOD));
-        }
-
-        // Keeps a constant tick rate of 1 second.
-        if (System.currentTimeMillis() - constantTick >= 1000) {
-            // Count down the thirst timer
-            if (thirstTimer > 0) {
-                thirstTimer--;
-            }
-            constantTick = System.currentTimeMillis();
-        }
-    }
-
-    /**
-     * Called by {@link me.masstrix.eternalnature.core.Renderer} to render all components
-     * for the players perspective.
-     */
-    public final void render() {
-        Player player = Bukkit.getPlayer(id);
-        if (player == null) return; // Stop it from rendering if player is offline.
-        flicker.update();
-
-        // Render user info.
-        StringBuilder actionBar = new StringBuilder();
-
-        // Render the players hydration is the display is enabled for it.
-        if (config.isEnabled(ConfigOption.HYDRATION_ENABLED)
-                && config.isEnabled(ConfigOption.HYDRATION_BAR_DISPLAY_ENABLED)) {
-            StatusRenderMethod renderMethod = config.getRenderMethod(ConfigOption.HYDRATION_BAR_STYLE);
-
-            if (renderMethod != StatusRenderMethod.BOSSBAR && hydrationBar != null) {
-                hydrationBar.removeAll();
-                hydrationBar = null;
-            }
-
-            if (renderMethod == StatusRenderMethod.BOSSBAR) {
-                // Render the hydration bar as a boss bar.
-                if (hydrationBar == null) {
-                    hydrationBar = Bukkit.createBossBar("Hydration", BarColor.BLUE, BarStyle.SEGMENTED_12);
-                }
-                hydrationBar.addPlayer(player);
-                hydrationBar.setProgress(Math.abs(hydration / 20));
-                int percent = (int) ((hydration / 20F) * 100);
-                String flash = hydration <= 4 && config.getBoolean(ConfigOption.HYDRATION_BAR_FLASH)
-                        && flicker.isEnabled() ? "c" : "f";
-                String thirsty = isThirsty() ? String.format(" &7(&aThirst Effect &7%s)", TIME_FORMAT.format(thirstTimer)) : "";
-
-                hydrationBar.setTitle(StringUtil.color("H²O &" + flash + percent + "%" + thirsty));
-            } else if (renderMethod == StatusRenderMethod.ACTIONBAR) {
-                // Render the hydration bar in the action bar.
-                String flash = hydration <= 4 && config.getBoolean(ConfigOption.HYDRATION_BAR_FLASH)
-                        && flicker.isEnabled() ? "c" : "f";
-                StringBuilder h20 = new StringBuilder("\u00A7" + flash + "H²O ");
-                float mid = Math.round(hydration / 2);
-                char bubble = '\u2B58'; // Unicode 11096
-                for (int i = 0; i < 10; i++) {
-                    if (i < mid) {
-                        if (isThirsty()) h20.append(ChatColor.GREEN);
-                        else h20.append(ChatColor.AQUA);
-                    } else if (i > mid) {
-                        h20.append("\u00A78");
-                    } else {
-                        if (isThirsty()) h20.append(ChatColor.DARK_GREEN);
-                        else h20.append(ChatColor.DARK_AQUA);
-                    }
-                    h20.append(bubble);
-                }
-                actionBar.append(h20);
-            } else {
-                // Render in the players XP bar.
-                float percentage = (float) (hydration / 20F);
-                player.setExp(MathUtil.minMax(percentage, 0, 1));
-                player.setLevel(0);
-            }
-        } else if (hydrationBar != null) {
-            hydrationBar.removeAll();
-        }
-
-        // Render the players temperature if the display is enabled for it.
-        if (config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)
-                && config.isEnabled(ConfigOption.TEMPERATURE_DISPLAY_ENABLED)) {
-            WorldProvider provider = plugin.getEngine().getWorldProvider();
-            WorldData worldData = provider.getWorld(player.getWorld());
-            Temperatures temps = worldData.getTemperatures();
-            TemperatureIcon icon = TemperatureIcon.getClosest(temperature, temps);
-
-            String text = config.getString(ConfigOption.TEMPERATURE_TEXT);
-            text = text.replaceAll("%temp_simple%", icon.getColor() + icon.getName() + "&f");
-            text = text.replaceAll("%temp_icon%", icon.getColor() + icon.getIcon() + "&f");
-
-            String tempInfoColor = icon.getColor().toString();
-
-            if (config.isEnabled(ConfigOption.TEMPERATURE_BAR_FLASH)) {
-                double burn = temps.getBurningPoint();
-                double freeze = temps.getFreezingPoint();
-                boolean flash = this.temperature <= freeze + 2 || this.temperature >= burn - 4;
-                if (flash) {
-                    tempInfoColor = flicker.isEnabled() ? "&c" : "&f";
-                }
-            }
-
-            text = text.replaceAll("%temperature%", tempInfoColor + String.format("%.1f°", temperature) + "&f");
-
-            // Append debug info for temperature
-            if (debugEnabled) {
-                text += " &d(exact: " + MathUtil.round(tempExact, 2) + ")";
-            }
-
-            if (config.getRenderMethod(ConfigOption.TEMPERATURE_BAR_STYLE) == StatusRenderMethod.BOSSBAR) {
-                if (tempBar == null) {
-                    tempBar = Bukkit.createBossBar("Loading...", BarColor.GREEN, BarStyle.SOLID);
-                }
-                tempBar.addPlayer(player);
-                // Update the bars progress
-                double min = Math.abs(temps.getMinTemp());
-                double max = temps.getMaxTemp() + min;
-                double temp = this.temperature + min;
-                double progress = temp / max;
-                if (progress >= 0D && progress <= 1)
-                    tempBar.setProgress(progress);
-
-                // Set its color and title
-                tempBar.setTitle(StringUtil.color(text));
-                tempBar.setColor(BossBarUtil.fromBukkitColor(icon.getColor()));
-            } else {
-                if (tempBar != null) {
-                    tempBar.removeAll();
-                    tempBar = null;
-                }
-                if (actionBar.length() > 0)
-                    actionBar.append("    ");
-                actionBar.append(StringUtil.color("&f" + text));
-            }
-        } else if(tempBar != null) {
-            tempBar.removeAll();
-        }
-
-        if (actionBar.length() > 0)
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(actionBar.toString()));
     }
 
     /**
@@ -481,7 +437,7 @@ public class UserData implements EternalUser {
      */
     public void addWalkDistance(float distance, boolean sprinting) {
         if (isOnline() && Bukkit.getPlayer(id).getGameMode() == GameMode.CREATIVE) return;
-        if (!config.isEnabled(ConfigOption.HYDRATION_ENABLED)) return;
+        if (!isHydEnabled) return;
         distanceWalked += sprinting ? distance + 0.3 : distance;
         if (distanceWalked >= distanceNextThirst) {
             distanceWalked = 0;
@@ -533,25 +489,12 @@ public class UserData implements EternalUser {
      * Saves the players data.
      */
     public void save() {
-        File file = new File(plugin.getDataFolder(), "players.yml");
-        if (!file.exists()) {
-            file.getParentFile().mkdirs();
-            try {
-                Files.createFile(file.toPath());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        YamlConfiguration config = new YamlConfiguration();
-        try {
-            config.load(file);
-            config.set(id + ".temp", temperature);
-            config.set(id + ".hydration", hydration);
-            config.set(id + ".effects.thirst", thirstTimer);
-            config.save(file);
-        } catch (IOException | InvalidConfigurationException e) {
-            e.printStackTrace();
-        }
+        Configuration playerConfig = PLUGIN.getPlayerConfig();
+        YamlConfiguration config = playerConfig.getYml();
+        config.set(id + ".temp", temperature);
+        config.set(id + ".hydration", hydration);
+        config.set(id + ".effects.thirst", thirstTimer);
+        playerConfig.save();
     }
 
     /**
@@ -559,8 +502,7 @@ public class UserData implements EternalUser {
      * and also saves all data to file.
      */
     public void endSession() {
-        if (hydrationBar != null) hydrationBar.removeAll();
-        if (tempBar != null) tempBar.removeAll();
+        statRenderers.forEach(StatRenderer::reset);
         save();
     }
 
@@ -571,7 +513,7 @@ public class UserData implements EternalUser {
         Player player = Bukkit.getPlayer(id);
         if (player == null || !player.isOnline()) return;
 
-        WorldProvider provider = plugin.getEngine().getWorldProvider();
+        WorldProvider provider = PLUGIN.getEngine().getWorldProvider();
         WorldData worldData = provider.getWorld(player.getWorld());
 
         // Stop if world is invalid.
@@ -592,11 +534,11 @@ public class UserData implements EternalUser {
      *                 players temperature.
      */
     public void updateTemperature(boolean forceNew) {
+        if (!isTmpEnabled) return;
         Player player = Bukkit.getPlayer(id);
         if (player == null || !player.isOnline() || player.isDead()) return;
-        if (!config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) return;
 
-        WorldProvider provider = plugin.getEngine().getWorldProvider();
+        WorldProvider provider = PLUGIN.getEngine().getWorldProvider();
         WorldData worldData = provider.getWorld(player.getWorld());
 
         // Stop if world is invalid.
@@ -610,20 +552,20 @@ public class UserData implements EternalUser {
         double emission = 0;
 
         // Add nearby block temperature if enabled.
-        if (config.isEnabled(ConfigOption.TEMPERATURE_USE_BLOCKS)) {
+        if (tmpUseBlocks) {
             if (forceNew) tempScanner.quickUpdate();
             else tempScanner.tick();
             emission += tempScanner.getTemperatureEmission();
         }
 
         // Add average nearby biome temperature if enabled
-        if (config.isEnabled(ConfigOption.TEMPERATURE_USE_BIOMES)) {
+        if (tmpUseBiomes) {
             int x = loc.getBlockX(), y = loc.getBlockY(), z = loc.getBlockZ();
             emission += worldData.getBlockAmbientTemperature(x, y, z);
         }
 
         // Add environmental modifiers if enabled.
-        if (config.isEnabled(ConfigOption.TEMPERATURE_USE_ENVIRO)) {
+        if (tmpUseEnvironment) {
             // If the player is swimming, subtract temperature from depth.
             if (inWater) {
                 int height = 0;
@@ -643,7 +585,7 @@ public class UserData implements EternalUser {
         }
 
         // Add item based temperatures if enabled.
-        if (config.isEnabled(ConfigOption.TEMPERATURE_USE_ITEMS)) {
+        if (tmpUseItems) {
             // Add armor to temp.
             ItemStack[] armor = player.getEquipment().getArmorContents();
             for (ItemStack i : armor) {
@@ -662,6 +604,10 @@ public class UserData implements EternalUser {
                 double offTemp = tempData.getEmission(mainHand, TempModifierType.BLOCK);
                 emission += offTemp / 10;
             }
+        }
+
+        if (tmpUseWeather) {
+            // TODO add weather to temperature calculations
         }
 
         if (!Double.isInfinite(emission) && !Double.isNaN(emission)) {
@@ -691,7 +637,7 @@ public class UserData implements EternalUser {
         // Stop updating temperature if is already exactly the same as
         // the expected value.
         if (temperature == tempExact) return;
-        if (!config.isEnabled(ConfigOption.TEMPERATURE_ENABLED)) return;
+        if (!isTmpEnabled) return;
 
         // Change players temperature gradually
         double diff = MathUtil.diff(this.tempExact, this.temperature);
@@ -700,9 +646,8 @@ public class UserData implements EternalUser {
             if (inWater && tempExact < temperature) {
                 division = 10;
             }
-            int maxDelta = config.getInt(ConfigOption.TEMPERATURE_MAX_DELTA);
             double delta = diff / division;
-            if (delta > maxDelta) delta = maxDelta;
+            if (delta > tmpMaxDelta) delta = tmpMaxDelta;
             if (this.tempExact > this.temperature) this.temperature += delta;
             else this.temperature -= delta;
         } else if (diff < 0.1) {

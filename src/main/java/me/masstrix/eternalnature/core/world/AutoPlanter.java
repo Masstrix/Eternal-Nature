@@ -17,33 +17,47 @@
 package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.config.Configurable;
+import me.masstrix.eternalnature.config.Configuration;
 import me.masstrix.eternalnature.core.EternalWorker;
 import me.masstrix.eternalnature.util.MathUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
-public class AutoPlanter implements EternalWorker {
+@Configurable.Path("global.auto-plant")
+public class AutoPlanter implements EternalWorker, Configurable {
 
-    private EternalNature plugin;
-    private SystemConfig config;
-    private Set<Plant> plants = new HashSet<>();
+    private final EternalNature plugin;
+    private final Set<Plant> plants = new HashSet<>();
+    private final Configuration CONFIG;
     private BukkitTask task;
+
+    private boolean enabled;
+    private boolean playSounds;
+    private Map<String, Double> autoPlantChances = new HashMap<>();
 
     public AutoPlanter(EternalNature plugin) {
         this.plugin = plugin;
-        this.config = plugin.getSystemConfig();
+        CONFIG = plugin.getRootConfig();
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        enabled = section.getBoolean("enabled");
+        playSounds = section.getBoolean("play-sound");
+        List<String> exclude = Arrays.asList("enabled", "play-sound", "replant-crops");
+        for (String key : section.getKeys(false)) {
+            if (exclude.contains(key)) continue;
+            autoPlantChances.put(key, section.getDouble(key));
+        }
     }
 
     /**
@@ -78,14 +92,12 @@ public class AutoPlanter implements EternalWorker {
         PlantType plantType = PlantType.fromMaterial(type);
         if (plantType == null) return false;
 
-        ConfigOption option = Plant.configOptionFromPlant(type);
+        String option = Plant.configPathFromPlant(type);
         if (option == null) return false;
-        double chance = config.getDouble(option);
-        if (chance == 0) return false;
 
         // Rolls a random chance.
-        if (MathUtil.chance(config.getDouble(option))) {
-            plants.add(new Plant(item, plantType));
+        if (MathUtil.chance(autoPlantChances.getOrDefault(option, 0D))) {
+            plants.add(new Plant(this, item, plantType));
             return true;
         }
         return false;
@@ -99,25 +111,30 @@ public class AutoPlanter implements EternalWorker {
         task = new BukkitRunnable() {
             @Override
             public void run() {
-                for (Plant p : new ArrayList<>(plants)) {
-                    if (!p.isValid() || p.plant()) {
-                        plants.remove(p);
-                    }
-                }
+                plants.removeIf(p -> !p.isValid() || p.plant());
             }
         }.runTaskTimer(plugin, 20, 20);
     }
 
     @Override
     public void end() {
-        task.cancel();
-        task = null;
+        if (task != null) {
+            task.cancel();
+            task = null;
+        }
+    }
+
+    /**
+     * @return if sounds should be played when a plant is planted.
+     */
+    public boolean getPlaySounds() {
+        return playSounds;
     }
 
     /**
      * @return if auto planting is enabled.
      */
     public boolean isEnabled() {
-        return config.isEnabled(ConfigOption.AUTO_PLANT);
+        return enabled;
     }
 }

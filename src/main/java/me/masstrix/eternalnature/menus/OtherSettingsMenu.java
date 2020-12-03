@@ -17,26 +17,37 @@
 package me.masstrix.eternalnature.menus;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.config.*;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
 import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.configuration.ConfigurationSection;
 
+@Configurable.Path("general")
 public class OtherSettingsMenu extends GlobalMenu {
 
     private EternalNature plugin;
     private MenuManager menuManager;
-    private SystemConfig config;
+    private Configuration config;
     private LanguageEngine le;
+
+    private boolean updateNotify;
+    private boolean updateCheck;
 
     public OtherSettingsMenu(EternalNature plugin, MenuManager menuManager) {
         super(Menus.OTHER_SETTINGS, 5);
-        this.config = plugin.getSystemConfig();
         this.menuManager = menuManager;
+        config = plugin.getRootConfig();
         this.le = plugin.getLanguageEngine();
         this.plugin = plugin;
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        updateCheck = section.getBoolean("check-for-updates");
+        updateNotify = section.getBoolean("notify-update-join");
+        build();
     }
 
     @Override
@@ -52,24 +63,24 @@ public class OtherSettingsMenu extends GlobalMenu {
         setButton(new Button(getInventory(), asSlot(1, 3), () -> new ItemBuilder(Material.PAPER)
                 .setName("&a" + le.getText("menu.other.update-notify.title"))
                 .addDescription(le.getText("menu.other.update-notify.description"))
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.UPDATES_NOTIFY))
+                .addSwitch("Currently:", updateNotify)
                 .build()).setToggle(le.getText("menu.other.update-notify.title"),
-                () -> config.isEnabled(ConfigOption.UPDATES_NOTIFY))
+                () -> updateNotify)
                 .onClick(player -> {
-                    config.toggle(ConfigOption.UPDATES_NOTIFY);
-                    config.save();
+                    config.toggle(ConfigPath.UPDATE_NOTIFY);
+                    config.save().reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
         setButton(new Button(getInventory(), asSlot(1, 4), () -> new ItemBuilder(Material.KNOWLEDGE_BOOK)
                 .setName("&a" + le.getText("menu.other.update-checks.title"))
                 .addDescription(le.getText("menu.other.update-checks.description"))
-                .addSwitch("Currently:", config.isEnabled(ConfigOption.UPDATES_CHECK))
+                .addSwitch("Currently:", updateCheck)
                 .build()).setToggle(le.getText("menu.other.update-checks.title"),
-                () -> config.isEnabled(ConfigOption.UPDATES_CHECK))
+                () -> updateCheck)
                 .onClick(player -> {
-                    config.toggle(ConfigOption.UPDATES_CHECK);
-                    config.save();
+                    config.toggle(ConfigPath.UPDATE_CHECK);
+                    config.save().reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
     }

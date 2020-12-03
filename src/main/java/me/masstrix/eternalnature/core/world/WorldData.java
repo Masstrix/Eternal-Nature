@@ -18,27 +18,23 @@ package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.api.EternalWorld;
-import me.masstrix.eternalnature.config.Reloadable;
+import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.core.temperature.Temperatures;
 import me.masstrix.eternalnature.core.world.wind.Wind;
-import me.masstrix.eternalnature.util.*;
-import org.bukkit.*;
+import me.masstrix.eternalnature.util.MathUtil;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.configuration.ConfigurationSection;
 
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+public class WorldData implements EternalWorld, Configurable {
 
-public class WorldData implements EternalWorld, Reloadable {
-
-    private Map<Long, ChunkData> chunks = new HashMap<>();
     private String worldName;
     protected EternalNature plugin;
     private Temperatures temperatures;
     private Wind wind;
-    Map<Position, WaterfallEmitter> waterfalls = new ConcurrentHashMap<>();
 
     public WorldData(EternalNature plugin, String world) {
         this.plugin = plugin;
@@ -101,36 +97,17 @@ public class WorldData implements EternalWorld, Reloadable {
         return worldName;
     }
 
-    public void tick() {
-        //chunks.forEach((l, c) -> c.tick());
-    }
-
-    public void render() {
-        //chunks.forEach((l, c) -> c.render());
-    }
-
     public void save() {
         temperatures.saveConfig();
     }
 
     @Override
-    public void reload() {
+    public void updateConfig(ConfigurationSection section) {
         temperatures.loadData();
-    }
-
-    public void createWaterfall(Location loc) {
     }
 
     public World asBukkit() {
         return Bukkit.getWorld(worldName);
-    }
-
-    /**
-     * @return the amount of chunks loaded.
-     */
-    @Override
-    public int getChunksLoaded() {
-        return chunks.size();
     }
 
     @Override
@@ -213,21 +190,5 @@ public class WorldData implements EternalWorld, Reloadable {
             temp *= amp * percent + 1;
         }
         return temp;
-    }
-
-    public boolean isChunkLoaded(int x, int z) {
-        return chunks.containsKey(pair(x, z));
-    }
-
-    public static long pair(int var0, int var1) {
-        return (long) var0 & 4294967295L | ((long) var1 & 4294967295L) << 32;
-    }
-
-    public static int getX(long var0) {
-        return (int) (var0 & 4294967295L);
-    }
-
-    public static int getZ(long var0) {
-        return (int) (var0 >>> 32 & 4294967295L);
     }
 }

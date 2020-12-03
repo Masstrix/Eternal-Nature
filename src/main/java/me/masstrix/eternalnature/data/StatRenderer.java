@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.core.entity;
+package me.masstrix.eternalnature.data;
 
-import org.bukkit.entity.Entity;
+import me.masstrix.eternalnature.config.Configurable;
+import me.masstrix.eternalnature.util.Flicker;
+import me.masstrix.eternalnature.util.SecondsFormat;
 
-public interface CleanableEntity {
+public interface StatRenderer extends ActionbarItem, Configurable {
 
-    Entity[] getEntities();
+    Flicker FLASH = new Flicker(300);
+    SecondsFormat TIME_FORMAT = new SecondsFormat();
+
+    void render();
+
+    void reset();
 }

@@ -17,39 +17,33 @@
 package me.masstrix.eternalnature.listeners;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.config.ConfigPath;
+import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.core.world.PlantType;
 import me.masstrix.eternalnature.core.world.WaterfallEmitter;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.block.data.Levelled;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockFadeEvent;
-import org.bukkit.event.block.BlockFromToEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.player.PlayerBucketEmptyEvent;
-import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BlockListener implements Listener {
+public class BlockListener implements Listener, Configurable {
 
-    private SystemConfig config;
-    private EternalNature plugin;
+    private boolean autoRePlantCropEnabled;
+    private final EternalNature PLUGIN;
     private List<WaterfallEmitter> locs = new ArrayList<>();
 
     public BlockListener(EternalNature plugin) {
-        this.plugin = plugin;
-        config = plugin.getSystemConfig();
+        this.PLUGIN = plugin;
 
         new BukkitRunnable() {
             @Override
@@ -62,16 +56,14 @@ public class BlockListener implements Listener {
         }.runTaskTimer(plugin, 1, 1);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlace(BlockPlaceEvent event) {
-        if (event.isCancelled()) return;
-        //calculateArea(event.getBlockPlaced());
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        autoRePlantCropEnabled = section.getBoolean(ConfigPath.AUTO_PLANT_CROPS);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onBreak(BlockBreakEvent event) {
-        if (event.isCancelled()) return;
-        //calculateArea(event.getBlock());
+        if (event.isCancelled() || !autoRePlantCropEnabled) return;
 
         Block block = event.getBlock();
         Location loc = block.getLocation();
@@ -79,8 +71,7 @@ public class BlockListener implements Listener {
         BlockData data = event.getBlock().getBlockData();
 
         // Replant crop if it's fully grown and auto replanting is enabled
-        if (PlantType.isReplantableCrop(type) && data instanceof Ageable
-                && config.isEnabled(ConfigOption.AUTO_REPLANT)) {
+        if (PlantType.isReplantableCrop(type) && data instanceof Ageable) {
             Ageable age = (Ageable) event.getBlock().getBlockData();
             if (age.getAge() != age.getMaximumAge()) return;
             boolean droppedSeed = false;
@@ -109,45 +100,8 @@ public class BlockListener implements Listener {
                     public void run() {
                         event.getBlock().setType(type);
                     }
-                }.runTaskLater(plugin, 2);
+                }.runTaskLater(PLUGIN, 2);
             }
         }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onLiquid(PlayerBucketEmptyEvent event) {
-        if (event.isCancelled()) return;
-        //calculateArea(event.getBlockClicked().getLocation());
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void on(PlayerBucketFillEvent event) {
-        if (event.isCancelled()) return;
-        //calculateArea(event.getBlockClicked().getLocation());
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void on(BlockFromToEvent event) {
-        if (event.isCancelled()) return;
-        World world = event.getToBlock().getWorld();
-
-        if (event.getBlock().getType() == Material.WATER) {
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    plugin.getEngine().getWorldProvider().getWorld(world).createWaterfall(event.getBlock().getLocation().add(0, -1, 0));
-                }
-            }.runTaskLater(plugin, 5);
-        }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void on(BlockFadeEvent event) {
-        if (event.isCancelled()) return;
-        //calculateArea(event.getBlock());
-    }
-
-    private void calculateArea(Block block) {
-
     }
 }

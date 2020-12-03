@@ -17,17 +17,17 @@
 package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.config.Reloadable;
+import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.core.EternalWorker;
 import org.bukkit.World;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class WorldProvider implements EternalWorker, Reloadable {
+public class WorldProvider implements EternalWorker, Configurable {
 
     private EternalNature plugin;
     private Map<String, WorldData> worldData = new HashMap<>();
@@ -70,27 +70,11 @@ public class WorldProvider implements EternalWorker, Reloadable {
 
     @Override
     public void start() {
-        ticker = new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (tick++ == 10) {
-                    tick = 0;
-                    worldData.forEach((n, w) -> w.tick());
-                }
-                worldData.forEach((n, w) -> w.render());
-            }
-        }.runTaskTimer(plugin, 0, 1);
     }
 
     @Override
     public void end() {
-        ticker.cancel();
         worldData.forEach((n, w) -> w.save());
-    }
-
-    @Override
-    public void reload() {
-        worldData.values().forEach(w -> reload());
     }
 
     /**
@@ -100,11 +84,21 @@ public class WorldProvider implements EternalWorker, Reloadable {
         return worldData.size();
     }
 
-    public Iterable<WorldData> getWorlds() {
+    public WorldData getFirstWorld() {
+        if (worldData.size() == 0) return null;
+        return getWorlds().iterator().next();
+    }
+
+    public Collection<WorldData> getWorlds() {
         return worldData.values();
     }
 
     public Collection<String> getWorldNames() {
         return worldData.keySet();
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+
     }
 }

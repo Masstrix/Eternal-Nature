@@ -17,24 +17,24 @@
 package me.masstrix.eternalnature.core.temperature;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.config.ConfigOption;
+import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.data.PlayerIdle;
 import me.masstrix.eternalnature.data.UserData;
 import org.bukkit.Color;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Lightable;
-import org.bukkit.block.data.type.Campfire;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 /**
  * Scans around a player to calculate the temperature of surrounding blocks.
  */
-public class TemperatureScanner {
+@Configurable.Path("temperature")
+public class TemperatureScanner implements Configurable {
 
     private int iteration;
     private int fidelity;
@@ -44,23 +44,36 @@ public class TemperatureScanner {
     private boolean setLoc;
     private final Player PLAYER;
     private final UserData USER;
-    private final EternalNature PLUGIN;
-    private final Temperatures TEMPS;
+    private Temperatures temps;
     private Location loc;
     private double temperature;
     private double hottest;
     private double coldest;
     private double scannedTemp = 0;
-    private int tempTotalHeatCount = 0;
-    private int emissiveBlockCount = 0;
+    private double damageAmount;
 
     public TemperatureScanner(EternalNature plugin, UserData data, Player player) {
-        this.PLUGIN = plugin;
         this.PLAYER = player;
         this.USER = data;
-        this.TEMPS = plugin.getEngine().getDefaultTemperatures();
         setFidelity(4);
         setScanScale(2, 2);
+        useTemperatureProfile(plugin.getEngine().getDefaultTemperatures());
+    }
+
+    /**
+     * Sets the temperature profile to use when scanning.
+     *
+     * @param temps temperature profile.
+     * @return an instance of this scanner.
+     */
+    public TemperatureScanner useTemperatureProfile(Temperatures temps) {
+        this.temps = temps;
+        return this;
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        damageAmount = section.getDouble("damage.amount");
     }
 
     /**
@@ -159,8 +172,6 @@ public class TemperatureScanner {
         int areaCb = areaSq * this.height; // cubed area
         int scanSize = (areaCb / fidelity) + 1;
 
-        int dmgTemp = PLUGIN.getSystemConfig().getInt(ConfigOption.TEMPERATURE_DMG_AMOUNT);
-
         for (int j = 0; j < scanSize; j++) {
             int i = j * fidelity + iteration;
             int sq = i % areaSq; // 2d squared area
@@ -174,7 +185,7 @@ public class TemperatureScanner {
             if (!isValidState(block)) continue;
 
             // Calculate block emission temperature
-            BlockTemperature blockTemp = (BlockTemperature) TEMPS.getModifier(
+            BlockTemperature blockTemp = (BlockTemperature) temps.getModifier(
                     block.getType(), TempModifierType.BLOCK);
             if (blockTemp == null) continue;
             double temp = blockTemp.getEmission();
@@ -187,7 +198,7 @@ public class TemperatureScanner {
             double fallOff = distance == 0 ? temp : temp * Math.min(scalar / (distance * distance), 1);
 
             // Check if here should be block dissipation.
-            if (fallOff > hottest && fallOff > dmgTemp) {
+            if (fallOff > hottest && fallOff > damageAmount) {
                 double vx = center.getX() - block.getX();
                 double vy = center.getY() - block.getY();
                 double vz = center.getZ() - block.getZ();
@@ -207,7 +218,6 @@ public class TemperatureScanner {
 
             // Update temperature averaging.
             if (fallOff != 0) {
-                emissiveBlockCount++;
                 scannedTemp += fallOff;
             }
 
@@ -304,8 +314,6 @@ public class TemperatureScanner {
         lastScanTime = System.currentTimeMillis();
         iteration = 0;
         scannedTemp = 0;
-        emissiveBlockCount = 0;
-        tempTotalHeatCount = 0;
         done = true;
         setLoc = false;
     }

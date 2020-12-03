@@ -17,9 +17,10 @@
 package me.masstrix.eternalnature.listeners;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.data.UserData;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -28,14 +29,32 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionType;
 
-public class ConsumeListener implements Listener {
+import java.util.HashMap;
+import java.util.Map;
 
-    private EternalNature plugin;
-    private SystemConfig config;
+@Configurable.Path("hydration.consumables")
+public class ConsumeListener implements Listener, Configurable {
+
+    private final EternalNature PLUGIN;
+    private final Map<String, Double> AMOUNTS = new HashMap<>();
 
     public ConsumeListener(EternalNature plugin) {
-        this.plugin = plugin;
-        config = plugin.getSystemConfig();
+        this.PLUGIN = plugin;
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        for (String s : section.getKeys(false)) {
+            AMOUNTS.put(s.toLowerCase(), section.getDouble(s));
+        }
+    }
+
+    /**
+     * @param key name of material.
+     * @return how much hydration the item gives when consumed.
+     */
+    private double getVal(String key) {
+        return AMOUNTS.getOrDefault(key.toLowerCase(), 0D);
     }
 
     @EventHandler
@@ -44,21 +63,21 @@ public class ConsumeListener implements Listener {
         ItemStack stack = event.getItem();
         Material type = stack.getType();
 
-        UserData user = plugin.getEngine().getUserData(player.getUniqueId());
+        UserData user = PLUGIN.getEngine().getUserData(player.getUniqueId());
         if (user == null) return;
 
         if (type == Material.POTION) {
             PotionMeta meta = (PotionMeta) stack.getItemMeta();
             if (meta != null) {
                 PotionType potionType = meta.getBasePotionData().getType();
-                double val = config.getHydrationConsumableValue("potion");
+                double val = getVal("potion");
                 if (potionType == PotionType.WATER) {
-                    val = config.getHydrationConsumableValue("water_bottle");
+                    val = getVal("water_bottle");
                 }
                 user.hydrate((float) val);
             }
         }
-        double val = config.getHydrationConsumableValue(type.name());
+        double val = getVal(type.name());
         if (val != 0) {
             user.hydrate((float) val);
         }

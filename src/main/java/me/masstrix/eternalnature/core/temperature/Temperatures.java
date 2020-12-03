@@ -17,9 +17,7 @@
 package me.masstrix.eternalnature.core.temperature;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.config.Reloadable;
-import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.util.EnumUtils;
 import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.eternalnature.util.WorldTime;
@@ -39,16 +37,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-public class Temperatures implements Reloadable {
+@Configurable.Path("temperature")
+public class Temperatures implements Configurable {
 
     private static final String DEF_CONFIG = "temperature-config.yml";
     private static final Pattern NUM_CHECK = Pattern.compile("[0-9]*");
-    public static final String ICON_HOT = "☀";
-    public static final String ICON_NORMAL = "✿";
-    public static final String ICON_COLD = "❈";
-    public static final String ICON_WET = "☁";
+    public static String iconHot = "☀";
+    public static String iconNormal = "✿";
+    public static String iconCold = "❈";
+    public static String iconWet = "☁";
 
-    private SystemConfig sysSonfig;
     private EternalNature plugin;
     private final boolean DEFAULT;
     private File file;
@@ -61,8 +59,26 @@ public class Temperatures implements Reloadable {
     private double scalar;
     private double caveModifier;
     private double directSunAmplifier;
+    private double burningPoint;
+    private double freezingPoint;
 
-    {
+    public Temperatures(EternalNature plugin) {
+        this(plugin, new File(plugin.getDataFolder(), DEF_CONFIG), true);
+    }
+
+    public Temperatures(EternalNature plugin, String world) {
+        this(plugin, getWorldFile(plugin, world));
+    }
+
+    public Temperatures(EternalNature plugin, File file) {
+        this(plugin, file, false);
+    }
+
+    Temperatures(EternalNature plugin, File file, boolean def) {
+        this.plugin = plugin;
+        this.file = file;
+        this.DEFAULT = def;
+
         // Setup the modifier cache.
         for (TempModifierType type : TempModifierType.values()) {
             modifiers.put(type, new HashMap<>());
@@ -73,22 +89,10 @@ public class Temperatures implements Reloadable {
         this.config.options().copyHeader(true);
     }
 
-    public Temperatures(EternalNature plugin) {
-        this.plugin = plugin;
-        this.sysSonfig = plugin.getSystemConfig();
-        DEFAULT = true;
-        file =  new File(plugin.getDataFolder(), DEF_CONFIG);
-    }
-
-    public Temperatures(EternalNature plugin, String world) {
-        this(plugin, getWorldFile(plugin, world));
-    }
-
-    public Temperatures(EternalNature plugin, File file) {
-        this.plugin = plugin;
-        this.sysSonfig = plugin.getSystemConfig();
-        DEFAULT = false;
-        this.file = file;
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        burningPoint = section.getDouble("damage.threshold.heat");
+        freezingPoint = section.getDouble("damage.threshold.cold");
     }
 
     /**
@@ -131,11 +135,6 @@ public class Temperatures implements Reloadable {
                 e.printStackTrace();
             }
         }
-    }
-
-    @Override
-    public void reload() {
-        loadData();
     }
 
     /**
@@ -347,14 +346,14 @@ public class Temperatures implements Reloadable {
      * @return the freezing threshold point.
      */
     public double getBurningPoint() {
-        return sysSonfig.getDouble(ConfigOption.TEMPERATURE_DMG_THR_HEAT);
+        return burningPoint;
     }
 
     /**
      * @return the burning threshold point.
      */
     public double getFreezingPoint() {
-        return sysSonfig.getDouble(ConfigOption.TEMPERATURE_DMG_THR_COLD);
+        return freezingPoint;
     }
 
     /**

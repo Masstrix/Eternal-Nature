@@ -18,8 +18,7 @@ package me.masstrix.eternalnature.menus;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.PluginData;
-import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.config.*;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
 import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
 import me.masstrix.eternalnature.util.StringUtil;
@@ -27,20 +26,19 @@ import me.masstrix.lang.langEngine.Lang;
 import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.configuration.ConfigurationSection;
 
 public class LangSettingsMenu extends GlobalMenu {
 
     private EternalNature plugin;
     private MenuManager menuManager;
     private LanguageEngine le;
-    private SystemConfig config;
 
     public LangSettingsMenu(EternalNature plugin, MenuManager menuManager) {
         super(Menus.LANG_SETTINGS, 5);
         this.plugin = plugin;
         this.menuManager = menuManager;
         this.le = plugin.getLanguageEngine();
-        this.config = plugin.getSystemConfig();
     }
 
     @Override
@@ -109,7 +107,8 @@ public class LangSettingsMenu extends GlobalMenu {
                 if (selected) return;
 
                 // Update config
-                config.set(ConfigOption.LANGUAGE, lang.getLocale());
+                Configuration config = plugin.getRootConfig();;
+                config.set(ConfigPath.LANGUAGE, lang.getLocale());
                 config.save();
 
                 // Apply language

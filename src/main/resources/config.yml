@@ -13,11 +13,6 @@
 # 
 # Visit the wiki here https://github.com/Masstrix/Eternal-Nature/wiki for more help.
 # 
-# Auto Plant
-#   set any value to 0 to disable auto planting for a specific item.
-# Render
-#  style - sets where the item is displayed. This can be set to ACTIONBAR or BOSSBAR.
-#  flash - sets if the value will flash when critical.
 # 
 version: 2
 
@@ -40,31 +35,35 @@ global:
     scans: 2
   age-items: true
   auto-plant:
-    play-sound: true
     enabled: true
+    play-sound: true
     replant-crops: true
     saplings: 0.6
-    wheet: 1.0
+    wheat: 1.0
     carrot: 1.0
     potato: 1.0
     melon: 0.8
     pumpkin: 0.8
     beetroot: 1.0
-    sweet_berry: 1.0
+    sweet-berry: 1.0
     flowers: 0.2
     
 hydration:
   enabled: true
   increase-from-activity: true
-  damage-when-empty: true
+  sweat: true
+  damage:
+    enabled: true
+    amount: 0
+    delay: 20
   display:
     enabled: true
     style: BOSSBAR
     warning-flash: true
-  drink_from_open_water: true
+  drink-from-open-water: true
   thirst-effect:
     enabled: true
-    dehydrate-by: 0.1
+    amount: 0.1
   consumables:
     water_bottle: 2
     potion: 1.5
@@ -88,21 +87,19 @@ hydration:
     golden_apple: 0.5
     enchanted_golden_apple: 2
 
-
 temperature:
   enabled: true
-  sweat: true
   max-delta-change: 15
   damage:
     enabled: true
-    damage-dealt: 1.0
-    damage-delay: 1000
+    amount: 1.0
+    delay: 1000
     threshold:
       cold: -5
       heat: 60
   display:
     enabled: true
-    text: "%temperature% %temp_icon% %temp_simple%"
+    format: "%temperature% %temp_icon% %temp_simple%"
     style: BOSSBAR
     warning-flash: true
   scanning:

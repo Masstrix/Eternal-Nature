@@ -18,8 +18,7 @@ package me.masstrix.eternalnature.command;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.PluginData;
-import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.core.render.LeafParticle;
+import me.masstrix.eternalnature.config.ConfigPath;
 import me.masstrix.eternalnature.core.temperature.TempModifierType;
 import me.masstrix.eternalnature.core.temperature.Temperatures;
 import me.masstrix.eternalnature.core.world.WorldData;
@@ -70,7 +69,7 @@ public class NatureCommand extends EternalCommand {
         if (args[0].equalsIgnoreCase("reload")) {
             msg(PluginData.PREFIX + "&7Reloading files...");
             plugin.getEngine().getDefaultTemperatures().loadData();
-            plugin.getSystemConfig().reload();
+            plugin.getRootConfig().reload();
             msg(PluginData.PREFIX + "&aReloaded config files");
         }
 
@@ -107,7 +106,8 @@ public class NatureCommand extends EternalCommand {
                 return;
             }
             else if (sub.equalsIgnoreCase("reloadAll") && args.length == 2) {
-                provider.getWorlds().forEach(WorldData::reload);
+//                provider.getWorlds().forEach(WorldData::reload);
+                // TODO use world reload
                 msg(PluginData.PREFIX + "&aReloaded all worlds data.");
                 return;
             }
@@ -143,7 +143,7 @@ public class NatureCommand extends EternalCommand {
             if (sub.equalsIgnoreCase("reload")) {
                 WorldData data = provider.getWorld(world);
                 msg(PluginData.PREFIX + "&7Reloading files...");
-                data.reload();
+                // TODO implement reload method for worlds
                 msg(PluginData.PREFIX + "&aReloaded config files");
             }
             else if (sub.equalsIgnoreCase("info")) {
@@ -175,12 +175,11 @@ public class NatureCommand extends EternalCommand {
             plugin.saveResource("temperature-config.yml", true);
             plugin.saveResource("config.yml", true);
             plugin.getEngine().getDefaultTemperatures().loadData();
-            plugin.getSystemConfig().reload();
+            plugin.getRootConfig().reload();
             msg(PluginData.PREFIX + "&aReset config files back to default");
         }
 
         else if (args[0].equalsIgnoreCase("settings")) {
-            //if (wasPlayer()) plugin.getSettingsMenu().open((Player) getSender());
             if (wasPlayer()) {
                 plugin.getEngine().getMenuManager()
                         .getMenu(Menus.SETTINGS.getId()).open((Player) getSender());
@@ -210,7 +209,7 @@ public class NatureCommand extends EternalCommand {
                 msg("   &7&oThis version is a snapshot.");
             }
             if (plugin.getVersionInfo() == null) {
-                if (plugin.getSystemConfig().isEnabled(ConfigOption.UPDATES_CHECK)) {
+                if (plugin.getRootConfig().getYml().getBoolean(ConfigPath.UPDATE_CHECK)) {
                     msg("&cUnable to check plugin version.");
                 } else {
                     msg("&cVersion checking is disabled.");
