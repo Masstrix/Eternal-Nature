@@ -80,13 +80,13 @@ public class TemperatureRender implements StatRenderer {
             return;
         }
 
+        boolean flash = warningFlash && FLASH.update();
+        double temperature = USER.getTemperature();
+
         WorldData worldData = USER.getWorld();
         if (worldData == null) return;
         Temperatures temps = worldData.getTemperatures();
-        TemperatureIcon icon = TemperatureIcon.getClosest(USER.getTemperature(), temps);
-
-        boolean flash = warningFlash && FLASH.update();
-        double temperature = USER.getTemperature();
+        TemperatureIcon icon = TemperatureIcon.getClosest(temperature, temps);
 
         String text = displayFormat;
         text = text.replaceAll("%temp_simple%", icon.getColor() + icon.getName() + "&f");

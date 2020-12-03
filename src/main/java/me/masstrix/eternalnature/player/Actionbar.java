@@ -16,6 +16,7 @@
 
 package me.masstrix.eternalnature.player;
 
+import me.masstrix.eternalnature.util.StringUtil;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
@@ -73,13 +74,16 @@ public class Actionbar {
         StringBuilder text = new StringBuilder();
         boolean first = true;
         for (ActionbarItem item : items) {
-            if (!first) text.append(" ");
+            String append = item.getActionbarText();
+            if (append == null || append.isEmpty()) continue;
+            if (!first)
+                text.append(" ");
             text.append("&f");
-            text.append(item.getActionbarText());
+            text.append(append);
             text.append("&f");
             first = false;
         }
-        bar = new TextComponent(text.toString());
+        bar = new TextComponent(StringUtil.color(text.toString()));
         render = text.length() > 0;
     }
 
