@@ -100,7 +100,7 @@ public class EternalNature extends JavaPlugin {
 
         // Init language engine
         File langFolder = new File(getDataFolder(), "lang");
-        languageEngine = new LanguageEngine(langFolder, "en");
+        languageEngine = new LanguageEngine(langFolder, "en").setLogger(getLogger());
         writeLangFiles(false);
         // Load languages
         languageEngine.loadLanguages();
