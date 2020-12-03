@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.menus;
+package me.masstrix.eternalnature.menus.settings;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.*;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
+import me.masstrix.eternalnature.menus.Button;
+import me.masstrix.eternalnature.menus.GlobalMenu;
+import me.masstrix.eternalnature.menus.MenuManager;
+import me.masstrix.eternalnature.menus.Menus;
 import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -60,7 +64,7 @@ public class OtherSettingsMenu extends GlobalMenu {
         // Back button
         addBackButton(menuManager, Menus.SETTINGS);
 
-        setButton(new Button(getInventory(), asSlot(1, 3), () -> new ItemBuilder(Material.PAPER)
+        setButton(new Button(asSlot(1, 3), () -> new ItemBuilder(Material.PAPER)
                 .setName("&a" + le.getText("menu.other.update-notify.title"))
                 .addDescription(le.getText("menu.other.update-notify.description"))
                 .addSwitch("Currently:", updateNotify)
@@ -72,7 +76,7 @@ public class OtherSettingsMenu extends GlobalMenu {
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(1, 4), () -> new ItemBuilder(Material.KNOWLEDGE_BOOK)
+        setButton(new Button(asSlot(1, 4), () -> new ItemBuilder(Material.KNOWLEDGE_BOOK)
                 .setName("&a" + le.getText("menu.other.update-checks.title"))
                 .addDescription(le.getText("menu.other.update-checks.description"))
                 .addSwitch("Currently:", updateCheck)

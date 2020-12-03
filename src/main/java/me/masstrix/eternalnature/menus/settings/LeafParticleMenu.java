@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.menus;
+package me.masstrix.eternalnature.menus.settings;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.ConfigPath;
 import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.config.Configuration;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
+import me.masstrix.eternalnature.menus.Button;
+import me.masstrix.eternalnature.menus.GlobalMenu;
+import me.masstrix.eternalnature.menus.MenuManager;
+import me.masstrix.eternalnature.menus.Menus;
 import me.masstrix.eternalnature.util.ChangeToggleUtil;
 import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.Material;
@@ -63,7 +67,7 @@ public class LeafParticleMenu extends GlobalMenu {
         // Back button
         addBackButton(MANAGER, Menus.SETTINGS);
 
-        setButton(new Button(getInventory(), asSlot(1, 3), () -> new ItemBuilder(Material.REDSTONE_TORCH)
+        setButton(new Button(asSlot(1, 3), () -> new ItemBuilder(Material.REDSTONE_TORCH)
                 .setName("&a" + LANG.getText("menu.leaf-particles.enabled.title"))
                 .addDescription(LANG.getText("menu.leaf-particles.enabled.description"))
                 .addSwitch("Currently:", enabled)
@@ -81,7 +85,7 @@ public class LeafParticleMenu extends GlobalMenu {
         spawnChances.add("&a" + LANG.getText("menu.leaf-particles.spawn.low"), 0.001);
         spawnChances.selectClosest(chance);
 
-        setButton(new Button(getInventory(), asSlot(1, 5), () -> new ItemBuilder(Material.ENDER_EYE)
+        setButton(new Button(asSlot(1, 5), () -> new ItemBuilder(Material.ENDER_EYE)
                 .setName("&a" + LANG.getText("menu.leaf-particles.spawn.title"))
                 .addDescription(LANG.getText("menu.leaf-particles.spawn.description"))
                 .addLore("Currently: " +  spawnChances.getSelected().getName())

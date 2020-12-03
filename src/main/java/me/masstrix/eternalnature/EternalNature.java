@@ -50,7 +50,6 @@ public class EternalNature extends JavaPlugin {
     private EternalEngine engine;
     private LanguageEngine languageEngine;
     private VersionCheckInfo versionCheckInfo = null;
-    private boolean started = false;
 
     private Configuration playerCfg;
     private Configuration config;
@@ -92,8 +91,6 @@ public class EternalNature extends JavaPlugin {
             getPluginLoader().disablePlugin(this);
             return;
         }
-
-        started = true;
 
         config = new Configuration(this, "config").create(true);
         playerCfg = new Configuration(this, "players").create(false);
@@ -189,7 +186,7 @@ public class EternalNature extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (started) engine.shutdown();
+        if (engine != null) engine.shutdown();
     }
 
     private void registerCommands(EternalCommand... commands) {

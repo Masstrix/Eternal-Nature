@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.menus;
+package me.masstrix.eternalnature.menus.settings;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.config.*;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
 import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
+import me.masstrix.eternalnature.menus.Button;
+import me.masstrix.eternalnature.menus.GlobalMenu;
+import me.masstrix.eternalnature.menus.MenuManager;
+import me.masstrix.eternalnature.menus.Menus;
 import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.lang.langEngine.Lang;
 import me.masstrix.lang.langEngine.LanguageEngine;
@@ -51,7 +55,7 @@ public class LangSettingsMenu extends GlobalMenu {
         // Back button
         addBackButton(menuManager, Menus.SETTINGS);
 
-        setButton(new Button(getInventory(), asSlot(1, 3), new ItemBuilder(Material.WRITABLE_BOOK)
+        setButton(new Button(asSlot(1, 3), new ItemBuilder(Material.WRITABLE_BOOK)
                 .setName("&a" + le.getText("menu.language.reset.title"))
                 .addDescription(le.getText("menu.language.reset.description"))
                 .addLore("&e" + le.getText("menu.common.reset"))
@@ -67,7 +71,7 @@ public class LangSettingsMenu extends GlobalMenu {
                             + "Reset packaged language files."));
                 }));
 
-        setButton(new Button(getInventory(), asSlot(1, 5), new ItemBuilder(Material.BOOKSHELF)
+        setButton(new Button(asSlot(1, 5), new ItemBuilder(Material.BOOKSHELF)
                 .setName("&a" + le.getText("menu.language.reload.title"))
                 .addDescription(le.getText("menu.language.reload.description"))
                 .addLore("&e" + le.getText("menu.common.reload"))
@@ -93,7 +97,7 @@ public class LangSettingsMenu extends GlobalMenu {
             boolean selected = le.isActive(lang);
 
             // Add a loaded language to the menu.
-            setButton(new Button(getInventory(), asSlot(row + 2, column + 1), () -> {
+            setButton(new Button(asSlot(row + 2, column + 1), () -> {
                 ItemBuilder builder = new ItemBuilder(selected ? Material.MAP : Material.PAPER);
                 builder.setGlowing(selected);
                 builder.setName("&a" + lang.getNiceName());

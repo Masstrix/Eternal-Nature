@@ -16,7 +16,6 @@
 
 package me.masstrix.eternalnature;
 
-import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.config.Configuration;
 import me.masstrix.eternalnature.core.EternalWorker;
 import me.masstrix.eternalnature.core.Renderer;
@@ -26,6 +25,7 @@ import me.masstrix.eternalnature.core.temperature.Temperatures;
 import me.masstrix.eternalnature.core.world.*;
 import me.masstrix.eternalnature.data.UserData;
 import me.masstrix.eternalnature.menus.*;
+import me.masstrix.eternalnature.menus.settings.*;
 import me.masstrix.eternalnature.util.Stopwatch;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;

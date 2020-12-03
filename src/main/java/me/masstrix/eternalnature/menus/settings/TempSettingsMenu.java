@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.menus;
+package me.masstrix.eternalnature.menus.settings;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.config.*;
+import me.masstrix.eternalnature.config.Configurable;
+import me.masstrix.eternalnature.config.Configuration;
+import me.masstrix.eternalnature.config.StatusRenderMethod;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
+import me.masstrix.eternalnature.menus.Button;
+import me.masstrix.eternalnature.menus.GlobalMenu;
+import me.masstrix.eternalnature.menus.MenuManager;
+import me.masstrix.eternalnature.menus.Menus;
 import me.masstrix.eternalnature.util.MathUtil;
-import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionType;
 
 @Configurable.Path("temperature")
 public class TempSettingsMenu extends GlobalMenu {
@@ -74,7 +77,7 @@ public class TempSettingsMenu extends GlobalMenu {
         addBackButton(menuManager, Menus.SETTINGS);
 
         // Enabled toggle
-        setButton(new Button(getInventory(), asSlot(1, 2), () -> new ItemBuilder(Material.REDSTONE_TORCH)
+        setButton(new Button(asSlot(1, 2), () -> new ItemBuilder(Material.REDSTONE_TORCH)
                 .setName("&a" + le.getText("menu.temp.enabled.title"))
                 .addDescription(le.getText("menu.temp.enabled.description"))
                 .addSwitch("Currently:", enabled)
@@ -87,7 +90,7 @@ public class TempSettingsMenu extends GlobalMenu {
                 }));
 
         // Temperature damage toggle
-        setButton(new Button(getInventory(), asSlot(1, 4), () -> {
+        setButton(new Button(asSlot(1, 4), () -> {
             String damageDescription = le.getText("menu.temp.damage.description");
             damageDescription = damageDescription.replace("%cold_threshold%", "&e" + coldThr + "&7");
             damageDescription = damageDescription.replace("%heat_threshold%", "&e" + heatThr + "&7");
@@ -111,7 +114,7 @@ public class TempSettingsMenu extends GlobalMenu {
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(4, 4), () -> new ItemBuilder(Material.JUNGLE_SIGN)
+        setButton(new Button(asSlot(4, 4), () -> new ItemBuilder(Material.JUNGLE_SIGN)
                 .setName("&a" + le.getText("menu.temp.display.title"))
                 .addDescription(le.getText("menu.temp.display.description"))
                 .addLore("Currently: &f" + renderMethod.getSimple(),
@@ -124,7 +127,7 @@ public class TempSettingsMenu extends GlobalMenu {
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(4, 5), () -> {
+        setButton(new Button(asSlot(4, 5), () -> {
             return new ItemBuilder(displayEnabled ? Material.LIME_BANNER : Material.GRAY_BANNER)
                     .setName("&a" + le.getText("menu.display.enabled.title"))
                     .addDescription(le.getText("menu.display.enabled.description"))

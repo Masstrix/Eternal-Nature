@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.menus;
+package me.masstrix.eternalnature.menus.settings;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.*;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
+import me.masstrix.eternalnature.menus.Button;
+import me.masstrix.eternalnature.menus.GlobalMenu;
+import me.masstrix.eternalnature.menus.MenuManager;
+import me.masstrix.eternalnature.menus.Menus;
 import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -73,7 +77,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
         // Back button
         addBackButton(menuManager, Menus.SETTINGS);
 
-        setButton(new Button(getInventory(), asSlot(1, 2), () -> new ItemBuilder(Material.REDSTONE_TORCH)
+        setButton(new Button(asSlot(1, 2), () -> new ItemBuilder(Material.REDSTONE_TORCH)
                 .setName("&a" + le.getText("menu.hydration.enabled.title"))
                 .addDescription(le.getText("menu.hydration.enabled.description"))
                 .addSwitch("Currently:", enabled)
@@ -85,7 +89,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(1, 3), () -> new ItemBuilder(Material.IRON_SWORD)
+        setButton(new Button(asSlot(1, 3), () -> new ItemBuilder(Material.IRON_SWORD)
                 .setName("&a" + le.getText("menu.hydration.damage.title"))
                 .addDescription(le.getText("menu.hydration.damage.description"))
                 .addSwitch("Currently:", doDamage)
@@ -97,7 +101,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(1, 4), () -> new ItemBuilder(Material.RABBIT_FOOT)
+        setButton(new Button(asSlot(1, 4), () -> new ItemBuilder(Material.RABBIT_FOOT)
                 .setName("&a" + le.getText("menu.hydration.activity.title"))
                 .addDescription(le.getText("menu.hydration.activity.description"))
                 .addSwitch("Currently:", doActivity)
@@ -109,7 +113,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(1, 5), () -> new ItemBuilder(Material.LINGERING_POTION)
+        setButton(new Button(asSlot(1, 5), () -> new ItemBuilder(Material.LINGERING_POTION)
                 .setName("&a" + le.getText("menu.hydration.thirst.title"))
                 .addDescription(le.getText("menu.hydration.thirst.description")
                         .replace("%amount%", "" + thirstMod))
@@ -122,7 +126,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(1, 6), () -> new ItemBuilder(Material.WATER_BUCKET)
+        setButton(new Button(asSlot(1, 6), () -> new ItemBuilder(Material.WATER_BUCKET)
                 .setName("&a" + le.getText("menu.hydration.open_water.title"))
                 .addDescription(le.getText("menu.hydration.open_water.description"))
                 .addSwitch("Currently:", canDrinkOcean)
@@ -135,7 +139,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
                 }));
 
         // Temperature Sweating toggle
-        setButton(new Button(getInventory(), asSlot(1, 7), () -> new ItemBuilder(Material.POTION)
+        setButton(new Button(asSlot(1, 7), () -> new ItemBuilder(Material.POTION)
                 .setPotionType(PotionType.WATER)
                 .setName("&a" + le.getText("menu.temp.sweat.title"))
                 .addDescription(le.getText("menu.temp.sweat.description"))
@@ -148,7 +152,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(4, 4), () -> new ItemBuilder(Material.JUNGLE_SIGN)
+        setButton(new Button(asSlot(4, 4), () -> new ItemBuilder(Material.JUNGLE_SIGN)
                 .setName("&a" + le.getText("menu.hydration.display.title"))
                 .addDescription(le.getText("menu.hydration.display.description"))
                 .addLore("Currently: &f" + renderMethod.getSimple(),
@@ -161,7 +165,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(4, 5), () ->
+        setButton(new Button(asSlot(4, 5), () ->
                 new ItemBuilder(displayEnabled ? Material.LIME_BANNER : Material.GRAY_BANNER)
                         .setName("&a" + le.getText("menu.display.enabled.title"))
                         .addDescription(le.getText("menu.display.enabled.description"))

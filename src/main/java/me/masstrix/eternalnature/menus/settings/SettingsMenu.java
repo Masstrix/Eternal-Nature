@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.menus;
+package me.masstrix.eternalnature.menus.settings;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.config.Configuration;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
 import me.masstrix.eternalnature.core.item.SkullIndex;
+import me.masstrix.eternalnature.menus.Button;
+import me.masstrix.eternalnature.menus.GlobalMenu;
+import me.masstrix.eternalnature.menus.MenuManager;
+import me.masstrix.eternalnature.menus.Menus;
 import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.lang.langEngine.Lang;
 import me.masstrix.lang.langEngine.LanguageEngine;
@@ -30,7 +34,6 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -89,8 +92,7 @@ public class SettingsMenu extends GlobalMenu {
     public void build() {
         versionInfo = PLUGIN.getVersionInfo();
 
-        setButton(new Button(getInventory(), asSlot(0, 4), () -> {
-
+        setButton(new Button(asSlot(0, 4), () -> {
             String version = PLUGIN.getDescription().getVersion();
             String latest = versionInfo == null ? "&8Failed to Check" : versionInfo.getLatest().getName();
 
@@ -158,7 +160,7 @@ public class SettingsMenu extends GlobalMenu {
 
         LanguageEngine engine = PLUGIN.getLanguageEngine();
 
-        setButton(new Button(getInventory(), asSlot(1, 8), () -> {
+        setButton(new Button(asSlot(1, 8), () -> {
             ItemBuilder builder = new ItemBuilder(SkullIndex.PLANET_EARTH)
                     .setName("&a" + LANG.getText("menu.language.title"))
                     .addDescription(LANG.getText("menu.language.description"));
@@ -176,7 +178,7 @@ public class SettingsMenu extends GlobalMenu {
             MANAGER.getMenu(Menus.LANG_SETTINGS).open(player);
         }));
 
-        setButton(new Button(getInventory(), asSlot(1, 2), () -> new ItemBuilder(Material.POTION)
+        setButton(new Button(asSlot(1, 2), () -> new ItemBuilder(Material.POTION)
                 .setPotionType(PotionType.SPEED)
                 .setName("&a" + LANG.getText("menu.hydration.title"))
                 .addDescription(LANG.getText("menu.hydration.description"))
@@ -186,7 +188,7 @@ public class SettingsMenu extends GlobalMenu {
             MANAGER.getMenu(Menus.HYDRATION_SETTINGS).open(player);
         }));
 
-        setButton(new Button(getInventory(), asSlot(1, 4), () -> new ItemBuilder(Material.COMPARATOR)
+        setButton(new Button(asSlot(1, 4), () -> new ItemBuilder(Material.COMPARATOR)
                 .setName("&a" + LANG.getText("menu.other.title"))
                 .addLore("",
                         (notifyUpdates ? "&a" : "&c") + " ▪&7 Update Notifications",
@@ -197,7 +199,7 @@ public class SettingsMenu extends GlobalMenu {
             MANAGER.getMenu(Menus.OTHER_SETTINGS).open(player);
         }));
 
-        setButton(new Button(getInventory(), asSlot(1, 6), () -> new ItemBuilder(Material.CAMPFIRE)
+        setButton(new Button(asSlot(1, 6), () -> new ItemBuilder(Material.CAMPFIRE)
                 .setName("&a" + LANG.getText("menu.temp.title"))
                 .addDescription(LANG.getText("menu.temp.description"))
                 .addSwitchView("Currently:", tmpEnabled)
@@ -206,7 +208,7 @@ public class SettingsMenu extends GlobalMenu {
             MANAGER.getMenu(Menus.TEMP_SETTINGS).open(player);
         }));
 
-        setButton(new Button(getInventory(), asSlot(3, 2), () -> new ItemBuilder(Material.KELP)
+        setButton(new Button(asSlot(3, 2), () -> new ItemBuilder(Material.KELP)
                 .setName("&a" + LANG.getText("menu.leaf-particles.title"))
                 .addDescription(LANG.getText("menu.leaf-particles.description"))
                 .addSwitchView("Currently:", fallingLeavesEnabled)
@@ -217,7 +219,7 @@ public class SettingsMenu extends GlobalMenu {
                 .onClick(player -> {
                     openMenu(MANAGER, Menus.LEAF_PARTICLE_SETTINGS, player);
                 }));
-        setButton(new Button(getInventory(), asSlot(3, 3), () -> new ItemBuilder(Material.OAK_SAPLING)
+        setButton(new Button(asSlot(3, 3), () -> new ItemBuilder(Material.OAK_SAPLING)
                 .setName("&a" + LANG.getText("menu.settings.item.auto-plant.title"))
                 .addDescription(LANG.getText("menu.settings.item.auto-plant.description"))
                 .addSwitch("Currently:", autoPlantEnabled)
@@ -225,37 +227,47 @@ public class SettingsMenu extends GlobalMenu {
                 () -> autoPlantEnabled)
                 .onClick(player -> {
                     CONFIG.set("global.auto-plant.enabled", !autoPlantEnabled);
-                    CONFIG.save();
+                    CONFIG.save().reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(3, 4), () -> new ItemBuilder(Material.WOODEN_HOE)
+        setButton(new Button(asSlot(3, 4), () -> new ItemBuilder(Material.WOODEN_HOE)
                 .setName("&a" + LANG.getText("menu.settings.item.replant.title"))
                 .addDescription(LANG.getText("menu.settings.item.replant.description"))
                 .addSwitch("Currently:", replantCropsEnabled)
                 .build()).setToggle(LANG.getText("menu.settings.item.replant.title"),
                 () -> replantCropsEnabled)
                 .onClick(player -> {
-                    CONFIG.set("global.auto-plant.replant-crops", !replantCropsEnabled);
-                    CONFIG.save();
+                    CONFIG.toggle("global.auto-plant.replant-crops");
+                    CONFIG.save().reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(getInventory(), asSlot(3, 5), () -> new ItemBuilder(Material.OAK_LEAVES)
+        setButton(new Button(asSlot(3, 5), () -> new ItemBuilder(Material.OAK_LEAVES)
                 .setName("&a" + LANG.getText("menu.settings.item.tree-spread.title"))
                 .addDescription(LANG.getText("menu.settings.item.tree-spread.description"))
                 .addSwitch("Currently:", randomSpreadEnabled)
                 .build()).setToggle(LANG.getText("menu.settings.item.tree-spread.title"),
                 () -> randomSpreadEnabled)
                 .onClick(player -> {
-                    CONFIG.set("global.randomly-spread-trees", !randomSpreadEnabled);
-                    CONFIG.save();
+                    CONFIG.toggle("global.randomly-spread-trees");
+                    CONFIG.save().reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        // TODO add button to toggle global.age-items
+        setButton(new Button(asSlot(3, 6), () -> new ItemBuilder(Material.ROTTEN_FLESH)
+                .setName("&a" + LANG.getText("menu.settings.item.item-aging.title"))
+                .addDescription(LANG.getText("menu.settings.item.item-aging.description"))
+                .addSwitch("Currently:", ageItemsEnabled)
+                .build()).setToggle(LANG.getText("menu.settings.item.item-aging.title"),
+                () -> ageItemsEnabled)
+                .onClick(player -> {
+                    CONFIG.toggle("global.age-items");
+                    CONFIG.save().reload();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
 
-        setButton(new Button(getInventory(), asSlot(3, 8), () -> new ItemBuilder(Material.WRITABLE_BOOK)
+        setButton(new Button(asSlot(3, 8), () -> new ItemBuilder(Material.WRITABLE_BOOK)
                 .setName("&a" + LANG.getText("menu.settings.item.reset-config.title"))
                 .addDescription(LANG.getText("menu.settings.item.reset-config.description"))
                 .addLore("&e" + LANG.getText("menu.common.reset"))
@@ -270,7 +282,7 @@ public class SettingsMenu extends GlobalMenu {
                     player.sendMessage(StringUtil.color(PluginData.PREFIX + "&aReset Config back to default."));
                 }));
 
-        setButton(new Button(getInventory(), asSlot(4, 8), () -> new ItemBuilder(Material.BOOK)
+        setButton(new Button(asSlot(4, 8), () -> new ItemBuilder(Material.BOOK)
                 .setName("&a" + LANG.getText("menu.settings.item.reload-config.title"))
                 .addDescription(LANG.getText("menu.settings.item.reload-config.description"))
                 .addLore("&e" + LANG.getText("menu.common.reload"))
