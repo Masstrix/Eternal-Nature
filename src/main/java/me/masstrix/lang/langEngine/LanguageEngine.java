@@ -43,7 +43,7 @@ public class LanguageEngine {
     public LanguageEngine(File folder, String fallback) {
         loadFrom(folder);
         this.FALLBACK = stringNulled(fallback);
-        setPERSISTENT(fallback);
+        setPersistent(fallback);
     }
 
     /**
@@ -77,7 +77,7 @@ public class LanguageEngine {
      *
      * @return instance of this engine.
      */
-    public LanguageEngine setPERSISTENT(String... languages) {
+    public LanguageEngine setPersistent(String... languages) {
         for (String l : languages) {
             PERSISTENT.add(l);
             if (LOADED.containsKey(l)) {
