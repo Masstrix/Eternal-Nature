@@ -24,6 +24,10 @@ import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.util.BossBarUtil;
 import me.masstrix.eternalnature.util.MathUtil;
 import me.masstrix.eternalnature.util.StringUtil;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -36,7 +40,7 @@ public class TemperatureRender implements StatRenderer {
 
     private final UserData USER;
     private final Player player;
-    private String barText;
+    private BaseComponent[] barText;
     private StatusRenderMethod renderMethod = StatusRenderMethod.BOSSBAR;
     private BossBar bossBar;
     private boolean isEnabled;
@@ -65,11 +69,11 @@ public class TemperatureRender implements StatRenderer {
 
     @Override
     public String getName() {
-        return null;
+        return "temperature";
     }
 
     @Override
-    public String getActionbarText() {
+    public BaseComponent[] getActionbarText() {
         return barText;
     }
 
@@ -88,15 +92,18 @@ public class TemperatureRender implements StatRenderer {
         Temperatures temps = worldData.getTemperatures();
         TemperatureIcon icon = TemperatureIcon.getClosest(temperature, temps);
 
-        String text = displayFormat;
-        text = text.replaceAll("%temp_simple%", icon.getColor() + icon.getName() + "&f");
-        text = text.replaceAll("%temp_icon%", icon.getColor() + icon.getIcon() + "&f");
+        ChatColor color = TemperatureIcon.getGradatedColor((float) temperature);
 
+        String text = displayFormat;
+        text = text.replaceAll("%temp_simple%", color + icon.getName() + "&f");
+        text = text.replaceAll("%temp_icon%", color + icon.getIcon() + "&f");
 
         double burn = temps.getBurningPoint();
         double freeze = temps.getFreezingPoint();
         boolean willDamage = temperature <= freeze + 5 || temperature >= burn - 5;
-        String tempInfoColor = flash && willDamage ? "&c" : icon.getColor().toString();
+        ChatColor tempInfoColor = color;
+        if (warningFlash && willDamage)
+            tempInfoColor = flash ? ChatColor.RED : ChatColor.WHITE;
 
         text = text.replaceAll("%temperature%", tempInfoColor + String.format("%.1f°", temperature));
 
@@ -114,7 +121,7 @@ public class TemperatureRender implements StatRenderer {
 
             bossBar.setProgress(MathUtil.minMax(progress, 0, 1));
             bossBar.setTitle(StringUtil.color(text));
-            bossBar.setColor(BossBarUtil.fromBukkitColor(icon.getColor()));
+            bossBar.setColor(BossBarUtil.from(icon.getColor()));
             return;
         } else if (bossBar != null){
             bossBar.removeAll();
@@ -122,8 +129,32 @@ public class TemperatureRender implements StatRenderer {
         }
 
         if (renderMethod == StatusRenderMethod.ACTIONBAR) {
-            if (temperature == lastTemp) return;
-            barText = StringUtil.color(text);
+            if (temperature == lastTemp && !willDamage) return;
+
+            text = displayFormat;
+            String[] split = text.split(" ");
+
+            ComponentBuilder builder = new ComponentBuilder()
+                    .color(tempInfoColor);
+            boolean first = true;
+            for (String s : split) {
+                if (!first) builder.append(" ", ComponentBuilder.FormatRetention.NONE);
+                if (s.equalsIgnoreCase("%temperature%")) {
+                    builder.append(String.format("%.1f°", temperature)).color(tempInfoColor);
+                    first = false;
+                    continue;
+                }
+                if (s.equalsIgnoreCase("%temp_simple%")) {
+                    builder.append(icon.getName());
+                }
+                else if (s.equalsIgnoreCase("%temp_icon%")) {
+                    builder.append(icon.getIcon());
+                }
+                builder.color(color).bold(false);
+                first = false;
+            }
+
+            barText = builder.create();
             lastTemp = temperature;
             USER.ACTIONBAR.prepare();
         }
@@ -135,6 +166,6 @@ public class TemperatureRender implements StatRenderer {
             bossBar.removeAll();
             bossBar = null;
         }
-        barText = "";
+        barText = null;
     }
 }

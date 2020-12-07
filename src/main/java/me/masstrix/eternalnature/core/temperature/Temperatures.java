@@ -37,15 +37,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+// TODO remake config system so this loads from it's own config file
+//      instead of just using the default one.
 @Configurable.Path("temperature")
 public class Temperatures implements Configurable {
 
     private static final String DEF_CONFIG = "temperature-config.yml";
     private static final Pattern NUM_CHECK = Pattern.compile("[0-9]*");
-    public static String iconHot = "☀";
-    public static String iconNormal = "✿";
-    public static String iconCold = "❈";
-    public static String iconWet = "☁";
 
     private EternalNature plugin;
     private final boolean DEFAULT;

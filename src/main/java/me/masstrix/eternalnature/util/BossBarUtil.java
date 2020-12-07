@@ -29,26 +29,29 @@ public class BossBarUtil {
      * @param color color to convert.
      * @return a closest <code>BarColor</code> to color.
      */
-    public static BarColor fromBukkitColor(ChatColor color) {
+    public static BarColor from(ChatColor color) {
+        return from(color.name());
+    }
+
+    public static BarColor from(net.md_5.bungee.api.ChatColor color) {
+        return from(color.getName());
+    }
+
+    public static BarColor from(String color) {
+        color = color.toUpperCase();
         switch (color) {
-            case DARK_BLUE:
-            case BLUE:
-            case DARK_AQUA:
-            case AQUA:
+            case "DARK_BLUE": case "BLUE": case "DARK_AQUA": case "AQUA":
                 return BarColor.BLUE;
-            case RED:
-            case DARK_RED:
+            case "RED": case "DARK_RED":
                 return BarColor.RED;
-            case YELLOW:
-            case GOLD:
+            case "YELLOW": case "GOLD":
                 return BarColor.YELLOW;
-            case LIGHT_PURPLE:
+            case "LIGHT_PURPLE":
                 return BarColor.PINK;
-            case GREEN:
-            case DARK_GREEN:
-            return BarColor.GREEN;
-            case DARK_PURPLE:
+            case "DARK_PURPLE":
                 return BarColor.PURPLE;
+            case "GREEN": case "DARK_GREEN":
+                return BarColor.GREEN;
             default: return BarColor.WHITE;
         }
     }

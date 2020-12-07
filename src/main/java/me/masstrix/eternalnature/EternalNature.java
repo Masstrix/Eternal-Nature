@@ -145,6 +145,8 @@ public class EternalNature extends JavaPlugin {
             new PlaceholderSupport(this).register();
         }
 
+        config.subscribe(TemperatureIcon.BURNING);
+        config.save();
         config.reload();
     }
 

@@ -16,33 +16,54 @@
 
 package me.masstrix.eternalnature.core.temperature;
 
+import me.masstrix.eternalnature.config.Configurable;
+import me.masstrix.eternalnature.util.MathUtil;
 import me.masstrix.lang.langEngine.LanguageEngine;
-import org.bukkit.ChatColor;
+import net.md_5.bungee.api.ChatColor;
+import org.bukkit.configuration.ConfigurationSection;
 
-public enum TemperatureIcon {
-    BURNING(Temperatures.iconHot, "burning", 100, ChatColor.RED),
-    HOT(Temperatures.iconHot, "hot", 30, ChatColor.GOLD),
-    WARM(Temperatures.iconHot, "warm", 20, ChatColor.YELLOW),
-    PLEASANT(Temperatures.iconNormal, "pleasant", 13, ChatColor.GREEN),
-    COOL(Temperatures.iconCold, "cool", 5, ChatColor.DARK_AQUA),
-    COLD(Temperatures.iconCold, "cold", 0, ChatColor.AQUA),
-    FREEZING(Temperatures.iconCold, "freezing", -4, ChatColor.WHITE);
+import java.awt.Color;
+import java.util.HashMap;
+import java.util.Map;
 
-    private final String KEY;
+@Configurable.Path("icons.temperature")
+public class TemperatureIcon implements Configurable {
+
+    private static final Map<String, TemperatureIcon> ICONS = new HashMap<>();
+    private static float coolest = Integer.MAX_VALUE;
+    private static float hottest = Integer.MIN_VALUE;
+
+    public final static TemperatureIcon BURNING = new TemperatureIcon("burning", "", 100,
+            ChatColor.of(new Color(255, 62, 62)));
+    public final static TemperatureIcon HOT = new TemperatureIcon("hot", "", 100,
+            ChatColor.of(new Color(255, 160, 59)));
+    public final static TemperatureIcon WARM = new TemperatureIcon("warm", "", 100,
+            ChatColor.of(new Color(255, 251, 35)));
+    public final static TemperatureIcon PLEASANT = new TemperatureIcon("pleasant", "", 100,
+            ChatColor.of(new Color(149, 255, 55)));
+    public final static TemperatureIcon COOL = new TemperatureIcon("cool", "", 100,
+            ChatColor.of(new Color(49, 255, 231)));
+    public final static TemperatureIcon COLD = new TemperatureIcon("cold", "", 100,
+            ChatColor.of(new Color(43, 181, 255)));
+    public final static TemperatureIcon FREEZING = new TemperatureIcon("freezing", "", 100,
+            ChatColor.of(new Color(29, 67, 255)));
+
     private final String NAME;
+    private final ChatColor COLOR;
     private String icon;
     private String nameLang;
-    private boolean useLang = true;
     private float temp;
-    private ChatColor color;
 
-    TemperatureIcon(String icon, String name, float temp, ChatColor color) {
+    public TemperatureIcon(String name, String icon, float temp, ChatColor color) {
         this.icon = icon;
         this.NAME = name.toUpperCase();
-        this.KEY = "temp.icon." + name().toLowerCase();
         this.nameLang = this.NAME;
         this.temp = temp;
-        this.color = color;
+        this.COLOR = color;
+        ICONS.put(name, this);
+
+        if (temp > hottest) hottest = temp;
+        if (temp < coolest) coolest = temp;
     }
 
     /**
@@ -56,7 +77,7 @@ public enum TemperatureIcon {
      * @return the name of the icon.
      */
     public String getName() {
-        return useLang ? nameLang : NAME;
+        return nameLang;
     }
 
     /**
@@ -70,7 +91,29 @@ public enum TemperatureIcon {
      * @return the color for the text.
      */
     public ChatColor getColor() {
-        return color;
+        return COLOR;
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        coolest = Integer.MAX_VALUE;
+        hottest = Integer.MIN_VALUE;
+        for (String key : section.getKeys(false)) {
+            TemperatureIcon icon = ICONS.get(key);
+            if (icon == null) continue;
+
+
+            icon.icon = section.getString(key + ".icon", "?");
+            icon.temp = section.getInt(key + ".temp", 0);
+
+            if (icon.temp > hottest) hottest = icon.temp;
+            if (icon.temp < coolest) coolest = icon.temp;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "(" + icon + " " + nameLang + ") temp: " + temp + ", RGB: " + COLOR.getColor().getRGB();
     }
 
     /**
@@ -79,10 +122,26 @@ public enum TemperatureIcon {
      * @param languageEngine language engine instance.
      */
     public static void reloadLang(LanguageEngine languageEngine) {
-        for (TemperatureIcon icon : values()) {
-            icon.nameLang = languageEngine.getText(icon.KEY);
-            icon.useLang = icon.nameLang.length() > 0;
+        for (TemperatureIcon icon : ICONS.values()) {
+            String text = languageEngine.getText("temp.icon." + icon.NAME);
+            if (text.length() > 0 && !text.startsWith("temp.icon.")) {
+                icon.nameLang = text;
+            } else {
+                icon.nameLang = icon.NAME;
+            }
         }
+    }
+
+    public static ChatColor getGradatedColor(float temp) {
+        temp = MathUtil.minMax(temp, coolest, hottest);
+        float add = Math.abs(coolest);
+        temp += add;
+        float warmest = hottest - add;
+        float complete = MathUtil.minMax(hottest * (temp / hottest), 0F, 1F);
+        float hue = (1F * complete);
+
+        Color color = Color.getHSBColor(hue, 0.8F, 1F);
+        return ChatColor.of(color);
     }
 
     /**
@@ -92,13 +151,18 @@ public enum TemperatureIcon {
      * @return the most relevant icon.
      */
     public static TemperatureIcon getClosest(double temp, Temperatures config) {
-        if (temp >= config.getBurningPoint() - 4) return TemperatureIcon.BURNING;
+        if (temp >= config.getBurningPoint() - 2) return TemperatureIcon.BURNING;
         if (temp <= config.getFreezingPoint() + 2) return TemperatureIcon.FREEZING;
         if (temp <= TemperatureIcon.COLD.getTemp()) return TemperatureIcon.COLD;
-        TemperatureIcon icon = TemperatureIcon.FREEZING;
-        for (TemperatureIcon i : TemperatureIcon.values()) {
-            if (temp >= i.getTemp() && icon.getTemp() < i.getTemp())
+        TemperatureIcon icon = TemperatureIcon.BURNING;
+        double selectedDiff = Double.MAX_VALUE;
+        for (TemperatureIcon i : ICONS.values()) {
+            if (i.temp == temp) return i;
+            double diff = i.temp - temp;
+            if (selectedDiff > diff) {
                 icon = i;
+                selectedDiff = diff;
+            }
         }
         return icon;
     }

@@ -6,6 +6,8 @@ import org.bukkit.plugin.Plugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -70,6 +72,15 @@ public class Configuration {
             }
         }
         config = YamlConfiguration.loadConfiguration(file);
+        if (resource) {
+            config.options().copyDefaults(true).copyHeader(true);
+            InputStream def = plugin.getResource(file.getName());
+            if (def != null) {
+                InputStreamReader reader = new InputStreamReader(def);
+                config.setDefaults(YamlConfiguration.loadConfiguration(reader));
+            }
+            save();
+        }
         return this;
     }
 
@@ -82,7 +93,6 @@ public class Configuration {
      */
     public void subscribe(Configurable configurable) {
         configurables.add(configurable);
-        System.out.println("Subscribed " + configurable.getClass().getSimpleName());
     }
 
     /**

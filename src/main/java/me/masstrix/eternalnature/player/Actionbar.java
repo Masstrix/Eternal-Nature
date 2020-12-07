@@ -16,8 +16,9 @@
 
 package me.masstrix.eternalnature.player;
 
-import me.masstrix.eternalnature.util.StringUtil;
 import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
 
@@ -28,7 +29,9 @@ public class Actionbar {
 
     private final Set<ActionbarItem> items;
     private final Player player;
-    private TextComponent bar;
+    private BaseComponent[] bar;
+    private String text;
+    private TextComponent spacer = new TextComponent(" ");
     private boolean render = false;
     private boolean prepared = false;
 
@@ -44,8 +47,25 @@ public class Actionbar {
     /**
      * @return the actionbar.
      */
-    public String getBar() {
-        return bar.getText();
+    public String getText() {
+        return text;
+    }
+
+    /**
+     * @return the spacer used between items.
+     */
+    public TextComponent getSpacer() {
+        return spacer;
+    }
+
+    /**
+     * Sets the spacer used between each item in the actionbar. By default this
+     * is a single space.
+     *
+     * @param spacer component to use as a spacer.
+     */
+    public void setSpacer(TextComponent spacer) {
+        this.spacer = spacer == null ? new TextComponent(" ") : spacer;
     }
 
     /**
@@ -55,6 +75,7 @@ public class Actionbar {
      */
     public void add(ActionbarItem item) {
         items.add(item);
+        prepare();
     }
 
     /**
@@ -64,6 +85,7 @@ public class Actionbar {
      */
     public void remove(ActionbarItem item) {
         items.remove(item);
+        prepare();
     }
 
     /**
@@ -71,20 +93,24 @@ public class Actionbar {
      * them into a string that is sent to the player.
      */
     public void reconstruct() {
-        StringBuilder text = new StringBuilder();
+        StringBuilder legacy = new StringBuilder();
+        ComponentBuilder builder = new ComponentBuilder();
         boolean first = true;
+        render = false;
         for (ActionbarItem item : items) {
-            String append = item.getActionbarText();
-            if (append == null || append.isEmpty()) continue;
+            BaseComponent[] append = item.getActionbarText();
+            if (append == null) continue;
             if (!first)
-                text.append(" ");
-            text.append("&f");
-            text.append(append);
-            text.append("&f");
+                builder.append(spacer, ComponentBuilder.FormatRetention.NONE);
+            builder.append("", ComponentBuilder.FormatRetention.NONE);
+            builder.append(append);
             first = false;
+            render = true;
+            for (BaseComponent b : append)
+                legacy.append(b.toLegacyText());
         }
-        bar = new TextComponent(StringUtil.color(text.toString()));
-        render = text.length() > 0;
+        text = legacy.toString();
+        bar = builder.create();
     }
 
     /**

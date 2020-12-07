@@ -16,13 +16,15 @@
 
 package me.masstrix.eternalnature.player;
 
+import net.md_5.bungee.api.chat.BaseComponent;
+
 import java.lang.annotation.*;
 
 public interface ActionbarItem {
     
     String getName();
     
-    String getActionbarText();
+    BaseComponent[] getActionbarText();
     
     @Inherited
     @Target(ElementType.TYPE)

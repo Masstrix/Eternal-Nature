@@ -136,6 +136,10 @@ public class UserData implements EternalUser, Configurable {
         statRenderers.add(new HydrationRenderer(player, this));
         statRenderers.add(new TemperatureRender(player, this));
         statRenderers.forEach(ACTIONBAR::add);
+
+        // Reload all the stat renderers as well.
+        Configuration config = PLUGIN.getRootConfig();
+        statRenderers.forEach(config::reload);
     }
 
     @Override
@@ -261,7 +265,7 @@ public class UserData implements EternalUser, Configurable {
      */
     public final void render() {
         Player player = Bukkit.getPlayer(id);
-        if (player == null) return;
+        if (player == null || !player.isOnline()) return;
         statRenderers.forEach(StatRenderer::render);
         ACTIONBAR.send();
     }

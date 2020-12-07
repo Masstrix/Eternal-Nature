@@ -108,3 +108,40 @@ temperature:
     use-weather: true
     use-items: true
     use-environment: true
+
+icons:
+  temperature:
+    burning:
+      icon: "☀"
+      temp: 60
+    hot:
+      icon: "☀"
+      temp: 30
+    warm:
+      icon: "✿"
+      temp: 25
+    pleasant:
+      icon: "✿"
+      temp: 15
+    cool:
+      icon: "✿"
+      temp: 5
+    cold:
+      icon: "❈"
+      temp: 0
+    freezing:
+      icon: "❄"
+      temp: -5
+  weather:
+    clear:
+      icon: "☀"
+      color: "&a"
+    cloudy:
+      icon: "☁"
+      color: "&7"
+    raining:
+      icon: "☔"
+      color: "&b"
+    thunder:
+      icon: "⛈"
+      color: "&e"

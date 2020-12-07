@@ -20,8 +20,10 @@ import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.config.StatusRenderMethod;
 import me.masstrix.eternalnature.util.MathUtil;
 import me.masstrix.eternalnature.util.StringUtil;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -34,11 +36,12 @@ public class HydrationRenderer implements StatRenderer {
 
     private final UserData USER;
     private final Player player;
-    private String barText;
+    private BaseComponent[] barText;
     private StatusRenderMethod renderMethod = StatusRenderMethod.BOSSBAR;
     private BossBar bossBar;
     private boolean isEnabled;
     private boolean warningFlash;
+    private float hydration;
 
     public HydrationRenderer(Player player, UserData data) {
         this.player = player;
@@ -64,7 +67,7 @@ public class HydrationRenderer implements StatRenderer {
     }
 
     @Override
-    public String getActionbarText() {
+    public BaseComponent[] getActionbarText() {
         return barText;
     }
 
@@ -103,26 +106,27 @@ public class HydrationRenderer implements StatRenderer {
         }
 
         if (renderMethod == StatusRenderMethod.ACTIONBAR) {
-            String textBefore = this.barText;
-            StringBuilder text = new StringBuilder();
-            text.append(flash ? "&c" : "&f").append("H²O ");
+            if (this.hydration == hydration && hydration > 4) return;
+            ComponentBuilder builder = new ComponentBuilder();
+            builder.color(flash ? ChatColor.RED : ChatColor.WHITE);
+            builder.append("H²O ");
 
             float mid = Math.round(hydration / 2);
-            char bubble = '\u2B58'; // Unicode 11096
+            String bubble = String.valueOf('\u2B58'); // Unicode 11096
             for (int i = 0; i < 10; i++) {
+                builder.append(bubble);
                 if (i < mid) {
-                    if (isThirsty) text.append(ChatColor.GREEN);
-                    else text.append(ChatColor.AQUA);
+                    if (isThirsty) builder.color(ChatColor.GREEN);
+                    else builder.color(ChatColor.AQUA);
                 } else if (i > mid) {
-                    text.append("\u00A78");
+                    builder.append("\u00A78");
                 } else {
-                    if (isThirsty) text.append(ChatColor.DARK_GREEN);
-                    else text.append(ChatColor.DARK_AQUA);
+                    if (isThirsty) builder.color(ChatColor.DARK_GREEN);
+                    else builder.color(ChatColor.DARK_AQUA);
                 }
-                text.append(bubble);
             }
-            barText = StringUtil.color(text.toString());
-            if (!barText.equals(textBefore)) USER.ACTIONBAR.prepare();
+            barText = builder.create();
+            USER.ACTIONBAR.prepare();
             return;
         }
 
@@ -139,6 +143,6 @@ public class HydrationRenderer implements StatRenderer {
             bossBar.removeAll();
             bossBar = null;
         }
-        barText = "";
+        barText = null;
     }
 }
