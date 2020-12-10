@@ -17,21 +17,46 @@
 package me.masstrix.eternalnature.core.temperature;
 
 import me.masstrix.eternalnature.config.Configurable;
+import me.masstrix.eternalnature.util.FindableMatch;
 import me.masstrix.eternalnature.util.MathUtil;
 import me.masstrix.lang.langEngine.LanguageEngine;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.awt.Color;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 @Configurable.Path("icons.temperature")
-public class TemperatureIcon implements Configurable {
+public class TemperatureIcon implements Configurable, FindableMatch<Float> {
 
     private static final Map<String, TemperatureIcon> ICONS = new HashMap<>();
     private static float coolest = Integer.MAX_VALUE;
     private static float hottest = Integer.MIN_VALUE;
+
+    public static Collection<TemperatureIcon> values() {
+        return ICONS.values();
+    }
+
+    /**
+     * Returns the temperature of the coolest icon.
+     *
+     * @return the coldest temperature.
+     */
+    public static float getCoolest() {
+        return coolest;
+    }
+
+    /**
+     * Returns the temperature of the hottest icon.
+     *
+     * @return the hottest temperature.
+     */
+    public static float getHottest() {
+        return hottest;
+    }
 
     public final static TemperatureIcon BURNING = new TemperatureIcon("burning", "", 100,
             ChatColor.of(new Color(255, 62, 62)));
@@ -61,12 +86,25 @@ public class TemperatureIcon implements Configurable {
         this.temp = temp;
         this.COLOR = color;
         ICONS.put(name, this);
+        updateMinMax();
+    }
 
+    @Override
+    public Float getMatchingValue() {
+        return temp;
+    }
+
+    /**
+     * Updates the min and max temperature values for the icons.
+     */
+    private void updateMinMax() {
         if (temp > hottest) hottest = temp;
         if (temp < coolest) coolest = temp;
     }
 
     /**
+     * Returns the specific ico for this icon.
+     *
      * @return the icon.
      */
     public String getIcon() {
@@ -74,13 +112,27 @@ public class TemperatureIcon implements Configurable {
     }
 
     /**
-     * @return the name of the icon.
+     * Returns the generic name of the icon.
+     *
+     * @return the generic name of the icon.
      */
     public String getName() {
+        return NAME;
+    }
+
+    /**
+     * Returns the display name of the icon, this is what is normally displayed
+     * to the player.
+     *
+     * @return the name of the icon.
+     */
+    public String getDisplayName() {
         return nameLang;
     }
 
     /**
+     * Returns the temperature this icon is assigned to.
+     *
      * @return the temperature it should start being displayed at.
      */
     public float getTemp() {
@@ -88,6 +140,8 @@ public class TemperatureIcon implements Configurable {
     }
 
     /**
+     * Returns the color for this icon. This is always a single color.
+     *
      * @return the color for the text.
      */
     public ChatColor getColor() {
@@ -102,12 +156,9 @@ public class TemperatureIcon implements Configurable {
             TemperatureIcon icon = ICONS.get(key);
             if (icon == null) continue;
 
-
             icon.icon = section.getString(key + ".icon", "?");
             icon.temp = section.getInt(key + ".temp", 0);
-
-            if (icon.temp > hottest) hottest = icon.temp;
-            if (icon.temp < coolest) coolest = icon.temp;
+            icon.updateMinMax();
         }
     }
 
@@ -134,36 +185,49 @@ public class TemperatureIcon implements Configurable {
 
     public static ChatColor getGradatedColor(float temp) {
         temp = MathUtil.minMax(temp, coolest, hottest);
-        float add = Math.abs(coolest);
-        temp += add;
-        float warmest = hottest - add;
-        float complete = MathUtil.minMax(hottest * (temp / hottest), 0F, 1F);
-        float hue = (1F * complete);
+        float max = hottest;
+        if (coolest < 0) {
+            float add = Math.abs(coolest);
+            temp += add;
+            max += add;
+        }
 
-        Color color = Color.getHSBColor(hue, 0.8F, 1F);
+        float range = 0.6F;
+        float hue = range - ((range * (temp / max)) * 1.6F);
+
+        Color color = Color.getHSBColor(MathUtil.minMax(hue, 0, 1), 0.8F, 1F);
         return ChatColor.of(color);
+    }
+
+    public static TemperatureIcon find(MatchMethod method, double temp, TemperatureProfile config) {
+        if (temp >= config.getBurningPoint() - 2) return TemperatureIcon.BURNING;
+        if (temp <= config.getFreezingPoint() + 2) return TemperatureIcon.FREEZING;
+        return (TemperatureIcon) method.find(ICONS.values(), (float) temp);
     }
 
     /**
      * Finds the most relevant name for the given temperature.
      *
-     * @param temp temperature to evaluate.
+     * @param method method used to search for the closest matching icon.
+     * @param temp   temperature to evaluate.
+     * @param config config to use for checking if the temperature is above or below
+     *               the freezing or burning point.
      * @return the most relevant icon.
      */
-    public static TemperatureIcon getClosest(double temp, TemperatureProfile config) {
-        if (temp >= config.getBurningPoint() - 2) return TemperatureIcon.BURNING;
-        if (temp <= config.getFreezingPoint() + 2) return TemperatureIcon.FREEZING;
-        if (temp <= TemperatureIcon.COLD.getTemp()) return TemperatureIcon.COLD;
-        TemperatureIcon icon = TemperatureIcon.BURNING;
-        double selectedDiff = Double.MAX_VALUE;
-        for (TemperatureIcon i : ICONS.values()) {
-            if (i.temp == temp) return i;
-            double diff = i.temp - temp;
-            if (selectedDiff > diff) {
-                icon = i;
-                selectedDiff = diff;
-            }
-        }
-        return icon;
-    }
+//    public static TemperatureIcon getClosest(MatchingMethod method, double temp, TemperatureProfile config) {
+//        if (temp >= config.getBurningPoint() - 2) return TemperatureIcon.BURNING;
+//        if (temp <= config.getFreezingPoint() + 2) return TemperatureIcon.FREEZING;
+//
+//        TemperatureIcon icon = TemperatureIcon.BURNING;
+//        double selectedDiff = Double.MAX_VALUE;
+//        for (TemperatureIcon i : ICONS.values()) {
+//            if (i.temp == temp) return i;
+//            double diff = Math.abs(i.temp - temp);
+//            if (selectedDiff > diff) {
+//                icon = i;
+//                selectedDiff = diff;
+//            }
+//        }
+//        return icon;
+//    }
 }

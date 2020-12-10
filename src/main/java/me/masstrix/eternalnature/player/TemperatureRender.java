@@ -22,6 +22,7 @@ import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
 import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.util.BossBarUtil;
+import me.masstrix.eternalnature.util.FindableMatch;
 import me.masstrix.eternalnature.util.MathUtil;
 import me.masstrix.eternalnature.util.StringUtil;
 import net.md_5.bungee.api.ChatColor;
@@ -44,7 +45,9 @@ public class TemperatureRender implements StatRenderer {
     private BossBar bossBar;
     private boolean isEnabled;
     private boolean warningFlash;
+    private boolean useRgb;
     private String displayFormat = "";
+    private FindableMatch.MatchMethod matchMethod;
     private double lastTemp = Integer.MAX_VALUE;
 
     public TemperatureRender(Player player, UserData data) {
@@ -59,6 +62,8 @@ public class TemperatureRender implements StatRenderer {
         renderMethod = StatusRenderMethod.valueOf(section.getString("display.style"));
         warningFlash = section.getBoolean("display.warning-flash");
         displayFormat = section.getString("display.format");
+        useRgb = section.getBoolean("display.use-rgb-colors", true);
+        matchMethod = FindableMatch.MatchMethod.fromString(section.getString("display.icon-match-method"));
 
         if (beforeMethod != renderMethod) {
             reset();
@@ -89,12 +94,13 @@ public class TemperatureRender implements StatRenderer {
         WorldData worldData = USER.getWorld();
         if (worldData == null) return;
         TemperatureProfile temps = worldData.getTemperatures();
-        TemperatureIcon icon = TemperatureIcon.getClosest(temperature, temps);
+        TemperatureIcon icon = TemperatureIcon.find(matchMethod, temperature, temps);
 
-        ChatColor color = TemperatureIcon.getGradatedColor((float) temperature);
+        ChatColor color = icon.getColor();
+        if (useRgb) color = TemperatureIcon.getGradatedColor((float) temperature);
 
         String text = displayFormat;
-        text = text.replaceAll("%temp_simple%", color + icon.getName() + "&f");
+        text = text.replaceAll("%temp_simple%", color + icon.getDisplayName() + "&f");
         text = text.replaceAll("%temp_icon%", color + icon.getIcon() + "&f");
 
         double burn = temps.getBurningPoint();
@@ -144,7 +150,7 @@ public class TemperatureRender implements StatRenderer {
                     continue;
                 }
                 if (s.equalsIgnoreCase("%temp_simple%")) {
-                    builder.append(icon.getName());
+                    builder.append(icon.getDisplayName());
                 }
                 else if (s.equalsIgnoreCase("%temp_icon%")) {
                     builder.append(icon.getIcon());

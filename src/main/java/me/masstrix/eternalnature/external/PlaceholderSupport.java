@@ -18,21 +18,31 @@ package me.masstrix.eternalnature.external;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
 import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.player.UserData;
 import me.masstrix.eternalnature.util.BuildInfo;
+import me.masstrix.eternalnature.util.FindableMatch;
 import me.masstrix.eternalnature.util.SecondsFormat;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
-public class PlaceholderSupport extends PlaceholderExpansion {
+public class PlaceholderSupport extends PlaceholderExpansion implements Configurable {
 
     private final EternalNature PLUGIN;
+    private FindableMatch.MatchMethod tempDisplayMatchMethod = FindableMatch.MatchMethod.LINEAR;
 
     public PlaceholderSupport(EternalNature plugin) {
         this.PLUGIN = plugin;
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        tempDisplayMatchMethod = FindableMatch.MatchMethod.fromString(
+                section.getString("temperature.display.icon-match-method"));
     }
 
     @Override
@@ -82,7 +92,7 @@ public class PlaceholderSupport extends PlaceholderExpansion {
 
         if (identifier.equals("temperature_name")) {
             TemperatureIcon icon = getTemperatureIcon(player, data);
-            return icon.getColor() + icon.getName();
+            return icon.getColor() + icon.getDisplayName();
         }
 
         if (identifier.equals("thirst_effect_timer")) {
@@ -104,6 +114,6 @@ public class PlaceholderSupport extends PlaceholderExpansion {
         WorldProvider provider = PLUGIN.getEngine().getWorldProvider();
         WorldData worldData = provider.getWorld(player.getWorld());
         TemperatureProfile temps = worldData.getTemperatures();
-        return TemperatureIcon.getClosest(data.getTemperature(), temps);
+        return TemperatureIcon.find(tempDisplayMatchMethod, data.getTemperature(), temps);
     }
 }

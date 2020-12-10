@@ -100,6 +100,8 @@ temperature:
   display:
     enabled: true
     format: "%temperature% %temp_icon% %temp_simple%"
+    use-rgb-colors: true
+    icon-match-method: LINEAR
     style: BOSSBAR
     warning-flash: true
   scanning:
