@@ -94,6 +94,8 @@ public class UserData implements EternalUser, Configurable {
     private double tmpDamageAmount;
     private int tmpDamageDelay;
     private int tmpMaxDelta;
+    private int scanArea;
+    private int scanHeight;
 
     private boolean tmpUseBlocks;
     private boolean tmpUseBiomes;
@@ -167,6 +169,12 @@ public class UserData implements EternalUser, Configurable {
         tmpUseWeather = section.getBoolean("temperature.scanning.use-items");
         tmpUseEnvironment = section.getBoolean("temperature.scanning.use-environment");
 
+        scanArea = section.getInt("temperature.scanning.advanced.area", 11);
+        scanHeight = section.getInt("temperature.scanning.advanced.height", 5);
+
+        if (tempScanner != null)
+            tempScanner.setScanScale(scanArea, scanHeight);
+
         // Reload all the stat renderers as well.
         Configuration config = PLUGIN.getRootConfig();
         statRenderers.forEach(config::reload);
@@ -196,7 +204,7 @@ public class UserData implements EternalUser, Configurable {
         // Create a region scanner if one has not been made already.
         if (tempScanner == null) {
             this.tempScanner = new TemperatureScanner(PLUGIN, this, player);
-            this.tempScanner.setScanScale(11, 5);
+            this.tempScanner.setScanScale(scanArea, scanHeight);
         }
 
         WorldProvider provider = PLUGIN.getEngine().getWorldProvider();

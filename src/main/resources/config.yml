@@ -108,6 +108,9 @@ temperature:
     use-weather: true
     use-items: true
     use-environment: true
+    advanced:
+      area: 11
+      height: 5
 
 icons:
   temperature:
