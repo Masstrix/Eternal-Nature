@@ -143,6 +143,9 @@ public class UserData implements EternalUser, Configurable {
         // Reload all the stat renderers as well.
         Configuration config = PLUGIN.getRootConfig();
         statRenderers.forEach(config::reload);
+
+        // Update all the config options
+        config.reload(this);
     }
 
     @Override
@@ -150,24 +153,24 @@ public class UserData implements EternalUser, Configurable {
         // hydration
         isHydEnabled = section.getBoolean("hydration.enabled", true);
         doHydDamage = section.getBoolean("hydration.damage.enabled", true);
-        hydDamageAmount = section.getDouble("hydration.damage.amount");
-        hydDamageDelay = section.getInt("hydration.damage.delay");
-        hydSweat = section.getBoolean("hydration.sweat");
+        hydDamageAmount = section.getDouble("hydration.damage.amount", 0.5);
+        hydDamageDelay = section.getInt("hydration.damage.delay", 2000);
+        hydSweat = section.getBoolean("hydration.sweat", true);
         isThirstEnabled = section.getBoolean("hydration.thirst-effect.enabled", true);
-        thirstAmount = section.getDouble("hydration.thirst-effect.amount");
+        thirstAmount = section.getDouble("hydration.thirst-effect.amount", 0.1);
 
         // temp
         isTmpEnabled = section.getBoolean("temperature.enabled", true);
         doTmpDamage = section.getBoolean("temperature.damage.enabled", true);
-        tmpDamageAmount = section.getDouble("temperature.damage.amount");
-        tmpDamageDelay = section.getInt("temperature.damage.delay");
-        tmpMaxDelta = section.getInt("temperature.max-delta-chance");
+        tmpDamageAmount = section.getDouble("temperature.damage.amount", 1);
+        tmpDamageDelay = section.getInt("temperature.damage.delay", 1000);
+        tmpMaxDelta = section.getInt("temperature.max-delta-chance", 15);
 
-        tmpUseBlocks = section.getBoolean("temperature.scanning.use-blocks");
-        tmpUseBiomes = section.getBoolean("temperature.scanning.use-biomes");
-        tmpUseItems = section.getBoolean("temperature.scanning.use-weather");
-        tmpUseWeather = section.getBoolean("temperature.scanning.use-items");
-        tmpUseEnvironment = section.getBoolean("temperature.scanning.use-environment");
+        tmpUseBlocks = section.getBoolean("temperature.scanning.use-blocks", true);
+        tmpUseBiomes = section.getBoolean("temperature.scanning.use-biomes", true);
+        tmpUseItems = section.getBoolean("temperature.scanning.use-weather", true);
+        tmpUseWeather = section.getBoolean("temperature.scanning.use-items", true);
+        tmpUseEnvironment = section.getBoolean("temperature.scanning.use-environment", true);
 
         scanArea = section.getInt("temperature.scanning.advanced.area", 11);
         scanHeight = section.getInt("temperature.scanning.advanced.height", 5);
@@ -201,20 +204,20 @@ public class UserData implements EternalUser, Configurable {
             return;
         }
 
-        // Create a region scanner if one has not been made already.
-        if (tempScanner == null) {
-            this.tempScanner = new TemperatureScanner(PLUGIN, this, player);
-            this.tempScanner.setScanScale(scanArea, scanHeight);
-        }
-
-        WorldProvider provider = PLUGIN.getEngine().getWorldProvider();
-        WorldData worldData = provider.getWorld(player.getWorld());
-        TemperatureProfile tempProfile = worldData.getTemperatures();
-        this.tempScanner.useTemperatureProfile(tempProfile);
-
         // Updates the players temperature and applies damage to the player
         // if damage is enabled.
         if (isTmpEnabled) {
+            // Create a region scanner if one has not been made already.
+            if (tempScanner == null) {
+                this.tempScanner = new TemperatureScanner(PLUGIN, this, player);
+                this.tempScanner.setScanScale(scanArea, scanHeight);
+            }
+
+            WorldProvider provider = PLUGIN.getEngine().getWorldProvider();
+            WorldData worldData = provider.getWorld(player.getWorld());
+            TemperatureProfile tempProfile = worldData.getTemperatures();
+            this.tempScanner.useTemperatureProfile(tempProfile);
+
             // Update the players temperature
             updateTemperature(false);
 
@@ -547,7 +550,7 @@ public class UserData implements EternalUser, Configurable {
      *                 players temperature.
      */
     public void updateTemperature(boolean forceNew) {
-        if (!isTmpEnabled) return;
+        if (!isTmpEnabled || tempScanner == null) return;
         Player player = Bukkit.getPlayer(id);
         if (player == null || !player.isOnline() || player.isDead()) return;
 

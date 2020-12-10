@@ -190,7 +190,6 @@ public class TemperatureScanner implements Configurable {
             // Calculate block emission temperature
             BlockTemperature blockTemp = (BlockTemperature) temps.getModifier(TempModifierType.BLOCK, block);
             if (blockTemp == null) continue;
-            System.out.println(block.getType() + " " + blockTemp.getEmission()); // TODO remove this
             double temp = blockTemp.getEmission();
 
             // Ignore non emissive blocks
@@ -312,8 +311,6 @@ public class TemperatureScanner implements Configurable {
      */
     private void done() {
         temperature = scannedTemp;
-        System.out.println("Temperature: " + temperature);
-        System.out.println(" "); // TODO remove this
 
         // Resets values
         lastScanTime = System.currentTimeMillis();
