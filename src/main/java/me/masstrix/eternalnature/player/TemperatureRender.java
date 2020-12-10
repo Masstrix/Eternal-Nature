@@ -19,7 +19,7 @@ package me.masstrix.eternalnature.player;
 import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.config.StatusRenderMethod;
 import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
-import me.masstrix.eternalnature.core.temperature.Temperatures;
+import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.util.BossBarUtil;
 import me.masstrix.eternalnature.util.MathUtil;
@@ -27,7 +27,6 @@ import me.masstrix.eternalnature.util.StringUtil;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -89,7 +88,7 @@ public class TemperatureRender implements StatRenderer {
 
         WorldData worldData = USER.getWorld();
         if (worldData == null) return;
-        Temperatures temps = worldData.getTemperatures();
+        TemperatureProfile temps = worldData.getTemperatures();
         TemperatureIcon icon = TemperatureIcon.getClosest(temperature, temps);
 
         ChatColor color = TemperatureIcon.getGradatedColor((float) temperature);

@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.core.temperature;
+package me.masstrix.eternalnature.core.temperature.modifier;
 
+import me.masstrix.eternalnature.util.ConfigUtil;
 import me.masstrix.eternalnature.util.WorldTime;
 import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.craftbukkit.libs.org.apache.commons.lang3.StringUtils;
+import org.bukkit.craftbukkit.libs.org.apache.commons.lang3.math.NumberUtils;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,6 +32,32 @@ public class TimeTemperature implements TemperatureModifier {
 
     private final Map<Integer, Double> TIMES = new HashMap<>();
     private double fallback = 0;
+
+    /**
+     * Loads the data from a configuration section and adds it to this modifier. This will
+     * also remove all previously added times.
+     *
+     * @param section section to load.
+     */
+    public void load(ConfigurationSection section) {
+        if (section == null) return;
+        ConfigUtil util = new ConfigUtil(section);
+
+        for (String time : section.getKeys(false)) {
+            int timeExact = WorldTime.MID_DAY.getTime();
+            if (StringUtils.isNumeric(time)) {
+                // Exact time
+                timeExact = Integer.parseInt(time);
+            } else {
+                // World based time
+                WorldTime worldTime = WorldTime.find(time);
+                if (worldTime != null) {
+                    timeExact = worldTime.getTime();
+                }
+            }
+            put(timeExact, util.getDouble(time));
+        }
+    }
 
     /**
      * Puts a new value in for the time modifier. If the provided

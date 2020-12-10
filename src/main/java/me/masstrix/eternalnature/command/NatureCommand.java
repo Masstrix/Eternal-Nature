@@ -20,11 +20,12 @@ import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.config.ConfigPath;
 import me.masstrix.eternalnature.core.temperature.TempModifierType;
-import me.masstrix.eternalnature.core.temperature.Temperatures;
+import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
+import me.masstrix.eternalnature.core.temperature.modifier.BiomeModifier;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
-import me.masstrix.eternalnature.player.UserData;
 import me.masstrix.eternalnature.menus.Menus;
+import me.masstrix.eternalnature.player.UserData;
 import me.masstrix.eternalnature.testing.TestCommand;
 import me.masstrix.eternalnature.util.BuildInfo;
 import me.masstrix.version.checker.VersionCheckInfo;
@@ -68,7 +69,6 @@ public class NatureCommand extends EternalCommand {
 
         if (args[0].equalsIgnoreCase("reload")) {
             msg(PluginData.PREFIX + "&7Reloading files...");
-            plugin.getEngine().getDefaultTemperatures().loadData();
             plugin.getRootConfig().reload();
             msg(PluginData.PREFIX + "&aReloaded config files");
         }
@@ -126,7 +126,7 @@ public class NatureCommand extends EternalCommand {
             if (sub.equalsIgnoreCase("makeCustomConfig")) {
                 WorldData data = provider.getWorld(world);
                 msg(PluginData.PREFIX + "&7Creating custom config for world " + world + "...");
-                boolean success = data.createCustomTemperatureConfig(false);
+                boolean success = data.createCustomTemperatureConfig();
                 if (success)
                     msg(PluginData.PREFIX + "&aCreated custom config for world &e" + world + "&a.");
                 else msg(PluginData.PREFIX + "&7World &e" + world + "&7 already had a custom config.");
@@ -148,20 +148,22 @@ public class NatureCommand extends EternalCommand {
             }
             else if (sub.equalsIgnoreCase("info")) {
                 WorldData data = provider.getWorld(world);
-                Temperatures t = data.getTemperatures();
+                TemperatureProfile t = data.getTemperatures();
                 msg("");
                 msg("     &2&lEternal Nature");
                 msg("     &6&o" + world + "'s info");
                 msg("");
-                msg("Uses custom data set: &6" + data.usesCustomConfig());
-                msg("Biomes Loaded: &6" + t.count(TempModifierType.BIOME));
-                msg("Blocks Loaded: &6" + t.count(TempModifierType.BLOCK));
-                msg("Clothing Loaded: &6" + t.count(TempModifierType.CLOTHING));
+                // TODO add more stats like average player temp, leaf particle count etc.
                 msg("");
                 if (wasPlayer()) {
                     Player player = (Player) getSender();
                     Block standing = player.getLocation().getBlock();
-                    msg("Currently in biome: &7" + t.getModifier(standing.getBiome()).getName());
+                    BiomeModifier mod = (BiomeModifier) t.getModifier(TempModifierType.BIOME, standing.getBiome());
+                    if (mod == null) {
+                        msg("Current in biome: &7Unknown");
+                    } else {
+                        msg("Currently in biome: &7" + mod.getName());
+                    }
                     msg("");
                 }
             }
@@ -174,7 +176,7 @@ public class NatureCommand extends EternalCommand {
             msg(PluginData.PREFIX + "&7Resetting files...");
             plugin.saveResource("temperature-config.yml", true);
             plugin.saveResource("config.yml", true);
-            plugin.getEngine().getDefaultTemperatures().loadData();
+            plugin.getEngine().getDefaultTempProfile().reload();
             plugin.getRootConfig().reload();
             msg(PluginData.PREFIX + "&aReset config files back to default");
         }

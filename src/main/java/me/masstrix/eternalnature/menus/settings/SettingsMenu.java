@@ -275,7 +275,7 @@ public class SettingsMenu extends GlobalMenu {
                 .onClick(player -> {
                     PLUGIN.saveResource("temperature-config.yml", true);
                     PLUGIN.saveResource("config.yml", true);
-                    PLUGIN.getEngine().getDefaultTemperatures().loadData();
+                    PLUGIN.getEngine().getDefaultTempProfile().reload();
                     CONFIG.reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                     player.closeInventory();

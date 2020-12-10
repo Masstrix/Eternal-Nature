@@ -21,11 +21,11 @@ import me.masstrix.eternalnature.core.EternalWorker;
 import me.masstrix.eternalnature.core.Renderer;
 import me.masstrix.eternalnature.core.UserWorker;
 import me.masstrix.eternalnature.core.entity.shadow.ShadowEntityManager;
-import me.masstrix.eternalnature.core.temperature.Temperatures;
+import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
 import me.masstrix.eternalnature.core.world.*;
-import me.masstrix.eternalnature.player.UserData;
-import me.masstrix.eternalnature.menus.*;
+import me.masstrix.eternalnature.menus.MenuManager;
 import me.masstrix.eternalnature.menus.settings.*;
+import me.masstrix.eternalnature.player.UserData;
 import me.masstrix.eternalnature.util.Stopwatch;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
@@ -38,7 +38,7 @@ public class EternalEngine {
     private static boolean enabled = false;
     private EternalNature plugin;
     private WorldProvider worldProvider;
-    private Temperatures defaultTemps;
+    private TemperatureProfile defaultTempProfile;
     private AutoPlanter autoPlanter;
     private MenuManager menuManager;
     private EternalHeartbeat heartbeat;
@@ -57,13 +57,11 @@ public class EternalEngine {
         if (enabled) return;
         enabled  = true;
         this.plugin = plugin;
-        this.defaultTemps = new Temperatures(plugin);
+        this.defaultTempProfile = new TemperatureProfile(
+                new Configuration(plugin, "temperature-config")
+                        .create(true));
         this.menuManager = new MenuManager(plugin);
         heartbeat = new EternalHeartbeat(plugin, 10);
-
-        // Load default temperature data
-        this.defaultTemps.createFiles(false);
-        this.defaultTemps.loadData();
 
         AgingItemWorker agingItemWorker;
         LeafEmitter leafEmitter;
@@ -93,6 +91,7 @@ public class EternalEngine {
 
         config.subscribe(autoPlanter);
         config.subscribe(worldProvider);
+        config.subscribe(defaultTempProfile);
         config.subscribe(agingItemWorker);
         config.subscribe(leafEmitter);
         config.subscribe(treeSpreader);
@@ -166,11 +165,8 @@ public class EternalEngine {
         return null;
     }
 
-    /**
-     * @return the default temperature config.
-     */
-    public Temperatures getDefaultTemperatures() {
-        return defaultTemps;
+    public TemperatureProfile getDefaultTempProfile() {
+        return defaultTempProfile;
     }
 
     public WorldProvider getWorldProvider() {

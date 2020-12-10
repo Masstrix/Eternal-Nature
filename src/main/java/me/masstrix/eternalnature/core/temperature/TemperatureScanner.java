@@ -18,10 +18,13 @@ package me.masstrix.eternalnature.core.temperature;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.Configurable;
+import me.masstrix.eternalnature.core.temperature.maps.BlockModifierMap;
+import me.masstrix.eternalnature.core.temperature.modifier.BlockTemperature;
 import me.masstrix.eternalnature.player.PlayerIdle;
 import me.masstrix.eternalnature.player.UserData;
 import org.bukkit.Color;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
@@ -44,7 +47,7 @@ public class TemperatureScanner implements Configurable {
     private boolean setLoc;
     private final Player PLAYER;
     private final UserData USER;
-    private Temperatures temps;
+    private TemperatureProfile temps;
     private Location loc;
     private double temperature;
     private double hottest;
@@ -57,7 +60,7 @@ public class TemperatureScanner implements Configurable {
         this.USER = data;
         setFidelity(4);
         setScanScale(2, 2);
-        useTemperatureProfile(plugin.getEngine().getDefaultTemperatures());
+        useTemperatureProfile(plugin.getEngine().getDefaultTempProfile());
     }
 
     /**
@@ -66,7 +69,7 @@ public class TemperatureScanner implements Configurable {
      * @param temps temperature profile.
      * @return an instance of this scanner.
      */
-    public TemperatureScanner useTemperatureProfile(Temperatures temps) {
+    public TemperatureScanner useTemperatureProfile(TemperatureProfile temps) {
         this.temps = temps;
         return this;
     }
@@ -185,9 +188,9 @@ public class TemperatureScanner implements Configurable {
             if (!isValidState(block)) continue;
 
             // Calculate block emission temperature
-            BlockTemperature blockTemp = (BlockTemperature) temps.getModifier(
-                    block.getType(), TempModifierType.BLOCK);
+            BlockTemperature blockTemp = (BlockTemperature) temps.getModifier(TempModifierType.BLOCK, block);
             if (blockTemp == null) continue;
+            System.out.println(block.getType() + " " + blockTemp.getEmission()); // TODO remove this
             double temp = blockTemp.getEmission();
 
             // Ignore non emissive blocks
@@ -309,6 +312,8 @@ public class TemperatureScanner implements Configurable {
      */
     private void done() {
         temperature = scannedTemp;
+        System.out.println("Temperature: " + temperature);
+        System.out.println(" "); // TODO remove this
 
         // Resets values
         lastScanTime = System.currentTimeMillis();

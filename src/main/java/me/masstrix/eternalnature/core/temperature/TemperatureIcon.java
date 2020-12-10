@@ -150,7 +150,7 @@ public class TemperatureIcon implements Configurable {
      * @param temp temperature to evaluate.
      * @return the most relevant icon.
      */
-    public static TemperatureIcon getClosest(double temp, Temperatures config) {
+    public static TemperatureIcon getClosest(double temp, TemperatureProfile config) {
         if (temp >= config.getBurningPoint() - 2) return TemperatureIcon.BURNING;
         if (temp <= config.getFreezingPoint() + 2) return TemperatureIcon.FREEZING;
         if (temp <= TemperatureIcon.COLD.getTemp()) return TemperatureIcon.COLD;

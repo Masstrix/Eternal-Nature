@@ -1,6 +1,7 @@
 package me.masstrix.eternalnature.config;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 
@@ -20,7 +21,7 @@ public class Configuration {
     private final Plugin plugin;
     private final Set<Configurable> configurables;
     private final File file;
-    private YamlConfiguration config;
+    private final YamlConfiguration config;
 
     /**
      * Creates a new configuration. This works from the plugins data folder.
@@ -44,6 +45,7 @@ public class Configuration {
     public Configuration(Plugin plugin, File file) {
         this.plugin = plugin;
         this.file = file;
+        this.config = new YamlConfiguration();
         configurables = new TreeSet<>((incoming, checked) -> {
             if (incoming == checked) return 0;
             Configurable.Before before = incoming.getClass().getAnnotation(Configurable.Before.class);
@@ -71,7 +73,11 @@ public class Configuration {
                 }
             }
         }
-        config = YamlConfiguration.loadConfiguration(file);
+        try {
+            config.load(file);
+        } catch (IOException | InvalidConfigurationException e) {
+            e.printStackTrace();
+        }
         if (resource) {
             config.options().copyDefaults(true).copyHeader(true);
             InputStream def = plugin.getResource(file.getName());
@@ -81,6 +87,17 @@ public class Configuration {
             }
             save();
         }
+        return this;
+    }
+
+    /**
+     * Sets the defaults used for this config file if anything is missing.
+     *
+     * @param def default configuration to fall back on.
+     * @return an instance of this configuration.
+     */
+    public Configuration setDefault(Configuration def) {
+        config.setDefaults(def.getYml());
         return this;
     }
 
@@ -145,11 +162,15 @@ public class Configuration {
         return invert;
     }
 
+    public void reload() {
+        this.reload(true);
+    }
+
     /**
      * Reloads the config and updates all subscribed configurables.
      */
-    public void reload() {
-        create(false);
+    public void reload(boolean create) {
+        if (create) create(false);
         if (config == null) return;
         configurables.forEach(this::reload);
     }
@@ -167,8 +188,13 @@ public class Configuration {
         if (path != null && !path.isEmpty()) {
             if (!config.isConfigurationSection(path))
                 sec = config.createSection(path);
-            else
+            else {
                 sec = config.getConfigurationSection(path);
+                // Revert to the defaults if no keys are in this section
+                if (sec != null && sec.getKeys(false).size() == 0 && sec.getDefaultSection() != null) {
+                    sec = sec.getDefaultSection();
+                }
+            }
         }
         configurable.updateConfig(sec);
     }
@@ -178,6 +204,10 @@ public class Configuration {
      */
     public Configuration save() {
         try {
+            if (!file.exists()) {
+                file.mkdirs();
+                file.createNewFile();
+            }
             config.save(file);
         } catch (IOException e) {
             e.printStackTrace();

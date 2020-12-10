@@ -14,18 +14,9 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.core.temperature;
+package me.masstrix.eternalnature.util;
 
-public class SimpleTemperatureMod implements TemperatureModifier {
+public interface Named {
 
-    private double emission;
-
-    public SimpleTemperatureMod(double emission) {
-        this.emission = emission;
-    }
-
-    @Override
-    public double getEmission() {
-        return emission;
-    }
+    String getName();
 }

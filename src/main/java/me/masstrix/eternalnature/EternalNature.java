@@ -104,7 +104,7 @@ public class EternalNature extends JavaPlugin {
         languageEngine.setLanguage(getConfig().getString("general.language"));
         TemperatureIcon.reloadLang(languageEngine);
 
-        engine = new EternalEngine(this).start();
+        engine = new EternalEngine(this);
 
         registerCommands(new HydrateCommand(this), new NatureCommand(this));
         registerListeners(new MoveListener(this), new ConnectionListener(this),
@@ -145,6 +145,7 @@ public class EternalNature extends JavaPlugin {
             new PlaceholderSupport(this).register();
         }
 
+        engine.start();
         config.subscribe(TemperatureIcon.BURNING);
         config.save();
         config.reload();

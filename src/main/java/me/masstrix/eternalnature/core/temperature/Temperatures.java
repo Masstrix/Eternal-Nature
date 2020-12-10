@@ -18,6 +18,9 @@ package me.masstrix.eternalnature.core.temperature;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.Configurable;
+import me.masstrix.eternalnature.core.temperature.modifier.BiomeModifier;
+import me.masstrix.eternalnature.core.temperature.modifier.TemperatureModifier;
+import me.masstrix.eternalnature.core.temperature.modifier.TimeTemperature;
 import me.masstrix.eternalnature.util.EnumUtils;
 import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.eternalnature.util.WorldTime;
@@ -40,17 +43,18 @@ import java.util.regex.Pattern;
 // TODO remake config system so this loads from it's own config file
 //      instead of just using the default one.
 @Configurable.Path("temperature")
+@Deprecated
 public class Temperatures implements Configurable {
 
     private static final String DEF_CONFIG = "temperature-config.yml";
     private static final Pattern NUM_CHECK = Pattern.compile("[0-9]*");
 
-    private EternalNature plugin;
+    private final EternalNature PLUGIN;
     private final boolean DEFAULT;
     private File file;
-    private FileConfiguration config;
-    private Map<TempModifierType, Map<Material, TemperatureModifier>> modifiers = new HashMap<>();
-    private Map<Biome, BiomeModifier> biomeModifiers = new HashMap<>();
+    private YamlConfiguration config;
+    private final Map<TempModifierType, Map<Material, TemperatureModifier>> modifiers = new HashMap<>();
+    private final Map<Biome, BiomeModifier> biomeModifiers = new HashMap<>();
     private BiomeModifier biomeDefault;
     private double minTemp = 0;
     private double maxTemp = 1;
@@ -73,7 +77,7 @@ public class Temperatures implements Configurable {
     }
 
     Temperatures(EternalNature plugin, File file, boolean def) {
-        this.plugin = plugin;
+        this.PLUGIN = plugin;
         this.file = file;
         this.DEFAULT = def;
 
@@ -109,12 +113,12 @@ public class Temperatures implements Configurable {
         if (!replace && file.exists()) return;
         file.getParentFile().mkdirs();
         if (DEFAULT) {
-            plugin.saveResource(DEF_CONFIG, true);
+            PLUGIN.saveResource(DEF_CONFIG, true);
         }
         else {
             File destination = this.file;
             try {
-                InputStream in = plugin.getResource(DEF_CONFIG);
+                InputStream in = PLUGIN.getResource(DEF_CONFIG);
                 if (in == null) return;
 
                 InputStreamReader streamReader = new InputStreamReader(in, StandardCharsets.UTF_8);
@@ -178,7 +182,7 @@ public class Temperatures implements Configurable {
                 loadMtl(config, TempModifierType.BLOCK);
                 loadMtl(config, TempModifierType.CLOTHING);
             }
-        }.runTaskAsynchronously(plugin);
+        }.runTaskAsynchronously(PLUGIN);
     }
 
     /**
@@ -188,7 +192,7 @@ public class Temperatures implements Configurable {
      * @param type   type of modifier to load.
      */
     private void loadMtl(FileConfiguration config, TempModifierType type) {
-        ConfigurationSection sec = config.getConfigurationSection("data." + type.getConfigName());
+        ConfigurationSection sec = config.getConfigurationSection("data." + type.getConfigPath());
         if (sec == null) return;
 
         for (String key : sec.getKeys(false)) {
@@ -210,7 +214,7 @@ public class Temperatures implements Configurable {
             if (data[0] == 0) continue;
 
             updateMinMaxTempCache(data[0]);
-            modifiers.get(type).put(mtl, type.makeModifier(data));
+            //modifiers.get(type).put(mtl, type.makeModifier(data)); TODO remove all
         }
     }
 

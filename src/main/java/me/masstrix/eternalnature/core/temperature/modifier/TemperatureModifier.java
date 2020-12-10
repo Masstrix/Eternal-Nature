@@ -14,20 +14,25 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.core.temperature;
+package me.masstrix.eternalnature.core.temperature.modifier;
 
-public class BiomeModifier extends TimeTemperature {
+import org.bukkit.configuration.ConfigurationSection;
 
-    private final String NAME;
-
-    public BiomeModifier(String name) {
-        this.NAME = name;
-    }
+public interface TemperatureModifier {
 
     /**
-     * @return the biomes name.
+     * @return the emission value for the modifier.
      */
-    public String getName() {
-        return NAME;
+    double getEmission();
+
+    /**
+     * Returns if a configuration section in the type matches.
+     *
+     * @param section a configuration section to check in.
+     * @param key     the key in the config section to check if it matches this type.
+     * @return if the given configuration section
+     */
+    default boolean doesMatchType(ConfigurationSection section, String key) {
+        return false;
     }
 }

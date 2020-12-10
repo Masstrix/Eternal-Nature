@@ -14,9 +14,25 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.core.temperature;
+package me.masstrix.eternalnature.core.temperature.modifier;
 
-public interface TemperatureModifier {
+import org.bukkit.configuration.ConfigurationSection;
 
-    double getEmission();
+public class SimpleTemperatureMod implements TemperatureModifier {
+
+    private double emission;
+
+    public SimpleTemperatureMod(double emission) {
+        this.emission = emission;
+    }
+
+    @Override
+    public double getEmission() {
+        return emission;
+    }
+
+    @Override
+    public boolean doesMatchType(ConfigurationSection section, String key) {
+        return section.isDouble(key) || section.isInt(key);
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Matthew Denton
+ * Copyright 2020 Matthew Denton
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,31 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.core.world;
+package me.masstrix.eternalnature.util;
 
-import org.bukkit.World;
+public class Pair<K, V> {
 
-public enum WeatherType {
-    CLEAR, RAIN, STORM;
+    private K first;
+    private V second;
 
-    public static WeatherType from(World world) {
-        if (world.isThundering()) return STORM;
-        if (world.hasStorm()) return RAIN;
-        return CLEAR;
+    public Pair(K first, V second) {
+        this.first = first;
+        this.second = second;
+    }
+
+    public K getFirst() {
+        return first;
+    }
+
+    public void setFirst(K first) {
+        this.first = first;
+    }
+
+    public V getSecond() {
+        return second;
+    }
+
+    public void setSecond(V second) {
+        this.second = second;
     }
 }

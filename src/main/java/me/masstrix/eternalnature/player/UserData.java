@@ -22,8 +22,9 @@ import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.config.Configuration;
 import me.masstrix.eternalnature.core.HeightGradient;
 import me.masstrix.eternalnature.core.temperature.TempModifierType;
+import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
 import me.masstrix.eternalnature.core.temperature.TemperatureScanner;
-import me.masstrix.eternalnature.core.temperature.Temperatures;
+import me.masstrix.eternalnature.core.world.WeatherType;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.listeners.DeathListener;
@@ -200,7 +201,7 @@ public class UserData implements EternalUser, Configurable {
 
         WorldProvider provider = PLUGIN.getEngine().getWorldProvider();
         WorldData worldData = provider.getWorld(player.getWorld());
-        Temperatures tempProfile = worldData.getTemperatures();
+        TemperatureProfile tempProfile = worldData.getTemperatures();
         this.tempScanner.useTemperatureProfile(tempProfile);
 
         // Updates the players temperature and applies damage to the player
@@ -544,12 +545,13 @@ public class UserData implements EternalUser, Configurable {
 
         WorldProvider provider = PLUGIN.getEngine().getWorldProvider();
         WorldData worldData = provider.getWorld(player.getWorld());
+        World world = player.getWorld();
 
         // Stop if world is invalid.
         if (worldData == null) return;
 
         Location loc = player.getLocation();
-        Temperatures tempData = worldData.getTemperatures();
+        TemperatureProfile tempData = worldData.getTemperatures();
 
         // Handle temperature ticking.
         boolean inWater = isBlockWater(loc.getBlock());
@@ -594,29 +596,29 @@ public class UserData implements EternalUser, Configurable {
             ItemStack[] armor = player.getEquipment().getArmorContents();
             for (ItemStack i : armor) {
                 if (i == null) continue;
-                emission += tempData.getEmission(i.getType(), TempModifierType.CLOTHING);
+                emission += tempData.getEmission(TempModifierType.CLOTHING, i.getType());
             }
 
             // Add temperature depending on what the player is holding
             Material mainHand = player.getInventory().getItemInMainHand().getType();
             Material offHand = player.getInventory().getItemInOffHand().getType();
             if (mainHand != Material.AIR) {
-                double mainTemp = tempData.getEmission(mainHand, TempModifierType.BLOCK);
+                double mainTemp = tempData.getEmission(TempModifierType.BLOCK, mainHand);
                 emission += mainTemp / 10;
             }
             if (offHand != Material.AIR) {
-                double offTemp = tempData.getEmission(mainHand, TempModifierType.BLOCK);
+                double offTemp = tempData.getEmission(TempModifierType.BLOCK, offHand);
                 emission += offTemp / 10;
             }
         }
 
         if (tmpUseWeather) {
-            // TODO add weather to temperature calculations
+            emission += tempData.getEmission(TempModifierType.WEATHER, WeatherType.from(world));
         }
 
         if (!Double.isInfinite(emission) && !Double.isNaN(emission)) {
             this.tempExact = emission;
-            tempData.updateMinMaxTempCache(tempExact);
+            tempData.updateMinMax(tempExact);
         }
 
         // Force the new exact temperature on the player.

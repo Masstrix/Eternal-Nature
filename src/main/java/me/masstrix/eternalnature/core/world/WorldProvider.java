@@ -19,6 +19,7 @@ package me.masstrix.eternalnature.core.world;
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.core.EternalWorker;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.scheduler.BukkitTask;
@@ -70,11 +71,14 @@ public class WorldProvider implements EternalWorker, Configurable {
 
     @Override
     public void start() {
+        for (World world : Bukkit.getWorlds()) {
+            getWorld(world);
+        }
     }
 
     @Override
     public void end() {
-        worldData.forEach((n, w) -> w.save());
+        worldData.forEach((name, world) -> world.unload());
     }
 
     /**

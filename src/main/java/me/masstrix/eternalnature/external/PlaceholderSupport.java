@@ -19,7 +19,7 @@ package me.masstrix.eternalnature.external;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
-import me.masstrix.eternalnature.core.temperature.Temperatures;
+import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.player.UserData;
@@ -103,7 +103,7 @@ public class PlaceholderSupport extends PlaceholderExpansion {
     private TemperatureIcon getTemperatureIcon(Player player, UserData data) {
         WorldProvider provider = PLUGIN.getEngine().getWorldProvider();
         WorldData worldData = provider.getWorld(player.getWorld());
-        Temperatures temps = worldData.getTemperatures();
+        TemperatureProfile temps = worldData.getTemperatures();
         return TemperatureIcon.getClosest(data.getTemperature(), temps);
     }
 }

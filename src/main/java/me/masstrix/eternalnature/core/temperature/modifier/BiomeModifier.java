@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Matthew Denton
+ * Copyright 2020 Matthew Denton
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.core.world;
+package me.masstrix.eternalnature.core.temperature.modifier;
 
-import org.bukkit.World;
+public class BiomeModifier extends TimeTemperature {
 
-public enum WeatherType {
-    CLEAR, RAIN, STORM;
+    private final String NAME;
 
-    public static WeatherType from(World world) {
-        if (world.isThundering()) return STORM;
-        if (world.hasStorm()) return RAIN;
-        return CLEAR;
+    public BiomeModifier(String name) {
+        this.NAME = name;
+    }
+
+    /**
+     * @return the biomes name.
+     */
+    public String getName() {
+        return NAME;
     }
 }

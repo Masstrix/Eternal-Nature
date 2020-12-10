@@ -19,7 +19,8 @@ package me.masstrix.eternalnature.core.world;
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.api.EternalWorld;
 import me.masstrix.eternalnature.config.Configurable;
-import me.masstrix.eternalnature.core.temperature.Temperatures;
+import me.masstrix.eternalnature.config.Configuration;
+import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
 import me.masstrix.eternalnature.core.world.wind.Wind;
 import me.masstrix.eternalnature.util.MathUtil;
 import org.bukkit.Bukkit;
@@ -29,20 +30,38 @@ import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 
+import java.io.File;
+
 public class WorldData implements EternalWorld, Configurable {
 
     private String worldName;
     protected EternalNature plugin;
-    private Temperatures temperatures;
+    private final TemperatureProfile TEMPERATURES;
     private Wind wind;
 
     public WorldData(EternalNature plugin, String world) {
         this.plugin = plugin;
         this.worldName = world;
-        loadConfig();
         this.wind = new Wind(this, plugin, MathUtil.randomInt(10000));
 
+        // Load and set the temperature config.
+        File cfg = new File(plugin.getDataFolder(), "/worlds/" + world + "/temperature-config.yml");
+        TEMPERATURES = new TemperatureProfile(new Configuration(plugin, cfg)
+                .setDefault(plugin.getEngine().getDefaultTempProfile().getConfig()));
+        TEMPERATURES.name("World:" + worldName);
+        plugin.getRootConfig().subscribe(TEMPERATURES);
+        TEMPERATURES.reload();
+
         plugin.getEngine().getHeartbeat().subscribe(wind);
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        TEMPERATURES.reload();
+    }
+
+    public void unload() {
+        plugin.getRootConfig().unsubscribe(TEMPERATURES);
     }
 
     /**
@@ -53,40 +72,11 @@ public class WorldData implements EternalWorld, Configurable {
     }
 
     /**
-     * Loads the config files for the world.
-     */
-    public void loadConfig() {
-        this.temperatures = new Temperatures(plugin, worldName);
-        if (temperatures.hasCustomConfig()) {
-            temperatures.loadData();
-        } else {
-            temperatures = plugin.getEngine().getDefaultTemperatures();
-        }
-    }
-
-    /**
      * Creates a new config file for the worlds temperature.
-     *
-     * @param replace should this replace an existing config. If replaced
-     *                it will be reset to default options.
      */
-    public boolean createCustomTemperatureConfig(boolean replace) {
-        if (!temperatures.isDefaultConfig() && !replace) {
-            return false;
-        }
-
-        // Create and load the new config
-        temperatures = new Temperatures(plugin, worldName);
-        temperatures.createFiles(true);
-        temperatures.loadData();
+    public boolean createCustomTemperatureConfig() {
+        TEMPERATURES.getConfig().save();
         return true;
-    }
-
-    /**
-     * @return if the world uses a custom data set.
-     */
-    public boolean usesCustomConfig() {
-        return !temperatures.isDefaultConfig();
     }
 
     /**
@@ -97,22 +87,13 @@ public class WorldData implements EternalWorld, Configurable {
         return worldName;
     }
 
-    public void save() {
-        temperatures.saveConfig();
-    }
-
-    @Override
-    public void updateConfig(ConfigurationSection section) {
-        temperatures.loadData();
-    }
-
     public World asBukkit() {
         return Bukkit.getWorld(worldName);
     }
 
     @Override
-    public Temperatures getTemperatures() {
-        return temperatures;
+    public TemperatureProfile getTemperatures() {
+        return TEMPERATURES;
     }
 
     /**
@@ -128,7 +109,7 @@ public class WorldData implements EternalWorld, Configurable {
         World world = asBukkit();
         if (world != null) {
             Biome biome = world.getBlockAt(x, y, z).getBiome();
-            return temperatures.getBiome(biome, world);
+            return TEMPERATURES.getBiome(biome, world);
         }
         return 0;
     }
@@ -174,7 +155,7 @@ public class WorldData implements EternalWorld, Configurable {
 
         // Apply modifier if block has sunlight.
         if (block.getLightFromSky() > 0) {
-            double directSunAmplifier = temperatures.getDirectSunAmplifier() - 1;
+            double directSunAmplifier = TEMPERATURES.getDirectSunAmplifier() - 1;
             byte skyLight = block.getLightFromSky();
             double percent = skyLight / 15D;
             temp *= directSunAmplifier * percent + 1;
@@ -184,7 +165,7 @@ public class WorldData implements EternalWorld, Configurable {
         if (((block.getLightFromSky() <= 6 && block.getLightLevel() < 6)
                 || block.getType() == Material.CAVE_AIR)
                 && block.getLightLevel() != 15) {
-            double amp = temperatures.getCaveModifier() - 1;
+            double amp = TEMPERATURES.getCaveModifier() - 1;
             byte light = block.getLightLevel();
             double percent = (15D - light) / 15D;
             temp *= amp * percent + 1;

@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package me.masstrix.eternalnature.core.temperature;
+package me.masstrix.eternalnature.core.temperature.modifier;
+
+import org.bukkit.configuration.ConfigurationSection;
 
 public class BlockTemperature implements TemperatureModifier {
 
@@ -34,6 +36,24 @@ public class BlockTemperature implements TemperatureModifier {
     @Override
     public double getEmission() {
         return emission;
+    }
+
+    @Override
+    public boolean doesMatchType(ConfigurationSection section, String key) {
+        if (!section.isConfigurationSection(key)) return false;
+        ConfigurationSection sub = section.getConfigurationSection(key);
+        if (sub == null) return false;
+        return sub.contains("emission") && sub.contains("falloff")
+                && (sub.isDouble("emission") || sub.isInt("emission"))
+                && (sub.isDouble("falloff") || sub.isInt("falloff"));
+    }
+
+    @Override
+    public String toString() {
+        return "BlockTemperature{" +
+                "emission=" + emission +
+                ", scalar=" + scalar +
+                '}';
     }
 
     public void setEmission(double emission) {
