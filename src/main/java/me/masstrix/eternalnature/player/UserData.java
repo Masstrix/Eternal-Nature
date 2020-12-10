@@ -380,6 +380,10 @@ public class UserData implements EternalUser, Configurable {
         return temperature;
     }
 
+    protected double getTemperatureExact() {
+        return tempExact;
+    }
+
     /**
      * @return the hydration level of this player.
      */

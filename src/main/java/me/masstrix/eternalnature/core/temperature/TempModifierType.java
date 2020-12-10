@@ -58,14 +58,14 @@ public abstract class TempModifierType {
     public static final TempModifierType CLOTHING = new TempModifierType("clothing") {
         @Override
         public SimpleModifierMap<Material> newMap(TemperatureProfile profile) {
-            return new SimpleModifierMap<>(profile, "clothing", Material::values);
+            return new SimpleModifierMap<>(profile, this, Material::values);
         }
     };
 
     public static final TempModifierType WEATHER = new TempModifierType("weather") {
         @Override
         public SimpleModifierMap<WeatherType> newMap(TemperatureProfile profile) {
-            return new SimpleModifierMap<>(profile, "weather", WeatherType::values);
+            return new SimpleModifierMap<>(profile, this, WeatherType::values);
         }
     };
 

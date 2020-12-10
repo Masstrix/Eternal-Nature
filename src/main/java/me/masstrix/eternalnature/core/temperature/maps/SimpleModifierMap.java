@@ -16,6 +16,7 @@
 
 package me.masstrix.eternalnature.core.temperature.maps;
 
+import me.masstrix.eternalnature.core.temperature.TempModifierType;
 import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
 import me.masstrix.eternalnature.core.temperature.modifier.SimpleTemperatureMod;
 import me.masstrix.eternalnature.util.ConfigUtil;
@@ -28,6 +29,11 @@ public class SimpleModifierMap<K> extends TemperatureModifierMap<K> {
 
     public SimpleModifierMap(TemperatureProfile profile, String path, Constants<K> constants) {
         super(profile, path);
+        this.CONSTANTS = constants;
+    }
+
+    public SimpleModifierMap(TemperatureProfile profile, TempModifierType type, Constants<K> constants) {
+        super(profile, type);
         this.CONSTANTS = constants;
     }
 

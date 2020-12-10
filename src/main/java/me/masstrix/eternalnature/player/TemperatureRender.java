@@ -112,6 +112,9 @@ public class TemperatureRender implements StatRenderer {
 
         text = text.replaceAll("%temperature%", tempInfoColor + String.format("%.1f°", temperature));
 
+        if (USER.isDebugEnabled())
+            text = "&7(&e" + MathUtil.round(USER.getTemperatureExact(), 1) + "&7) " + text;
+
         if (renderMethod == StatusRenderMethod.BOSSBAR) {
             if (bossBar == null) {
                 bossBar = Bukkit.createBossBar("Hydration", BarColor.BLUE, BarStyle.SEGMENTED_10);
