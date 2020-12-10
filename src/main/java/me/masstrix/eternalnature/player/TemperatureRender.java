@@ -105,7 +105,7 @@ public class TemperatureRender implements StatRenderer {
 
         double burn = temps.getBurningPoint();
         double freeze = temps.getFreezingPoint();
-        boolean willDamage = temperature <= freeze + 5 || temperature >= burn - 5;
+        boolean willDamage = temperature <= freeze || temperature >= burn;
         ChatColor tempInfoColor = color;
         if (warningFlash && willDamage)
             tempInfoColor = flash ? ChatColor.RED : ChatColor.WHITE;
@@ -126,7 +126,7 @@ public class TemperatureRender implements StatRenderer {
 
             bossBar.setProgress(MathUtil.minMax(progress, 0, 1));
             bossBar.setTitle(StringUtil.color(text));
-            bossBar.setColor(BossBarUtil.from(icon.getColor()));
+            bossBar.setColor(BossBarUtil.from(color));
             return;
         } else if (bossBar != null){
             bossBar.removeAll();
