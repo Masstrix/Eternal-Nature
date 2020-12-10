@@ -42,7 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LeafEmitter implements EternalWorker, Configurable {
 
     private boolean enabled;
-    private double spawnChance = 0.3;
+    private double spawnChance = 0.005;
     private int maxParticles = 200;
     private int scanDelay = 2;
     private final EternalNature PLUGIN;

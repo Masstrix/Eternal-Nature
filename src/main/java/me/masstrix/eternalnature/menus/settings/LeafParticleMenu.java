@@ -94,7 +94,7 @@ public class LeafParticleMenu extends GlobalMenu {
                 .onClick(player -> {
                     spawnChances.next();
                     double chance = spawnChances.getSelected().getChance();
-                    CONFIG.set(ConfigPath.LEAF_EFFECT_MAX_PARTICLES, chance);
+                    CONFIG.set(ConfigPath.LEAF_EFFECT_CHANCE, chance);
                     CONFIG.save().reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));

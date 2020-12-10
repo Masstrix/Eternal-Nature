@@ -22,7 +22,7 @@ import java.util.Random;
 
 public class MathUtil {
 
-    private static Random random = new Random();
+    private final static Random RAND = new Random();
 
     /**
      * Returns an instance of <code>Random</code>. This reduces the use of needing to
@@ -31,7 +31,7 @@ public class MathUtil {
      * @return an instance of <code>java.util.Random</code>
      */
     public static Random random() {
-        return random;
+        return RAND;
     }
 
     /**
@@ -44,7 +44,7 @@ public class MathUtil {
     public static boolean chance(double percent) {
         if (percent >= 1) return true;
         if (percent <= 0) return false;
-        return random.nextDouble() <= percent;
+        return RAND.nextDouble() <= percent;
     }
 
 
@@ -59,7 +59,11 @@ public class MathUtil {
     }
 
     public static double randomDouble() {
-        return random.nextDouble();
+        return RAND.nextDouble();
+    }
+
+    public static double randomDouble(double min, double max) {
+        return min + (max - min) * RAND.nextDouble();
     }
 
     /**
@@ -69,7 +73,7 @@ public class MathUtil {
      * @return a random in between 0 and max.
      */
     public static int randomInt(int max) {
-        return random.nextInt(max);
+        return RAND.nextInt(max);
     }
 
     /**
@@ -80,7 +84,7 @@ public class MathUtil {
      * @return a random int between min and max.
      */
     public static int randomInt(int min, int max) {
-        return random.nextInt(max - min) + min;
+        return RAND.nextInt(max - min) + min;
     }
 
     /**

@@ -32,12 +32,15 @@ import org.bukkit.block.data.Levelled;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import java.util.Objects;
+
 public class LeafParticle extends BaseParticle implements Leaf {
 
     private SimplexNoiseOctave movementNoise;
     private ShadowArmorStand leaf;
     private double animationOffset;
     private boolean hasSettled;
+    private boolean willFloat;
     private int ticks;
     private double fallRate;
     private double randomArmOffset = degreesToEuler(MathUtil.randomDouble() * 360);
@@ -72,8 +75,9 @@ public class LeafParticle extends BaseParticle implements Leaf {
             });
         }
         lifeTime = MathUtil.randomInt(90, 150);
-        fallRate = MathUtil.random().nextDouble() / 10;
+        fallRate = MathUtil.randomDouble(0.01, 0.1);
         movementNoise = new SimplexNoiseOctave(MathUtil.randomInt(10000));
+        willFloat = MathUtil.chance(0.3);
 
         loc.setYaw(MathUtil.randomInt(0, 360));
         leaf = new ShadowArmorStand(loc);
@@ -87,9 +91,9 @@ public class LeafParticle extends BaseParticle implements Leaf {
         // This will not be sent to a player if they suddenly become in range of it.
         int renderDistance = 32;
 
-        //noinspection ConstantConditions
-        for (Player player : loc.getWorld().getPlayers()) {
-            if (loc.distanceSquared(player.getLocation()) < renderDistance * renderDistance) {
+        int distSq = renderDistance * renderDistance;
+        for (Player player : Objects.requireNonNull(loc.getWorld()).getPlayers()) {
+            if (loc.distanceSquared(player.getLocation()) < distSq) {
                 leaf.sendTo(player);
             }
         }
@@ -122,6 +126,12 @@ public class LeafParticle extends BaseParticle implements Leaf {
         Location loc = leaf.getLocation().clone().add(0, 0.3, 0);
         hasSettled = !loc.getBlock().isPassable();
         boolean inWater = loc.getBlock().getType() == Material.WATER;
+        if (inWater && !hasSettled && willFloat) {
+            // TODO make leaf particles interact with flowing water.
+            //      Also make some of them float on the top.
+            //      Water direction is client side so that will need to be worked
+            //      out to get the flowing direction.
+        }
 
         // Burn the particle
         if (loc.getBlock().getType() == Material.LAVA) {
@@ -136,7 +146,7 @@ public class LeafParticle extends BaseParticle implements Leaf {
             }
         }
 
-        animationOffset += 0.1;
+        animationOffset += 0.05;
 
         if (wind != null) {
             Vector force = wind.getForce(loc.getBlockX(), loc.getBlockZ())

@@ -30,7 +30,7 @@ public class ConfigPath {
     public static final String LEAF_EFFECT_FIDELITY = path(LEAF_EFFECT, "fidelity");
     public static final String LEAF_EFFECT_MAX_PARTICLES = path(LEAF_EFFECT, "max-particles");
     public static final String LEAF_EFFECT_DELAY = path(LEAF_EFFECT, "scan-delay");
-    public static final String LEAF_EFFECT_CHANCE = path(LEAF_EFFECT, "chance");
+    public static final String LEAF_EFFECT_CHANCE = path(LEAF_EFFECT, "spawn-chance");
 
     public static final String RAND_SPREAD = path(GLOBAL, "randomly-spread-trees");
     public static final String RAN_SPREAD_ENABLED = path(RAND_SPREAD, "enabled");
