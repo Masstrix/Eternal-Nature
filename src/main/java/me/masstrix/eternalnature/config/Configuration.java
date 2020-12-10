@@ -205,7 +205,7 @@ public class Configuration {
     public Configuration save() {
         try {
             if (!file.exists()) {
-                file.mkdirs();
+                file.getParentFile().mkdirs();
                 file.createNewFile();
             }
             config.save(file);

@@ -95,13 +95,8 @@ public class TemperatureProfile implements Configurable {
         freezeTemp = section.getDouble("damage.threshold.cold", -5);
         CONFIG.reload(false);
 
-        minTemp = 0;
-        maxTemp = 0;
-
-        MODIFIERS.values().forEach(map -> {
-            updateMinMax(map.getMax());
-            updateMinMax(map.getMin());
-        });
+        minTemp = section.getDouble("cache.min-temp", 0);
+        maxTemp = section.getDouble("cache.max-temp", 0);
     }
 
     /**
@@ -114,6 +109,8 @@ public class TemperatureProfile implements Configurable {
     public void updateMinMax(double val) {
         if (val < minTemp) minTemp = val;
         if (val > maxTemp) maxTemp = val;
+        CONFIG.set("cache.min-temp", minTemp);
+        CONFIG.set("cache.max-temp", maxTemp);
     }
 
     /**

@@ -16,12 +16,14 @@
 
 package me.masstrix.eternalnature.command;
 
+import me.masstrix.eternalnature.EternalEngine;
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.config.ConfigPath;
 import me.masstrix.eternalnature.core.temperature.TempModifierType;
 import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
 import me.masstrix.eternalnature.core.temperature.modifier.BiomeModifier;
+import me.masstrix.eternalnature.core.world.LeafEmitter;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.menus.Menus;
@@ -85,8 +87,6 @@ public class NatureCommand extends EternalCommand {
                 msg("     &7&o/world options");
                 msg("");
                 msg("&a/eternal world list &7- Lists all loaded worlds.");
-                msg("&a/eternal world reloadAll &7- Reloads all worlds.");
-                msg("&a/eternal world " + world + " reload &7- Reloads the worlds configs.");
                 msg("&a/eternal world " + world + " info &7- Displays info about that world.");
                 msg("&a/eternal world " + world + " makeCustomConfig &7- " +
                         "Makes a custom temperature config for world specific configuration.");
@@ -103,12 +103,6 @@ public class NatureCommand extends EternalCommand {
                 msg("     &2&lLoaded Worlds");
                 worlds.forEach(name -> msg(" &2• &f" + name));
                 msg("");
-                return;
-            }
-            else if (sub.equalsIgnoreCase("reloadAll") && args.length == 2) {
-//                provider.getWorlds().forEach(WorldData::reload);
-                // TODO use world reload
-                msg(PluginData.PREFIX + "&aReloaded all worlds data.");
                 return;
             }
 
@@ -140,32 +134,32 @@ public class NatureCommand extends EternalCommand {
             }
 
             // Handle sub commands for /eternal world
-            if (sub.equalsIgnoreCase("reload")) {
-                WorldData data = provider.getWorld(world);
-                msg(PluginData.PREFIX + "&7Reloading files...");
-                // TODO implement reload method for worlds
-                msg(PluginData.PREFIX + "&aReloaded config files");
-            }
-            else if (sub.equalsIgnoreCase("info")) {
+            if (sub.equalsIgnoreCase("info")) {
                 WorldData data = provider.getWorld(world);
                 TemperatureProfile t = data.getTemperatures();
                 msg("");
                 msg("     &2&lEternal Nature");
-                msg("     &6&o" + world + "'s info");
-                msg("");
-                // TODO add more stats like average player temp, leaf particle count etc.
+                msg("     &6&o" + world + "&6's info");
                 msg("");
                 if (wasPlayer()) {
                     Player player = (Player) getSender();
-                    Block standing = player.getLocation().getBlock();
-                    BiomeModifier mod = (BiomeModifier) t.getModifier(TempModifierType.BIOME, standing.getBiome());
-                    if (mod == null) {
-                        msg("Current in biome: &7Unknown");
+
+                    if (data.asBukkit() == player.getWorld()) {
+                        Block standing = player.getLocation().getBlock();
+                        BiomeModifier mod = (BiomeModifier) t.getModifier(TempModifierType.BIOME, standing.getBiome());
+                        if (mod == null) {
+                            msg("Current Biome: &7Unknown");
+                        } else {
+                            msg("Current Biome:: &7" + mod.getName()
+                                    + " (&f" + mod.getEmission() + "&7)");
+                        }
                     } else {
-                        msg("Currently in biome: &7" + mod.getName());
+                        msg("&7&oYou are not in this world.");
                     }
-                    msg("");
                 }
+                msg("Hottest record: &c" + t.getMaxTemp());
+                msg("Coldest record: &b" + t.getMinTemp());
+                msg("");
             }
             else {
                 msg(PluginData.PREFIX + "&cInvalid use. For help use /eternal world");
@@ -190,13 +184,18 @@ public class NatureCommand extends EternalCommand {
             }
         }
 
-        else if (args[0].equalsIgnoreCase("stats")) {
+        else if (args[0].equalsIgnoreCase("stats")
+                || args[0].equalsIgnoreCase("info")) {
+            EternalEngine engine = plugin.getEngine();
+            LeafEmitter leafEmitter = (LeafEmitter) engine.getWorker(LeafEmitter.class);
+
             msg("");
             msg("     &2&lEternal Nature");
             msg("     &7Background Stats");
             msg("");
-            msg("Players cached: &7" + plugin.getEngine().getCashedUsers().size());
-            msg("Worlds Loaded: &7" + plugin.getEngine().getWorldProvider().getLoaded());
+            msg("Players Cached: &7" + engine.getCashedUsers().size());
+            msg("Worlds Loaded: &7" + engine.getWorldProvider().getLoaded());
+            msg("Leaf Particles: &a" + leafEmitter.getParticleCount() + "&7/" + leafEmitter.getMaxParticles());
             msg("");
         }
 
@@ -279,7 +278,6 @@ public class NatureCommand extends EternalCommand {
                 if (args.length == 2) {
                     List<String> worlds = new ArrayList<>(names);
                     worlds.add("list");
-                    worlds.add("reloadAll");
                     return worlds;
                 }
 

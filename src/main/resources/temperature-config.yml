@@ -190,5 +190,5 @@ data:
     diamond_boots: 0.3
 
 cache:
-  min-temp: 0
-  max-temp: 0
+  min-temp: 0.0
+  max-temp: 0.0

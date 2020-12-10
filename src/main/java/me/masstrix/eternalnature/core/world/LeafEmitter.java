@@ -70,6 +70,18 @@ public class LeafEmitter implements EternalWorker, Configurable {
         SCANNER.setFidelity(fidelity);
     }
 
+    public int getParticleCount() {
+        return PARTICLES.size();
+    }
+
+    public int getMaxParticles() {
+        return maxParticles;
+    }
+
+    public double getSpawnChance() {
+        return spawnChance;
+    }
+
     @Override
     public void start() {
         if (updater != null)
