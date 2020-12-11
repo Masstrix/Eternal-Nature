@@ -30,7 +30,7 @@ import org.bukkit.util.Vector;
  * creating particles so there are not issues with them becoming stuck in the world if using entities
  * to create the effect.
  */
-public abstract class BaseParticle implements Ticking, EternalEntity {
+public abstract class BaseParticle implements Ticking, EternalParticle {
 
     Wind wind;
     boolean alive;

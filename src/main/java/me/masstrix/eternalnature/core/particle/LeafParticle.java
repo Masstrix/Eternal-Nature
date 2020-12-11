@@ -28,8 +28,10 @@ import me.masstrix.eternalnature.util.SimplexNoiseOctave;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.block.data.Levelled;
 import org.bukkit.entity.Player;
+import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
 
 import java.util.Objects;
@@ -41,9 +43,8 @@ public class LeafParticle extends BaseParticle implements Leaf {
     private double animationOffset;
     private boolean hasSettled;
     private boolean willFloat;
-    private int ticks;
     private double fallRate;
-    private double randomArmOffset = degreesToEuler(MathUtil.randomDouble() * 360);
+    private final double ARM_OFFSET = degreesToEuler(MathUtil.randomDouble() * 360);
 
     /**
      * Creates a new leaf effect. Leaves when ticked will slowly fall until they hit a
@@ -74,7 +75,7 @@ public class LeafParticle extends BaseParticle implements Leaf {
                 return true;
             });
         }
-        lifeTime = MathUtil.randomInt(90, 150);
+        lifeTime = MathUtil.randomInt(120, 150);
         fallRate = MathUtil.randomDouble(0.01, 0.1);
         movementNoise = new SimplexNoiseOctave(MathUtil.randomInt(10000));
         willFloat = MathUtil.chance(0.3);
@@ -113,18 +114,21 @@ public class LeafParticle extends BaseParticle implements Leaf {
 
     @Override
     public Location getLocation() {
-        return leaf.getLocation();
+        return getArmTip(leaf);
     }
 
     @Override
     public void tick() {
-        if (lifeTime-- <= 0 || ticks++ > 20 && !leaf.getLocation().clone().add(0, 1, 0).getBlock().isPassable()) {
-            remove(); // End the effect if leaf hits the ground
-            lifeTime = 0;
+        // Remove the particle if it's lifetime is reached
+        if (super.lifeTime-- <= 0) {
+            remove();
+            super.lifeTime = 0;
+            return;
         }
 
-        Location loc = leaf.getLocation().clone().add(0, 0.3, 0);
-        hasSettled = !loc.getBlock().isPassable();
+        Location loc = getLocation();
+        Block block = loc.getBlock();
+        hasSettled = !block.isPassable();
         boolean inWater = loc.getBlock().getType() == Material.WATER;
         if (inWater && !hasSettled && willFloat) {
             // TODO make leaf particles interact with flowing water.
@@ -135,8 +139,8 @@ public class LeafParticle extends BaseParticle implements Leaf {
 
         // Burn the particle
         if (loc.getBlock().getType() == Material.LAVA) {
-            Levelled levelled = (Levelled) loc.getBlock().getBlockData();
-            double y = loc.getBlock().getY() + (levelled.getLevel() / (double) levelled.getMaximumLevel());
+            Levelled levelled = (Levelled) block.getBlockData();
+            double y = block.getY() + (levelled.getLevel() / (double) levelled.getMaximumLevel());
 
             // Remove particle if in the lava
             if (loc.getY() < y) {
@@ -165,13 +169,49 @@ public class LeafParticle extends BaseParticle implements Leaf {
             double poseX = movementNoise.noise(animationOffset) * 0.5;
             double poseY = movementNoise.noise(animationOffset) * 10;
             double poseZ = movementNoise.noise(animationOffset) * 10;
-            leaf.setPose(ArmorStandBodyPart.RIGHT_ARM, new Vector(poseX + randomArmOffset, poseY, poseZ));
+            leaf.setPose(ArmorStandBodyPart.RIGHT_ARM, new Vector(poseX + ARM_OFFSET, poseY, poseZ));
         } else {
             Vector pose = leaf.getPose(ArmorStandBodyPart.RIGHT_ARM);
             pose.divide(new Vector(1.2, 1.2, 1.2));
             leaf.setPose(ArmorStandBodyPart.RIGHT_ARM, pose);
         }
-        velocity.divide(new Vector(2, 2,2 ));
+        velocity.divide(new Vector(2, 2, 2));
         animationOffset += 0.01;
+    }
+
+    private static Location getArmTip(ShadowArmorStand as) {
+
+        float offsetY = as.isSmall() ? 11f : 22f;
+        float offsetShoulder = as.isSmall() ? 3f : 5f;
+        float armLength = as.isSmall() ? 5f : 10f;
+
+        // Gets shoulder location
+        Location asl = as.getLocation().clone();
+        asl.setYaw(asl.getYaw() + 90f);
+        Vector dir = asl.getDirection();
+        asl.setX(asl.getX() + offsetShoulder / 16f * dir.getX());
+        asl.setY(asl.getY() + offsetY / 16f);
+        asl.setZ(asl.getZ() + offsetShoulder / 16f * dir.getZ());
+
+        // Get Hand Location
+        Vector pose = as.getPose(ArmorStandBodyPart.RIGHT_ARM);
+        EulerAngle ea = new EulerAngle(
+                Math.toRadians(pose.getX()),
+                Math.toRadians(pose.getY()),
+                Math.toRadians(pose.getZ()));
+        Vector armDir = getDirection(ea.getY(), ea.getX(), -ea.getZ());
+        armDir = armDir.rotateAroundY(Math.toRadians(asl.getYaw() - 90f));
+        armDir.rotateAroundY(Math.toRadians(asl.getYaw() - 90F));
+        asl.setX(asl.getX() + armLength / 16f * armDir.getX());
+        asl.setY(asl.getY() + armLength / 16f * armDir.getY());
+        return asl;
+    }
+
+    private static Vector getDirection(double yaw, double pitch, double roll) {
+        Vector v = new Vector(0, -1, 0);
+        v.rotateAroundX(pitch);
+        v.rotateAroundY(yaw);
+        v.rotateAroundZ(roll);
+        return v;
     }
 }

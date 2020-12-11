@@ -126,13 +126,25 @@ public class LeafEmitter implements EternalWorker, Configurable {
                     double offsetX = MathUtil.randomDouble() - 0.5;
                     double offsetZ = MathUtil.randomDouble() - 0.5;
                     WorldData worldData = PLUGIN.getEngine().getWorldProvider().getWorld(loc.getWorld());
-                    Location spawnLoc = loc.clone().add(offsetX, -1.2, offsetZ);
-                    LeafParticle particle = new LeafParticle(spawnLoc);
+                    Location spawnLoc = loc.clone().add(offsetX, -0.5, offsetZ);
+                    LeafParticle particle = new LeafParticle(spawnLoc, PLUGIN.getEngine());
                     particle.setForces(worldData.getWind());
                     PARTICLES.add(particle);
                 }
             }
         }.runTaskTimerAsynchronously(PLUGIN, 10, 1);
+    }
+
+    /**
+     * Spawns a new leaf particle already assigned to this emiiter and returns it.
+     *
+     * @param loc location to spawn the particle at.
+     * @return leaf particle that was spawned.
+     */
+    public LeafParticle spawn(Location loc) {
+        LeafParticle particle = new LeafParticle(loc);
+        PARTICLES.add(particle);
+        return particle;
     }
 
     /**
