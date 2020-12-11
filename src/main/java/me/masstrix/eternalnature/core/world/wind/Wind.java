@@ -32,16 +32,17 @@ public class Wind implements Ticking {
     private float amp = 0.01F;
     private double offset;
     private byte offsetDir;
+    private double ticks = 0;
 
     public Wind(WorldData world, EternalNature plugin, long seed) {
         this.world = world;
         this.plugin = plugin;
         xMap = new SimplexOctaveGenerator(seed, 2);
-        xMap.setScale(0.1);
+        xMap.setScale(0.01);
         xMap.setWScale(2);
 
         yMap = new SimplexOctaveGenerator(seed + 6543, 2);
-        yMap.setScale(0.1);
+        yMap.setScale(0.01);
         yMap.setWScale(2);
     }
 
@@ -60,22 +61,36 @@ public class Wind implements Ticking {
     }
 
     public Vector getForce(double x, double z) {
-        double valX = xMap.noise(x, offset, z, fre, amp) / 5;
-        double valZ = xMap.noise(x, offset, z, fre, amp) / 5;
+        double valX = xMap.noise(x, offset, z, fre, amp);
+        double valZ = xMap.noise(x, offset, z, fre, amp);
+
+        double cos = Math.cos(valX);
+        double sin = Math.sin(valZ);
 
         double temp = world.getBiomeEmission((int) x, 0, (int) z);
-        //return new Vector(valX, temp * 0.01 - 1, valZ);
-        return new Vector(0.1, 0, 0.1);
+        double pseudoUpdraft = temp * 0.001;
+        double strength = xMap.noise((x / 10) + (ticks / 10), ticks, (z / 10) + (ticks / 10),
+                0.0001, 0.001);
+        strength = Math.max(0, strength * 0.009);
+
+        double gust = xMap.noise(ticks, 0.1, 1);
+        double gustStrength = Math.max((gust - 0.6) * 0.05, 0);
+
+        return new Vector(cos, 0, sin)
+                .rotateAroundZ(pseudoUpdraft)
+                .normalize()
+                .multiply(strength + gustStrength);
     }
 
     @Override
     public void tick() {
         int range = 10000;
-        offset += offsetDir < 0 ? -0.1 : 0.1;
+        offset += offsetDir < 0 ? -0.5 : 0.5;
         if (offset >= range && offsetDir > 0) {
             offsetDir = -1;
         } else if (offset < range && offsetDir < 0) {
             offsetDir = 1;
         }
+        ticks += 0.1;
     }
 }

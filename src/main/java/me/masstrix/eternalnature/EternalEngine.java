@@ -67,6 +67,7 @@ public class EternalEngine {
         LeafEmitter leafEmitter;
         TreeSpreader treeSpreader;
         registerWorkers(
+                heartbeat,
                 new UserWorker(plugin, this),
                 new Renderer(plugin, this),
                 new ShadowEntityManager(plugin),

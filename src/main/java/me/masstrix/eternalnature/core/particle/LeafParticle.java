@@ -153,8 +153,7 @@ public class LeafParticle extends BaseParticle implements Leaf {
         animationOffset += 0.05;
 
         if (wind != null) {
-            Vector force = wind.getForce(loc.getBlockX(), loc.getBlockZ())
-                    .divide(new Vector(70, 100, 70));
+            Vector force = wind.getForce(loc.getBlockX(), loc.getBlockZ());
             velocity.add(force);
         }
 
@@ -175,7 +174,7 @@ public class LeafParticle extends BaseParticle implements Leaf {
             pose.divide(new Vector(1.2, 1.2, 1.2));
             leaf.setPose(ArmorStandBodyPart.RIGHT_ARM, pose);
         }
-        velocity.divide(new Vector(2, 2, 2));
+        velocity.divide(new Vector(1.2, 2, 1.2));
         animationOffset += 0.01;
     }
 
