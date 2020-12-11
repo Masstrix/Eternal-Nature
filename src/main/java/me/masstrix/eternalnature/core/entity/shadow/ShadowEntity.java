@@ -16,6 +16,7 @@
 
 package me.masstrix.eternalnature.core.entity.shadow;
 
+import io.netty.util.internal.ConcurrentSet;
 import me.masstrix.eternalnature.util.ReflectionUtil;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Location;
@@ -27,9 +28,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.Set;
-import java.util.WeakHashMap;
 
 public abstract class ShadowEntity {
 
@@ -45,7 +44,7 @@ public abstract class ShadowEntity {
     private static Method getCraftWorldHandle;
     private static Method setPositionMethod;
     private static Method setSilentMethod;
-    private static Method setNoGravityMethod;
+    private static Method setFireTicksMethod;
 
     static {
         try {
@@ -73,8 +72,7 @@ public abstract class ShadowEntity {
             setPositionMethod = entityClass.getMethod("setPositionRotation",
                     double.class, double.class, double.class, float.class, float.class);
             setSilentMethod = entityClass.getMethod("setSilent", boolean.class);
-            setNoGravityMethod = entityClass.getMethod("setNoGravity", boolean.class);
-
+            setFireTicksMethod = entityClass.getMethod("setFireTicks", int.class);
         } catch (ClassNotFoundException | NoSuchMethodException e) {
             e.printStackTrace();
         }
@@ -94,7 +92,7 @@ public abstract class ShadowEntity {
         return null;
     }
 
-    private final Set<Player> VISIBLE_TO = Collections.newSetFromMap(new WeakHashMap<>());
+    private final Set<Player> VISIBLE_TO = new ConcurrentSet<>();
     private int id = -1;
     protected Object entity;
     protected Object dataWatcher;
@@ -131,6 +129,12 @@ public abstract class ShadowEntity {
         return id;
     }
 
+    /**
+     * Sets if the entity is silent. This is useful to set to false before spawning an
+     * entity as it will ensure no sound will be made.
+     *
+     * @param silent should this entity make sounds.
+     */
     public void setSilent(boolean silent) {
         try {
             setSilentMethod.invoke(entity, silent);
@@ -139,10 +143,33 @@ public abstract class ShadowEntity {
         }
     }
 
+    /**
+     * Sets the fire ticks of the entity.
+     *
+     * @param ticks how long the entity should be on fire for.
+     */
+    public void setFireTicks(int ticks) {
+        try {
+            setFireTicksMethod.invoke(entity, ticks);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Sets the yaw of the entity.
+     *
+     * @param yaw yaw to set.
+     */
     public void setYaw(float yaw) {
         setYawPitch(yaw, location.getPitch());
     }
 
+    /**
+     * Sets the pitch of the entity.
+     *
+     * @param pitch pitch to set.
+     */
     public void setPitch(float pitch) {
         setYawPitch(location.getYaw(), pitch);
     }
