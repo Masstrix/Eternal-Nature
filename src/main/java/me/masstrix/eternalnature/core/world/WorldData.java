@@ -22,8 +22,6 @@ import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.config.Configuration;
 import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
 import me.masstrix.eternalnature.core.world.wind.Wind;
-import me.masstrix.eternalnature.util.MathUtil;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
@@ -34,33 +32,38 @@ import java.io.File;
 
 public class WorldData implements EternalWorld, Configurable {
 
-    private String worldName;
+    private final World WORLD;
     protected EternalNature plugin;
     private final TemperatureProfile TEMPERATURES;
-    private Wind wind;
+    private final Wind WIND;
 
-    public WorldData(EternalNature plugin, String world) {
+    public WorldData(EternalNature plugin, World world) {
         this.plugin = plugin;
-        this.worldName = world;
-        this.wind = new Wind(this, plugin, MathUtil.randomInt(10000));
+        this.WORLD = world;
+        this.WIND = new Wind(this, plugin, world.getSeed());
 
         // Load and set the temperature config.
         File cfg = new File(plugin.getDataFolder(), "/worlds/" + world + "/temperature-config.yml");
         TEMPERATURES = new TemperatureProfile(new Configuration(plugin, cfg)
                 .setDefault(plugin.getEngine().getDefaultTempProfile().getConfig()));
-        TEMPERATURES.name("World:" + worldName);
+        TEMPERATURES.name("World:" + this.WORLD);
         plugin.getRootConfig().subscribe(TEMPERATURES);
-        TEMPERATURES.reload();
 
-        plugin.getEngine().getHeartbeat().subscribe(wind);
+        plugin.getEngine().getWorldProvider().getHeartbeat().subscribe(WIND);
     }
 
     @Override
     public void updateConfig(ConfigurationSection section) {
         TEMPERATURES.reload();
+        plugin.getRootConfig().reload(WIND);
     }
 
+    /**
+     * Unloads the world. This will make sure to unsubscribe any tasks that need to
+     * be and save data that needs to be saved.
+     */
     public void unload() {
+        plugin.getEngine().getWorldProvider().getHeartbeat().unsubscribe(WIND);
         plugin.getRootConfig().unsubscribe(TEMPERATURES);
     }
 
@@ -68,7 +71,7 @@ public class WorldData implements EternalWorld, Configurable {
      * @return the wind for this world.
      */
     public Wind getWind() {
-        return wind;
+        return WIND;
     }
 
     /**
@@ -84,11 +87,11 @@ public class WorldData implements EternalWorld, Configurable {
      */
     @Override
     public String getWorldName() {
-        return worldName;
+        return WORLD.getName();
     }
 
     public World asBukkit() {
-        return Bukkit.getWorld(worldName);
+        return WORLD;
     }
 
     @Override

@@ -153,7 +153,7 @@ public class LeafParticle extends BaseParticle implements Leaf {
         animationOffset += 0.05;
 
         if (wind != null) {
-            Vector force = wind.getForce(loc.getBlockX(), loc.getBlockZ());
+            Vector force = wind.getForce(loc.getX(), loc.getY(), loc.getZ());
             velocity.add(force);
         }
 

@@ -16,7 +16,9 @@
 
 package me.masstrix.eternalnature.core.world;
 
+import me.masstrix.eternalnature.EternalHeartbeat;
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.Ticking;
 import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.core.EternalWorker;
 import org.bukkit.Bukkit;
@@ -24,19 +26,22 @@ import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class WorldProvider implements EternalWorker, Configurable {
 
-    private EternalNature plugin;
-    private Map<String, WorldData> worldData = new HashMap<>();
-    private BukkitTask ticker;
+    private final EternalNature plugin;
+    private final EternalHeartbeat HEARTBEAT;
+    private Map<UUID, WorldData> worldData = new HashMap<>();
     private int tick = 0;
 
     public WorldProvider(EternalNature plugin) {
         this.plugin = plugin;
+        HEARTBEAT = new EternalHeartbeat(plugin, 1);
+    }
+
+    public EternalHeartbeat getHeartbeat() {
+        return HEARTBEAT;
     }
 
     /**
@@ -44,33 +49,29 @@ public class WorldProvider implements EternalWorker, Configurable {
      * @return the worlds data or null if the world does not exist.
      */
     public WorldData getWorld(World world) {
-        return getWorld(world.getName());
-    }
-
-    /**
-     * @param name name of the world. Case sensitive.
-     * @return the worlds data or null if the world does not exist.
-     */
-    public WorldData getWorld(String name) {
-        if (worldData.containsKey(name)) {
-            return worldData.get(name);
+        if (world == null) return null;
+        if (worldData.containsKey(world.getUID())) {
+            return worldData.get(world.getUID());
         }
 
-        WorldData data = new WorldData(plugin, name);
-        worldData.put(name, data);
+        WorldData data = new WorldData(plugin, world);
+        worldData.put(world.getUID(), data);
         return data;
     }
 
     /**
-     * @param name name of the world to check if loaded.
+     * Returns if a worlds data was loaded.
+     *
+     * @param world world to check if it is loaded.
      * @return if the worlds data is loaded.
      */
-    public boolean isLoaded(String name) {
-        return worldData.containsKey(name);
+    public boolean isLoaded(World world) {
+        return worldData.containsKey(world.getUID());
     }
 
     @Override
     public void start() {
+        HEARTBEAT.start();
         for (World world : Bukkit.getWorlds()) {
             getWorld(world);
         }
@@ -79,6 +80,7 @@ public class WorldProvider implements EternalWorker, Configurable {
     @Override
     public void end() {
         worldData.forEach((name, world) -> world.unload());
+        HEARTBEAT.end();
     }
 
     /**
@@ -97,12 +99,14 @@ public class WorldProvider implements EternalWorker, Configurable {
         return worldData.values();
     }
 
-    public Collection<String> getWorldNames() {
-        return worldData.keySet();
+    public List<String> getWorldNames() {
+        List<String> names = new ArrayList<>();
+        worldData.values().forEach(w -> names.add(w.getWorldName()));
+        return names;
     }
 
     @Override
     public void updateConfig(ConfigurationSection section) {
-
+        worldData.forEach((id, w) -> plugin.getRootConfig().reload(w));
     }
 }

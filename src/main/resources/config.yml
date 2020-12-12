@@ -22,7 +22,17 @@ general:
   language: "en"
   
 global:
+  wind:
+    enabled: true
+    gusts:
+      enabled: true
+      chance: 1.0
+      max-strength: 1.0
+      push-players: true
+      push-entities: true
+      show-particles: true
   falling-leaves:
+    only-spawn-from-natrual-leaves: true
     enabled: true
     range: 12
     fidelity: 3

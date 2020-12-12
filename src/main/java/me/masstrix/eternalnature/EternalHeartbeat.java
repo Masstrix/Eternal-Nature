@@ -39,7 +39,7 @@ public class EternalHeartbeat implements EternalWorker {
         pubsub.add(ticking);
     }
 
-    public void unSubscribe(Ticking ticking) {
+    public void unsubscribe(Ticking ticking) {
         pubsub.remove(ticking);
     }
 

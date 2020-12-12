@@ -36,12 +36,16 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import java.util.*;
 
 public class NatureCommand extends EternalCommand {
+
+    private static final String WORLD_NOT_LOADED = PluginData.PREFIX + "&cNo world is loaded with that name.";
 
     private EternalNature plugin;
 
@@ -98,7 +102,7 @@ public class NatureCommand extends EternalCommand {
             String sub = args[1];
 
             if (sub.equalsIgnoreCase("list") && args.length == 2) {
-                Collection<String> worlds = provider.getWorldNames();
+                List<String> worlds = provider.getWorldNames();
                 msg("");
                 msg("     &2&lLoaded Worlds");
                 worlds.forEach(name -> msg(" &2• &f" + name));
@@ -118,7 +122,11 @@ public class NatureCommand extends EternalCommand {
             // the need for a world to be loaded and lets the user
             // define any name for the world being created.
             if (sub.equalsIgnoreCase("makeCustomConfig")) {
-                WorldData data = provider.getWorld(world);
+                WorldData data = provider.getWorld(Bukkit.getWorld(world));
+                if (data == null) {
+                    msg(WORLD_NOT_LOADED);
+                    return;
+                }
                 msg(PluginData.PREFIX + "&7Creating custom config for world " + world + "...");
                 boolean success = data.createCustomTemperatureConfig();
                 if (success)
@@ -128,14 +136,20 @@ public class NatureCommand extends EternalCommand {
             }
 
             // Stop if the world does not exist
-            if (!provider.isLoaded(world)) {
-                msg(PluginData.PREFIX + "&cNo world was found with that name.");
+            World bukkitWorld = Bukkit.getWorld(world);
+            if (bukkitWorld == null) {
+                msg(WORLD_NOT_LOADED);
+                return;
+            }
+
+            if (!provider.isLoaded(bukkitWorld)) {
+                msg(PluginData.PREFIX + "&cWorld does not have any loaded data.");
                 return;
             }
 
             // Handle sub commands for /eternal world
             if (sub.equalsIgnoreCase("info")) {
-                WorldData data = provider.getWorld(world);
+                WorldData data = provider.getWorld(bukkitWorld);
                 TemperatureProfile t = data.getTemperatures();
                 msg("");
                 msg("     &2&lEternal Nature");
@@ -273,7 +287,7 @@ public class NatureCommand extends EternalCommand {
         }
         else if (args.length >= 2) {
             if (args[0].equalsIgnoreCase("world")) {
-                Collection<String> names = plugin.getEngine().getWorldProvider().getWorldNames();
+                List<String> names = plugin.getEngine().getWorldProvider().getWorldNames();
 
                 if (args.length == 2) {
                     List<String> worlds = new ArrayList<>(names);
