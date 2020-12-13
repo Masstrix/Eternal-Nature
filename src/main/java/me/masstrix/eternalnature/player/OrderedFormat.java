@@ -187,7 +187,7 @@ public class OrderedFormat {
                 }
                 copyFromLast = f.copyFormattingToNextComponent();
             }
-            return builder.create();
+            formatted = builder.create();
         }
         return formatted;
     }
@@ -213,11 +213,7 @@ public class OrderedFormat {
      */
     public String getLegacy(boolean update) {
         if (update) {
-            StringBuilder builder = new StringBuilder();
-            for (TagFormatter f : ORDERED) {
-                builder.append(f.asLegacy());
-            }
-            return builder.toString();
+            return TextComponent.toLegacyText(getFormatted(update));
         }
         return legacy;
     }

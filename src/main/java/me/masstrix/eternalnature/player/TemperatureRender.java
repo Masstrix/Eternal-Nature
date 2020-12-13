@@ -21,10 +21,7 @@ import me.masstrix.eternalnature.config.StatusRenderMethod;
 import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
 import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
 import me.masstrix.eternalnature.core.world.WorldData;
-import me.masstrix.eternalnature.util.BossBarUtil;
-import me.masstrix.eternalnature.util.FindableMatch;
-import me.masstrix.eternalnature.util.MathUtil;
-import me.masstrix.eternalnature.util.StringUtil;
+import me.masstrix.eternalnature.util.*;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -39,7 +36,7 @@ import org.bukkit.entity.Player;
 public class TemperatureRender implements StatRenderer {
 
     private final UserData USER;
-    private final Player player;
+    private final Player PLAYER;
     private BaseComponent[] barText;
     private StatusRenderMethod renderMethod = StatusRenderMethod.BOSSBAR;
     private BossBar bossBar;
@@ -51,7 +48,7 @@ public class TemperatureRender implements StatRenderer {
     private double lastTemp = Integer.MAX_VALUE;
 
     public TemperatureRender(Player player, UserData data) {
-        this.player = player;
+        this.PLAYER = player;
         this.USER = data;
     }
 
@@ -100,7 +97,7 @@ public class TemperatureRender implements StatRenderer {
         if (useRgb) color = TemperatureIcon.getGradatedColor((float) temperature);
 
         String text = displayFormat;
-        text = text.replaceAll("%temp_simple%", color + icon.getDisplayName() + "&f");
+        text = text.replaceAll("%temp_name%", color + icon.getDisplayName() + "&f");
         text = text.replaceAll("%temp_icon%", color + icon.getIcon() + "&f");
 
         double burn = temps.getBurningPoint();
@@ -118,7 +115,7 @@ public class TemperatureRender implements StatRenderer {
         if (renderMethod == StatusRenderMethod.BOSSBAR) {
             if (bossBar == null) {
                 bossBar = Bukkit.createBossBar("Hydration", BarColor.BLUE, BarStyle.SOLID);
-                bossBar.addPlayer(player);
+                bossBar.addPlayer(PLAYER);
             }
 
             // Update the bars progress
@@ -152,7 +149,7 @@ public class TemperatureRender implements StatRenderer {
                     first = false;
                     continue;
                 }
-                if (s.equalsIgnoreCase("%temp_simple%")) {
+                if (s.equalsIgnoreCase("%temp_name%")) {
                     builder.append(icon.getDisplayName());
                 }
                 else if (s.equalsIgnoreCase("%temp_icon%")) {

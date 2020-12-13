@@ -120,7 +120,7 @@ temperature:
       heat: 60
   display:
     enabled: true
-    format: "%temperature% %temp_icon% %temp_simple%"
+    format: "%temperature% %temp_icon% %temp_name%"
     use-rgb-colors: true
     icon-match-method: LINEAR
     style: BOSSBAR

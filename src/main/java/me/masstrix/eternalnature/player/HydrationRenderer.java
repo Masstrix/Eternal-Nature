@@ -36,12 +36,10 @@ import org.bukkit.entity.Player;
 @Configurable.Path("hydration")
 public class HydrationRenderer implements StatRenderer {
 
-    private final static BaseComponent[] FLASH_COLOR = new ComponentBuilder("")
-            .color(ChatColor.RED)
-            .create();
     private final OrderedFormat FORMAT = new OrderedFormat();
     private final UserData USER;
-    private final Player player;
+    private final Player PLAYER;
+    private final ChatColor[] COLORS = new ChatColor[6];
     private BaseComponent[] barText;
     private StatusRenderMethod renderMethod = StatusRenderMethod.BOSSBAR;
     private BossBar bossBar;
@@ -49,10 +47,9 @@ public class HydrationRenderer implements StatRenderer {
     private boolean warningFlash;
     private double hydration;
     private String icon;
-    private ChatColor[] colors = new ChatColor[6];
 
     public HydrationRenderer(Player player, UserData data) {
-        this.player = player;
+        this.PLAYER = player;
         this.USER = data;
 
         FORMAT.registerTag("data", () -> {
@@ -65,8 +62,8 @@ public class HydrationRenderer implements StatRenderer {
             for (int i = 0; i < 10; i++) {
                 builder.append(icon);
                 int pos = i * 2;
-                int id = pos < hydration && pos + 1 < hydration ? 0 : pos < hydration && pos + 1 > hydration ? 1 : 2;
-                builder.color(colors[USER.isThirsty() ? id + 3 : id]);
+                int id = pos < hydration && pos + 1 < hydration ? 0 : pos < hydration && pos + 1 >= hydration ? 1 : 2;
+                builder.color(COLORS[USER.isThirsty() ? id + 3 : id]);
             }
             return new Pair<>(builder.create(), "");
         }).registerTag("effects", () -> {
@@ -103,12 +100,12 @@ public class HydrationRenderer implements StatRenderer {
         renderMethod = StatusRenderMethod.valueOf(section.getString("display.style"));
         warningFlash = section.getBoolean("display.warning-flash");
         icon = section.getString("display.icon.ico", "\u2B58");
-        colors[0] = ColorUtil.fromName(section.getString("display.icon.normal.full"));
-        colors[1] = ColorUtil.fromName(section.getString("display.icon.normal.half"));
-        colors[2] = ColorUtil.fromName(section.getString("display.icon.normal.empty"));
-        colors[3] = ColorUtil.fromName(section.getString("display.icon.thirsty.full"));
-        colors[4] = ColorUtil.fromName(section.getString("display.icon.thirsty.half"));
-        colors[5] = ColorUtil.fromName(section.getString("display.icon.thirsty.empty"));
+        COLORS[0] = ColorUtil.fromName(section.getString("display.icon.normal.full"));
+        COLORS[1] = ColorUtil.fromName(section.getString("display.icon.normal.half"));
+        COLORS[2] = ColorUtil.fromName(section.getString("display.icon.normal.empty"));
+        COLORS[3] = ColorUtil.fromName(section.getString("display.icon.thirsty.full"));
+        COLORS[4] = ColorUtil.fromName(section.getString("display.icon.thirsty.half"));
+        COLORS[5] = ColorUtil.fromName(section.getString("display.icon.thirsty.empty"));
 
         if (beforeMethod != renderMethod) {
             reset();
@@ -136,13 +133,11 @@ public class HydrationRenderer implements StatRenderer {
         }
 
         double hydration = USER.getHydration();
-        boolean flash = warningFlash && hydration <= 4 && FLASH.update();
-        boolean isThirsty = USER.isThirsty();
 
         if (renderMethod == StatusRenderMethod.BOSSBAR) {
             if (bossBar == null) {
                 bossBar = Bukkit.createBossBar("Hydration", BarColor.BLUE, BarStyle.SEGMENTED_10);
-                bossBar.addPlayer(player);
+                bossBar.addPlayer(PLAYER);
             }
             if (this.hydration == hydration && USER.getHydration() > 4) return;
             bossBar.setProgress(Math.abs(hydration / 20));
@@ -164,8 +159,8 @@ public class HydrationRenderer implements StatRenderer {
 
         if (renderMethod == StatusRenderMethod.XP_BAR) {
             float percentage = (float) (hydration / 20F);
-            player.setExp(MathUtil.minMax(percentage, 0, 1));
-            player.setLevel(0);
+            PLAYER.setExp(MathUtil.minMax(percentage, 0, 1));
+            PLAYER.setLevel(0);
         }
     }
 

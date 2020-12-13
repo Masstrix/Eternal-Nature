@@ -18,14 +18,37 @@ package me.masstrix.eternalnature.player;
 
 import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.util.Flicker;
+import me.masstrix.eternalnature.util.Pair;
 import me.masstrix.eternalnature.util.SecondsFormat;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
 
+/**
+ * Stat Renderers are renderers for players to display stats on the
+ * players screen in some way. These are build to be
+ */
 public interface StatRenderer extends ActionbarItem, Configurable {
 
     Flicker FLASH = new Flicker(300);
     SecondsFormat TIME_FORMAT = new SecondsFormat();
+    /**
+     * Default flash color used for the warning flashing. This is a basic
+     * component to save the time for continually creating new components.
+     */
+    BaseComponent[] FLASH_COLOR = new ComponentBuilder("")
+            .color(ChatColor.RED)
+            .create();
 
+    /**
+     * Renders the stat. This will cause it to update the stats display if it
+     * can or update the display and call for it to be updated in the next
+     * tick for the player.
+     */
     void render();
 
+    /**
+     * Resets all the stats display.
+     */
     void reset();
 }
