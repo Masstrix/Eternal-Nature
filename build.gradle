@@ -107,3 +107,10 @@ processResources {
 task makeJar {
     dependsOn(clean, jar)
 }
+
+// Updates the javadocs for the project.
+task updateJavaDoc('type': Copy) {
+    project.delete(files('docs'))
+    from javadoc
+    into 'docs'
+}
