@@ -16,7 +16,7 @@
 
 package me.masstrix.version;
 
-import me.masstrix.eternalnature.util.ReflectionUtil;
+import me.masstrix.eternalnature.reflection.ReflectionUtil;
 
 import java.util.HashMap;
 import java.util.Map;

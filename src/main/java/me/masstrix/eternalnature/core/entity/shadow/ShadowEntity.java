@@ -17,7 +17,7 @@
 package me.masstrix.eternalnature.core.entity.shadow;
 
 import io.netty.util.internal.ConcurrentSet;
-import me.masstrix.eternalnature.util.ReflectionUtil;
+import me.masstrix.eternalnature.reflection.ReflectionUtil;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Location;
 import org.bukkit.World;

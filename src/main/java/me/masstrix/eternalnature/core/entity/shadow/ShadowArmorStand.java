@@ -17,7 +17,7 @@
 package me.masstrix.eternalnature.core.entity.shadow;
 
 import com.mojang.datafixers.util.Pair;
-import me.masstrix.eternalnature.util.ReflectionUtil;
+import me.masstrix.eternalnature.reflection.ReflectionUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;

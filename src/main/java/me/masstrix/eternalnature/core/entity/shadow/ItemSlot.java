@@ -16,7 +16,7 @@
 
 package me.masstrix.eternalnature.core.entity.shadow;
 
-import me.masstrix.eternalnature.util.ReflectionUtil;
+import me.masstrix.eternalnature.reflection.ReflectionUtil;
 
 public enum ItemSlot {
     MAINHAND(0, 0),
