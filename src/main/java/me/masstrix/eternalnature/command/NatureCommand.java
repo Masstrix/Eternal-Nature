@@ -28,7 +28,6 @@ import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.menus.Menus;
 import me.masstrix.eternalnature.player.UserData;
-import me.masstrix.eternalnature.testing.TestCommand;
 import me.masstrix.eternalnature.util.BuildInfo;
 import me.masstrix.version.checker.VersionCheckInfo;
 import net.md_5.bungee.api.ChatColor;
@@ -41,7 +40,10 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class NatureCommand extends EternalCommand {
 
@@ -77,10 +79,6 @@ public class NatureCommand extends EternalCommand {
             msg(PluginData.PREFIX + "&7Reloading files...");
             plugin.getRootConfig().reload();
             msg(PluginData.PREFIX + "&aReloaded config files");
-        }
-
-        else if (args[0].equalsIgnoreCase("test") && wasPlayer()) {
-            new TestCommand(plugin).execute((Player) getSender(), args);
         }
 
         else if (args[0].equalsIgnoreCase("world")) {
