@@ -17,16 +17,12 @@
 package me.masstrix.eternalnature.listeners;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.core.world.ChunkData;
-import me.masstrix.eternalnature.core.world.WorldData;
-import me.masstrix.eternalnature.core.world.WorldProvider;
-import me.masstrix.eternalnature.data.UserData;
+import me.masstrix.eternalnature.player.UserData;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.util.Vector;
 
 public class MoveListener implements Listener {
 
@@ -51,17 +47,6 @@ public class MoveListener implements Listener {
 
         // Updates the players motion vector
         data.setMotion(from.toVector().subtract(to.toVector()));
-
-        // Does the players chunk section change
-        if (from.getChunk() != to.getChunk() || ChunkData.getSection(from.getY())
-                != ChunkData.getSection(to.getY())) {
-            // Load nearby sections
-            WorldProvider provider = plugin.getEngine().getWorldProvider();
-            WorldData worldData = provider.getWorld(player.getWorld());
-            if (worldData != null) {
-
-            }
-        }
 
         // Ignore movement if player is a passenger.
         if (!player.isInsideVehicle() && !player.isGliding() && !player.isRiptiding()) {

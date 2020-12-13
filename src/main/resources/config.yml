@@ -13,11 +13,6 @@
 # 
 # Visit the wiki here https://github.com/Masstrix/Eternal-Nature/wiki for more help.
 # 
-# Auto Plant
-#   set any value to 0 to disable auto planting for a specific item.
-# Render
-#  style - sets where the item is displayed. This can be set to ACTIONBAR or BOSSBAR.
-#  flash - sets if the value will flash when critical.
 # 
 version: 2
 
@@ -27,12 +22,22 @@ general:
   language: "en"
   
 global:
+  wind:
+    enabled: true
+    gusts:
+      enabled: true
+      chance: 1.0
+      max-strength: 1.0
+      push-players: true
+      push-entities: true
+      show-particles: true
   falling-leaves:
+    only-spawn-from-natrual-leaves: true
     enabled: true
     range: 12
     fidelity: 3
     max-particles: 300
-    scan-delay: 100
+    scan-delay: 2
     spawn-chance: 0.005
   randomly-spread-trees:
     enabled: true
@@ -40,41 +45,85 @@ global:
     scans: 2
   age-items: true
   auto-plant:
-    play-sound: true
     enabled: true
+    play-sound: true
     replant-crops: true
     saplings: 0.6
-    wheet: 1.0
+    wheat: 1.0
     carrot: 1.0
     potato: 1.0
     melon: 0.8
     pumpkin: 0.8
     beetroot: 1.0
-    sweet_berry: 1.0
+    sweet-berry: 1.0
     flowers: 0.2
   render-delay-ticks: 20
     
 hydration:
   enabled: true
   increase-from-activity: true
-  damage-when-empty: true
+  sweat: true
+  damage:
+    enabled: true
+    amount: 0.5
+    delay: 2000
   display:
+    enabled: true
     style: BOSSBAR
     warning-flash: true
+    format: "%flash%H²O %data% %effects%"
+    icon:
+      ico: "⭘"
+      normal:
+        full: "aqua"
+        half: "cyan"
+        empty: "gray"
+      thirsty:
+        full: "green"
+        half: "dark green"
+        empty: "gray"
+  drink-from-open-water: true
+  thirst-effect:
+    enabled: true
+    amount: 0.1
+  consumables:
+    water_bottle: 2
+    potion: 1.5
+    milk_bucket: 5
+    cooked_beef: 0.5
+    cooked_pork: 0.5
+    cooked_chicken: 0.5
+    cooked_rabbit: 0.5
+    cooked_mutton: 0.5
+    cooked_cod: 0.5
+    cooked_salmon: 0.5
+    bread: -1
+    honey_bottle: 1
+    melon_slice: 1
+    mushroom_stew: 2
+    rabbit_stew: 1.5
+    beetroot_soup: 2
+    dried_kelp: -0.3
+    cookie: -0.1
+    apple: 0.5
+    golden_apple: 0.5
+    enchanted_golden_apple: 2
 
 temperature:
   enabled: true
-  sweat: true
   max-delta-change: 15
   damage:
     enabled: true
-    damage-dealt: 1.0
-    damage-delay: 1000
+    amount: 1.0
+    delay: 1000
     threshold:
       cold: -5
       heat: 60
   display:
-    text: "%temperature% %temp_icon% %temp_simple%"
+    enabled: true
+    format: "%temperature% %temp_icon% %temp_name%"
+    use-rgb-colors: true
+    icon-match-method: LINEAR
     style: BOSSBAR
     warning-flash: true
   scanning:
@@ -83,3 +132,43 @@ temperature:
     use-weather: true
     use-items: true
     use-environment: true
+    advanced:
+      area: 11
+      height: 5
+
+icons:
+  temperature:
+    burning:
+      icon: "☀"
+      temp: 60
+    hot:
+      icon: "☀"
+      temp: 30
+    warm:
+      icon: "✿"
+      temp: 25
+    pleasant:
+      icon: "✿"
+      temp: 15
+    cool:
+      icon: "✿"
+      temp: 5
+    cold:
+      icon: "❈"
+      temp: 0
+    freezing:
+      icon: "❄"
+      temp: -5
+  weather:
+    clear:
+      icon: "☀"
+      color: "&a"
+    cloudy:
+      icon: "☁"
+      color: "&7"
+    raining:
+      icon: "☔"
+      color: "&b"
+    thunder:
+      icon: "⛈"
+      color: "&e"

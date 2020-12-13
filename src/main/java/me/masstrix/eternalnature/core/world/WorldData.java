@@ -18,67 +18,68 @@ package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.api.EternalWorld;
-import me.masstrix.eternalnature.config.Reloadable;
-import me.masstrix.eternalnature.core.temperature.Temperatures;
-import me.masstrix.eternalnature.util.*;
-import org.bukkit.*;
+import me.masstrix.eternalnature.config.Configurable;
+import me.masstrix.eternalnature.config.Configuration;
+import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
+import me.masstrix.eternalnature.core.world.wind.Wind;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.configuration.ConfigurationSection;
 
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.io.File;
 
-public class WorldData implements EternalWorld, Reloadable {
+public class WorldData implements EternalWorld, Configurable {
 
-    private Map<Long, ChunkData> chunks = new HashMap<>();
-    private String worldName;
+    private final World WORLD;
     protected EternalNature plugin;
-    private Temperatures temperatures;
-    Map<Position, WaterfallEmitter> waterfalls = new ConcurrentHashMap<>();
+    private final TemperatureProfile TEMPERATURES;
+    private final Wind WIND;
 
-    public WorldData(EternalNature plugin, String world) {
+    public WorldData(EternalNature plugin, World world) {
         this.plugin = plugin;
-        this.worldName = world;
-        loadConfig();
+        this.WORLD = world;
+        this.WIND = new Wind(this, plugin, world.getSeed());
+
+        // Load and set the temperature config.
+        File cfg = new File(plugin.getDataFolder(), "/worlds/" + world + "/temperature-config.yml");
+        TEMPERATURES = new TemperatureProfile(new Configuration(plugin, cfg)
+                .setDefault(plugin.getEngine().getDefaultTempProfile().getConfig()));
+        TEMPERATURES.name("World:" + this.WORLD);
+        plugin.getRootConfig().subscribe(TEMPERATURES);
+
+        plugin.getEngine().getWorldProvider().getHeartbeat().subscribe(WIND);
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        TEMPERATURES.reload();
+        plugin.getRootConfig().reload(WIND);
     }
 
     /**
-     * Loads the config files for the world.
+     * Unloads the world. This will make sure to unsubscribe any tasks that need to
+     * be and save data that needs to be saved.
      */
-    public void loadConfig() {
-        this.temperatures = new Temperatures(plugin, worldName);
-        if (temperatures.hasCustomConfig()) {
-            temperatures.loadData();
-        } else {
-            temperatures = plugin.getEngine().getDefaultTemperatures();
-        }
+    public void unload() {
+        plugin.getEngine().getWorldProvider().getHeartbeat().unsubscribe(WIND);
+        plugin.getRootConfig().unsubscribe(TEMPERATURES);
+    }
+
+    /**
+     * @return the wind for this world.
+     */
+    public Wind getWind() {
+        return WIND;
     }
 
     /**
      * Creates a new config file for the worlds temperature.
-     *
-     * @param replace should this replace an existing config. If replaced
-     *                it will be reset to default options.
      */
-    public boolean createCustomTemperatureConfig(boolean replace) {
-        if (!temperatures.isDefaultConfig() && !replace) {
-            return false;
-        }
-
-        // Create and load the new config
-        temperatures = new Temperatures(plugin, worldName);
-        temperatures.createFiles(true);
-        temperatures.loadData();
+    public boolean createCustomTemperatureConfig() {
+        TEMPERATURES.getConfig().save();
         return true;
-    }
-
-    /**
-     * @return if the world uses a custom data set.
-     */
-    public boolean usesCustomConfig() {
-        return !temperatures.isDefaultConfig();
     }
 
     /**
@@ -86,44 +87,16 @@ public class WorldData implements EternalWorld, Reloadable {
      */
     @Override
     public String getWorldName() {
-        return worldName;
-    }
-
-    public void tick() {
-        //chunks.forEach((l, c) -> c.tick());
-    }
-
-    public void render() {
-        //chunks.forEach((l, c) -> c.render());
-    }
-
-    public void save() {
-        temperatures.saveConfig();
-    }
-
-    @Override
-    public void reload() {
-        temperatures.loadData();
-    }
-
-    public void createWaterfall(Location loc) {
+        return WORLD.getName();
     }
 
     public World asBukkit() {
-        return Bukkit.getWorld(worldName);
-    }
-
-    /**
-     * @return the amount of chunks loaded.
-     */
-    @Override
-    public int getChunksLoaded() {
-        return chunks.size();
+        return WORLD;
     }
 
     @Override
-    public Temperatures getTemperatures() {
-        return temperatures;
+    public TemperatureProfile getTemperatures() {
+        return TEMPERATURES;
     }
 
     /**
@@ -139,7 +112,7 @@ public class WorldData implements EternalWorld, Reloadable {
         World world = asBukkit();
         if (world != null) {
             Biome biome = world.getBlockAt(x, y, z).getBiome();
-            return temperatures.getBiome(biome, world);
+            return TEMPERATURES.getBiome(biome, world);
         }
         return 0;
     }
@@ -185,7 +158,7 @@ public class WorldData implements EternalWorld, Reloadable {
 
         // Apply modifier if block has sunlight.
         if (block.getLightFromSky() > 0) {
-            double directSunAmplifier = temperatures.getDirectSunAmplifier() - 1;
+            double directSunAmplifier = TEMPERATURES.getDirectSunAmplifier() - 1;
             byte skyLight = block.getLightFromSky();
             double percent = skyLight / 15D;
             temp *= directSunAmplifier * percent + 1;
@@ -195,27 +168,11 @@ public class WorldData implements EternalWorld, Reloadable {
         if (((block.getLightFromSky() <= 6 && block.getLightLevel() < 6)
                 || block.getType() == Material.CAVE_AIR)
                 && block.getLightLevel() != 15) {
-            double amp = temperatures.getCaveModifier() - 1;
+            double amp = TEMPERATURES.getCaveModifier() - 1;
             byte light = block.getLightLevel();
             double percent = (15D - light) / 15D;
             temp *= amp * percent + 1;
         }
         return temp;
-    }
-
-    public boolean isChunkLoaded(int x, int z) {
-        return chunks.containsKey(pair(x, z));
-    }
-
-    public static long pair(int var0, int var1) {
-        return (long) var0 & 4294967295L | ((long) var1 & 4294967295L) << 32;
-    }
-
-    public static int getX(long var0) {
-        return (int) (var0 & 4294967295L);
-    }
-
-    public static int getZ(long var0) {
-        return (int) (var0 >>> 32 & 4294967295L);
     }
 }

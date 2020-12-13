@@ -16,6 +16,14 @@
 
 package me.masstrix.eternalnature.core.world;
 
+import org.bukkit.World;
+
 public enum WeatherType {
-    CLEAR, RAIN, STORM
+    CLEAR, RAIN, STORM;
+
+    public static WeatherType from(World world) {
+        if (world.isThundering()) return STORM;
+        if (world.hasStorm()) return RAIN;
+        return CLEAR;
+    }
 }

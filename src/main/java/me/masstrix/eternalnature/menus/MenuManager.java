@@ -41,6 +41,10 @@ public final class MenuManager implements Listener {
         }
     }
 
+    public Collection<GlobalMenu> getMenus() {
+        return menus.values();
+    }
+
     public void forceCloseAll() {
         for (GlobalMenu m : menus.values()) {
             m.forceClose();

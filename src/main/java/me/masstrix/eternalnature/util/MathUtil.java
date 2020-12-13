@@ -22,7 +22,7 @@ import java.util.Random;
 
 public class MathUtil {
 
-    private static Random random = new Random();
+    private final static Random RAND = new Random();
 
     /**
      * Returns an instance of <code>Random</code>. This reduces the use of needing to
@@ -31,7 +31,7 @@ public class MathUtil {
      * @return an instance of <code>java.util.Random</code>
      */
     public static Random random() {
-        return random;
+        return RAND;
     }
 
     /**
@@ -43,7 +43,8 @@ public class MathUtil {
      */
     public static boolean chance(double percent) {
         if (percent >= 1) return true;
-        return random.nextDouble() <= percent;
+        if (percent <= 0) return false;
+        return RAND.nextDouble() <= percent;
     }
 
 
@@ -57,6 +58,14 @@ public class MathUtil {
         return randomInt(range) == 1;
     }
 
+    public static double randomDouble() {
+        return RAND.nextDouble();
+    }
+
+    public static double randomDouble(double min, double max) {
+        return min + (max - min) * RAND.nextDouble();
+    }
+
     /**
      * Returns a random int between 0 and <code>max</code>.
      *
@@ -64,7 +73,7 @@ public class MathUtil {
      * @return a random in between 0 and max.
      */
     public static int randomInt(int max) {
-        return random.nextInt(max);
+        return RAND.nextInt(max);
     }
 
     /**
@@ -75,7 +84,7 @@ public class MathUtil {
      * @return a random int between min and max.
      */
     public static int randomInt(int min, int max) {
-        return random.nextInt(max - min) + min;
+        return RAND.nextInt(max - min) + min;
     }
 
     /**
@@ -147,5 +156,16 @@ public class MathUtil {
      */
     public static double fix(double v, double fix) {
         return Double.isNaN(v) || Double.isInfinite(v) ? fix : v;
+    }
+
+    public static double minMax(double v, double min, double max) {
+        return v > max ? max : Math.max(v, min);
+    }
+
+    public static float minMax(float v, float min, float max) {
+        return v > max ? max : Math.max(v, min);
+    }
+    public static int minMax(int v, int min, int max) {
+        return v > max ? max : Math.max(v, min);
     }
 }

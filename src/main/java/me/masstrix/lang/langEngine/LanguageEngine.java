@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Handles language files for multi language support in applications.
@@ -16,7 +18,8 @@ public class LanguageEngine {
     private String selected = "en";
     private final String FALLBACK;
     private final Map<String, Lang> LOADED = new HashMap<>();
-    private Set<String> persistent = new HashSet<>();
+    private final Set<String> PERSISTENT = new HashSet<>();
+    private Logger logger;
 
     /**
      * Defines a new language engine.
@@ -44,6 +47,17 @@ public class LanguageEngine {
     }
 
     /**
+     * Sets the logger used by the language engine to print any info.
+     *
+     * @param logger logger to use.
+     * @return an instance of this engine.
+     */
+    public LanguageEngine setLogger(Logger logger) {
+        this.logger = logger;
+        return this;
+    }
+
+    /**
      * Sets the file to load language files from.
      *
      * @param folder folder to load .lang files from.
@@ -65,7 +79,7 @@ public class LanguageEngine {
      */
     public LanguageEngine setPersistent(String... languages) {
         for (String l : languages) {
-            persistent.add(l);
+            PERSISTENT.add(l);
             if (LOADED.containsKey(l)) {
                 Lang lang = LOADED.get(l);
                 lang.setPersistent(true);
@@ -126,7 +140,7 @@ public class LanguageEngine {
             if (selected.equals(fn))
                 LOADED.get(fn).read(true, true);
         } else {
-            Lang lang = new Lang(file, persistent.contains(fn));
+            Lang lang = new Lang(this, file, PERSISTENT.contains(fn));
             LOADED.put(lang.getLocale(), lang);
         }
     }
@@ -181,7 +195,7 @@ public class LanguageEngine {
             this.selected = name;
             lang = LOADED.get(name);
             lang.loadText();
-            System.out.println("Changed language to " + lang.getNiceName());
+            log(Level.INFO, "Changed language to " + lang.getNiceName());
         }
     }
 
@@ -206,6 +220,16 @@ public class LanguageEngine {
             if (lang == null) return key;
             return lang.getText(key);
         }
+    }
+
+    /**
+     * Logs a message to the logger if one is set.
+     *
+     * @param level level of the message.
+     * @param msg   message to log.
+     */
+    void log(Level level, String msg) {
+        if (logger != null) logger.log(level, msg);
     }
 
     /**

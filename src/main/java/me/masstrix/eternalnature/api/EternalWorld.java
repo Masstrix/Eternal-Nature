@@ -16,13 +16,11 @@
 
 package me.masstrix.eternalnature.api;
 
-import me.masstrix.eternalnature.core.temperature.Temperatures;
+import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
 
 public interface EternalWorld {
 
     String getWorldName();
 
-    int getChunksLoaded();
-
-    Temperatures getTemperatures();
+    TemperatureProfile getTemperatures();
 }

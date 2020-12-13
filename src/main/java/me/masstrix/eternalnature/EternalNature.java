@@ -16,11 +16,14 @@
 
 package me.masstrix.eternalnature;
 
-import me.masstrix.eternalnature.command.*;
-import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.command.EternalCommand;
+import me.masstrix.eternalnature.command.HydrateCommand;
+import me.masstrix.eternalnature.command.NatureCommand;
+import me.masstrix.eternalnature.config.Configurable;
+import me.masstrix.eternalnature.config.Configuration;
 import me.masstrix.eternalnature.core.metric.Metrics;
 import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
+import me.masstrix.eternalnature.external.PlaceholderSupport;
 import me.masstrix.eternalnature.listeners.*;
 import me.masstrix.eternalnature.util.BuildInfo;
 import me.masstrix.eternalnature.util.StringUtil;
@@ -43,24 +46,16 @@ import java.util.logging.Level;
 
 public class EternalNature extends JavaPlugin {
 
-    private static final MinecraftVersion REQUIRED_VER = new MinecraftVersion("1.14");
+    private static final MinecraftVersion REQUIRED_VER = new MinecraftVersion("1.16");
     private EternalEngine engine;
     private LanguageEngine languageEngine;
-    private SystemConfig systemConfig;
-    private EternalNatureAPI api;
     private VersionCheckInfo versionCheckInfo = null;
-    private boolean started = false;
 
-    public SystemConfig getSystemConfig() {
-        return systemConfig;
-    }
+    private Configuration playerCfg;
+    private Configuration config;
 
     public EternalEngine getEngine() {
         return engine;
-    }
-
-    public EternalNatureAPI getApi() {
-        return api;
     }
 
     public VersionCheckInfo getVersionInfo() {
@@ -74,9 +69,17 @@ public class EternalNature extends JavaPlugin {
         return languageEngine;
     }
 
+    public Configuration getPlayerConfig() {
+        return playerCfg;
+    }
+
+    public Configuration getRootConfig() {
+        return config;
+    }
+
     @Override
     public void onEnable() {
-        BuildInfo.init();
+        BuildInfo.load(this);
         MinecraftVersion serverVer = MinecraftRelease.getServerVersion();
 
         // Make sure the server is new enough to run the plugin
@@ -89,22 +92,19 @@ public class EternalNature extends JavaPlugin {
             return;
         }
 
-        started = true;
-
-        systemConfig = new SystemConfig(this);
+        config = new Configuration(this, "config").create(true);
+        playerCfg = new Configuration(this, "players").create(false);
 
         // Init language engine
         File langFolder = new File(getDataFolder(), "lang");
-        languageEngine = new LanguageEngine(langFolder, "en");
+        languageEngine = new LanguageEngine(langFolder, "en").setLogger(getLogger());
         writeLangFiles(false);
         // Load languages
         languageEngine.loadLanguages();
-        languageEngine.setLanguage(systemConfig.getString(ConfigOption.LANGUAGE));
+        languageEngine.setLanguage(getConfig().getString("general.language"));
         TemperatureIcon.reloadLang(languageEngine);
-        engine = new EternalEngine(this);
-        api = new EternalNatureAPI(this);
 
-        engine.start();
+        engine = new EternalEngine(this);
 
         registerCommands(new HydrateCommand(this), new NatureCommand(this));
         registerListeners(new MoveListener(this), new ConnectionListener(this),
@@ -113,7 +113,7 @@ public class EternalNature extends JavaPlugin {
                 new InteractListener(this));
 
         // Only check for updates if enabled.
-        if (systemConfig.isEnabled(ConfigOption.UPDATES_CHECK)) {
+        if (getConfig().getBoolean("general.check-for-updates")) {
             new VersionChecker(PluginData.RESOURCE_ID, getDescription().getVersion()).run(info -> {
                 if (info.isUnknown()) {
                     getLogger().log(Level.WARNING, "Failed to check plugin version. Are you running offline?");
@@ -139,6 +139,16 @@ public class EternalNature extends JavaPlugin {
         
         // Enable metrics
         new Metrics(this);
+
+        // Register placeholders if plugin is installed
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new PlaceholderSupport(this).register();
+        }
+
+        engine.start();
+        config.subscribe(TemperatureIcon.BURNING);
+        config.save();
+        config.reload();
     }
 
     /**
@@ -179,10 +189,10 @@ public class EternalNature extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (started) engine.shutdown();
+        if (engine != null) engine.shutdown();
     }
 
-    protected void registerCommands(EternalCommand... commands) {
+    private void registerCommands(EternalCommand... commands) {
         for (EternalCommand cmd : commands) {
             PluginCommand pc = Bukkit.getPluginCommand(cmd.getName());
             if (pc == null) continue;
@@ -193,6 +203,11 @@ public class EternalNature extends JavaPlugin {
 
     protected void registerListeners(Listener... listeners) {
         PluginManager manager = Bukkit.getPluginManager();
-        for (Listener l : listeners) manager.registerEvents(l, this);
+        for (Listener l : listeners) {
+            manager.registerEvents(l, this);
+            if (Configurable.class.isAssignableFrom(l.getClass())) {
+                config.subscribe((Configurable) l);
+            }
+        }
     }
 }

@@ -18,7 +18,7 @@ package me.masstrix.eternalnature.listeners;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.PluginData;
-import me.masstrix.eternalnature.config.ConfigOption;
+import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.version.checker.VersionCheckInfo;
 import net.md_5.bungee.api.ChatColor;
@@ -26,28 +26,35 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-public class ConnectionListener implements Listener {
+@Configurable.Path("general")
+public class ConnectionListener implements Listener, Configurable {
 
-    private EternalNature plugin;
+    private final EternalNature PLUGIN;
+    private boolean notifyUpdates;
 
     public ConnectionListener(EternalNature plugin) {
-        this.plugin = plugin;
+        this.PLUGIN = plugin;
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        notifyUpdates = section.getBoolean("notify-update-join");
     }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        plugin.getEngine().loadPlayerData(event.getPlayer().getUniqueId());
+        PLUGIN.getEngine().loadPlayerData(event.getPlayer().getUniqueId());
 
         Player player = event.getPlayer();
-        if (player.hasPermission("eternalnature.admin") || player.isOp()
-                && plugin.getSystemConfig().isEnabled(ConfigOption.UPDATES_NOTIFY)) {
-            VersionCheckInfo info = plugin.getVersionInfo();
+        if (notifyUpdates && (player.hasPermission("eternalnature.admin") || player.isOp())) {
+            VersionCheckInfo info = PLUGIN.getVersionInfo();
             if (info == null) return;
             switch (info.getState()) {
                 case BEHIND: {
@@ -75,6 +82,6 @@ public class ConnectionListener implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        plugin.getEngine().unloadUserData(event.getPlayer().getUniqueId());
+        PLUGIN.getEngine().unloadUserData(event.getPlayer().getUniqueId());
     }
 }

@@ -16,9 +16,13 @@
 
 package me.masstrix.eternalnature.util;
 
+import org.bukkit.plugin.java.JavaPlugin;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class BuildInfo {
 
@@ -30,12 +34,17 @@ public class BuildInfo {
      * Loads the build.properties file and sets the build constants. This
      * should be run on initialization.
      */
-    public static void init() {
-        try {
-            InputStream in = BuildInfo.class.getClassLoader().getResourceAsStream("build.properties");
+    public static void load(JavaPlugin plugin) {
+        new Thread(() -> {
+            try {
+                InputStream in = BuildInfo.class.getClassLoader().getResourceAsStream("build.properties");
 
-            // Load the properties file.
-            if (in != null) {
+                // Don't load if file was not found.
+                if (in == null) {
+                    System.out.println("Failed to load build.properties");
+                    return;
+                }
+
                 Properties properties = new Properties();
                 properties.load(in);
 
@@ -43,12 +52,12 @@ public class BuildInfo {
                 build = Integer.parseInt(properties.getProperty("build", "-1"));
                 version = properties.getProperty("version", "Unknown");
                 snapshot = Boolean.parseBoolean(properties.getProperty("snapshot", "true"));
-            } else {
-                System.out.println("Failed to load build.properties");
+            } catch (IOException e) {
+                Logger logger = plugin.getLogger();
+                logger.log(Level.SEVERE, "Failed to load plugin properties, make sure you restart the " +
+                        "server when changing the jar and not reload.");
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        }, "PluginPropertyLoader").start();
     }
 
     /**

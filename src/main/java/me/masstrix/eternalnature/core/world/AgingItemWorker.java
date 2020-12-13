@@ -17,12 +17,12 @@
 package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.config.SystemConfig;
+import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.core.EternalWorker;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -33,16 +33,21 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class AgingItemWorker implements EternalWorker {
+@Configurable.Path("global")
+public class AgingItemWorker implements EternalWorker, Configurable {
 
     private EternalNature plugin;
-    private SystemConfig config;
     private Set<AgeItem> items = new HashSet<>();
     private BukkitTask task;
+    private boolean enabled;
 
     public AgingItemWorker(EternalNature plugin) {
         this.plugin = plugin;
-        this.config = plugin.getSystemConfig();
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        enabled = section.getBoolean("age-items");
     }
 
     /**
@@ -50,7 +55,7 @@ public class AgingItemWorker implements EternalWorker {
      * list to slowly age.
      */
     private void findItems() {
-        if (!isEnabled()) return;
+        if (!enabled) return;
         int count = 0;
         for (World world : Bukkit.getWorlds()) {
             for (Entity e : world.getEntities()) {
@@ -88,12 +93,13 @@ public class AgingItemWorker implements EternalWorker {
 
     @Override
     public void start() {
-        if (!isEnabled() || task != null) return;
+        if (!enabled || task != null) return;
         plugin.getLogger().info("Started food aging worker");
         findItems();
         task = new BukkitRunnable() {
             @Override
             public void run() {
+                if (!enabled) return;
                 List<AgeItem> bin = new ArrayList<>();
                 for (AgeItem i : items) {
                     if (!i.isValid() || i.isDone()) {
@@ -112,15 +118,10 @@ public class AgingItemWorker implements EternalWorker {
 
     @Override
     public void end() {
-        task.cancel();
-        task = null;
-    }
-
-    /**
-     * @return if this worker is enabled.
-     */
-    private boolean isEnabled() {
-        return config.isEnabled(ConfigOption.AGE_ITEMS);
+        if (task != null) {
+            task.cancel();
+            task = null;
+        }
     }
 
     /**

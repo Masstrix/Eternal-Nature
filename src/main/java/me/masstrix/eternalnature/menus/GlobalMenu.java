@@ -16,21 +16,21 @@
 
 package me.masstrix.eternalnature.menus;
 
+import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
-public abstract class GlobalMenu {
+public abstract class GlobalMenu implements Configurable {
 
     static final ItemStack BACK_ICON = new ItemBuilder(Material.ARROW)
             .setName("&a⬅ Back").build();
@@ -38,7 +38,7 @@ public abstract class GlobalMenu {
     private final int slots;
     private final String ID;
     private Inventory inventory;
-    private List<Button> buttons = new ArrayList<>();
+    private final Set<Button> BUTTONS = new HashSet<>();
 
     /**
      * Creates a new global menu instance.
@@ -61,6 +61,11 @@ public abstract class GlobalMenu {
         this.slots = rows * 9;
     }
 
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        build();
+    }
+
     public final String getID() {
         return ID;
     }
@@ -69,12 +74,8 @@ public abstract class GlobalMenu {
         return inventory;
     }
 
-    public final void setIcon(int slot, ItemStack stack) {
-        inventory.setItem(slot, stack);
-    }
-
     public final void setButton(Button button) {
-        this.buttons.add(button);
+        this.BUTTONS.add(button.setMenu(this));
         button.update();
     }
 
@@ -83,7 +84,7 @@ public abstract class GlobalMenu {
     }
 
     public final void addBackButton(MenuManager manager, String id) {
-        setButton(new Button(getInventory(), 0, BACK_ICON).onClick(player -> {
+        setButton(new Button(0, BACK_ICON).onClick(player -> {
             manager.getMenu(id).open(player);
         }));
     }
@@ -104,10 +105,14 @@ public abstract class GlobalMenu {
      */
     public final void rebuild() {
         forceClose();
+        makeInventory();
+        build();
+    }
+
+    private void makeInventory() {
         String title = getTitle();
         if (title == null) title = "";
         this.inventory = Bukkit.createInventory(null, slots, title);
-        build();
     }
 
     /**
@@ -154,8 +159,7 @@ public abstract class GlobalMenu {
     final void processClick(int slot, Player player, ClickType clickType) {
         if (inventory == null) return;
         onClick(slot, player, clickType);
-        List<Button> buttons = new ArrayList<>(this.buttons);
-        buttons.forEach(b -> b.click(player, this.inventory, slot));
+        BUTTONS.forEach(b -> b.click(player, this, slot));
     }
 
     /**

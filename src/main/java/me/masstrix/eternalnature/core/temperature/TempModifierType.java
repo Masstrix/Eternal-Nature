@@ -16,33 +16,86 @@
 
 package me.masstrix.eternalnature.core.temperature;
 
-public enum TempModifierType {
+import me.masstrix.eternalnature.core.temperature.maps.BiomeModifierMap;
+import me.masstrix.eternalnature.core.temperature.maps.BlockModifierMap;
+import me.masstrix.eternalnature.core.temperature.maps.SimpleModifierMap;
+import me.masstrix.eternalnature.core.temperature.maps.TemperatureModifierMap;
+import me.masstrix.eternalnature.core.world.WeatherType;
+import org.bukkit.Material;
 
-    BIOME("biomes"),
-    BLOCK("blocks") {
+import java.util.*;
+
+public abstract class TempModifierType {
+
+    private final static Map<String, TempModifierType> BY_NAME = new HashMap<>();
+    private final static Set<TempModifierType> VALUES = new HashSet<>();
+
+    /**
+     * @return all the modifier types.
+     */
+    public static Set<TempModifierType> values() {
+        return Collections.unmodifiableSet(VALUES);
+    }
+
+    public static TempModifierType find(String name) {
+        return BY_NAME.get(name.toLowerCase());
+    }
+
+    public static final TempModifierType BIOME = new TempModifierType("biomes") {
         @Override
-        public TemperatureModifier makeModifier(double[] data) {
-            return new BlockTemperature(data[0], data.length >= 2 ? data[1] : 3);
+        public BiomeModifierMap newMap(TemperatureProfile profile) {
+            return new BiomeModifierMap(profile);
         }
-    },
-    CLOTHING("clothing"),
-    WEATHER("weather");
+    };
 
-    private String configName;
+    public static final TempModifierType BLOCK = new TempModifierType("blocks") {
+        @Override
+        public BlockModifierMap newMap(TemperatureProfile profile) {
+            return new BlockModifierMap(profile);
+        }
+    };
 
-    TempModifierType(String configName) {
-        this.configName = configName;
+    public static final TempModifierType CLOTHING = new TempModifierType("clothing") {
+        @Override
+        public SimpleModifierMap<Material> newMap(TemperatureProfile profile) {
+            return new SimpleModifierMap<>(profile, this, Material::values);
+        }
+    };
+
+    public static final TempModifierType WEATHER = new TempModifierType("weather") {
+        @Override
+        public SimpleModifierMap<WeatherType> newMap(TemperatureProfile profile) {
+            return new SimpleModifierMap<>(profile, this, WeatherType::values);
+        }
+    };
+
+    private final String PATH;
+
+    private TempModifierType(String path) {
+        this.PATH = path;
+        BY_NAME.put(path.toLowerCase(), this);
+        VALUES.add(this);
     }
 
-    public TemperatureModifier makeModifier(double[] data) {
-        return new SimpleTemperatureMod(data[0]);
+    public String getConfigPath() {
+        return PATH;
     }
 
-    public String getConfigName() {
-        return configName;
+    /**
+     * @return a new instance of a modifier map for this type.
+     */
+    public abstract TemperatureModifierMap<?> newMap(TemperatureProfile profile);
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TempModifierType)) return false;
+        TempModifierType type = (TempModifierType) o;
+        return Objects.equals(PATH, type.PATH);
     }
 
-    public boolean matches(String name) {
-        return name.equalsIgnoreCase(this.name()) || name.equalsIgnoreCase(configName);
+    @Override
+    public int hashCode() {
+        return Objects.hash(PATH);
     }
 }

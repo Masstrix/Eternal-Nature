@@ -87,13 +87,13 @@ data:
       mid_night: -3
 
     frozen*: -3
-    tiga*: -5
+    taiga*: -5
     snowy*: -8
     ice*: -10
 
     # Nether Biomes
     nether: 20
-    nether_wastes‌: 20
+    nether_wastes: 20
     crimson_forest: 13
     warped_forest: 18
     soul_sand_valley: 15
@@ -190,5 +190,5 @@ data:
     diamond_boots: 0.3
 
 cache:
-  min-temp: 0
-  max-temp: 0
+  min-temp: 0.0
+  max-temp: 0.0

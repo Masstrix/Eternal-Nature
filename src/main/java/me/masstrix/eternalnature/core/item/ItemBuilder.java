@@ -17,6 +17,7 @@
 package me.masstrix.eternalnature.core.item;
 
 import me.masstrix.eternalnature.util.StringUtil;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
@@ -37,6 +38,7 @@ public class ItemBuilder {
     private List<String> lore = new ArrayList<>();
     private PotionType potionType;
     private boolean glowing;
+    private int customModel = -1;
 
     public ItemBuilder(Material type) {
         this.type = type;
@@ -70,6 +72,18 @@ public class ItemBuilder {
      * @return an instance of the item builder.
      */
     public ItemBuilder addDescription(String desc) {
+        return addDescription(desc, ChatColor.GRAY);
+    }
+
+    /**
+     * Adds a description to the item. Descriptions are padded on the top and bottom and
+     * will auto-wrap words when over a threshold length.
+     *
+     * @param desc  description text to append to the items lore.
+     * @param color sets the colour of this description section.
+     * @return an instance of the item builder.
+     */
+    public ItemBuilder addDescription(String desc, ChatColor color) {
         StringBuilder line = new StringBuilder();
         addLore("");
         boolean complete = false;
@@ -90,7 +104,7 @@ public class ItemBuilder {
             line.append(" ");
         }
         if (!complete)
-            addLore(line.toString());
+            addLore(color.toString() + line.toString());
         addLore("");
         return this;
     }
@@ -121,12 +135,26 @@ public class ItemBuilder {
         return this;
     }
 
+    /**
+     * Sets the custom model id used for a resource pack.
+     *
+     * @param id id of the custom model.
+     * @return an instance of this item builder.
+     */
+    public ItemBuilder setCustomModelData(int id) {
+        this.customModel = id;
+        return this;
+    }
+
     public ItemStack build() {
         ItemStack item = stack == null ? new ItemStack(type) : stack;
 
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(name);
         meta.setLore(lore);
+        if (customModel > 0) {
+            meta.setCustomModelData(customModel);
+        }
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS,
                 ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_UNBREAKABLE);
         if (glowing) {

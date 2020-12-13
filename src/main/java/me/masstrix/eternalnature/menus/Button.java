@@ -23,6 +23,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Objects;
+
 /**
  * Buttons are a more simple to use way of handling items with actions
  * in an inventory. Being able to store a click action along with an
@@ -30,38 +32,40 @@ import org.bukkit.inventory.ItemStack;
  */
 public class Button {
 
-    private Inventory inventory;
-    private int slot;
+    private GlobalMenu menu;
+    private final UpdateIcon UPDATER;
+    private final int SLOT;
     private ItemStack stack;
-    private UpdateIcon updateIcon;
     private UpdateToggle updateToggle;
-    private ClickEvent click;
+    private ClickEvent clickEvent;
     private boolean toggleDisplay = false, enabled;
     private String toggleName = "";
 
     /**
      * Creates a new button.
      *
-     * @param inventory inventory this button is linked to.
      * @param slot slot this button is to be displayed in.
      * @param icon icon used to display for this button.
      */
-    public Button(Inventory inventory, int slot, ItemStack icon) {
-        this(inventory, slot, () -> icon);
+    public Button(int slot, ItemStack icon) {
+        this(slot, () -> icon);
     }
 
     /**
      * Creates a new button.
      *
-     * @param inventory inventory this button is linked to.
      * @param slot slot this button is to be displayed in.
      * @param updateIcon method used to get the buttons icon.
      */
-    public Button(Inventory inventory, int slot, UpdateIcon updateIcon) {
-        this.inventory = inventory;
-        this.slot = slot;
-        this.updateIcon = updateIcon;
+    public Button(int slot, UpdateIcon updateIcon) {
+        this.SLOT = slot;
+        this.UPDATER = updateIcon;
         stack = updateIcon.run();
+    }
+
+    Button setMenu(GlobalMenu menu) {
+        this.menu = menu;
+        return this;
     }
 
     /**
@@ -70,7 +74,7 @@ public class Button {
      * @param event method used to handle the click event.
      */
     public Button onClick(ClickEvent event) {
-        click = event;
+        clickEvent = event;
         return this;
     }
 
@@ -87,12 +91,12 @@ public class Button {
      * for the click to be actioned.
      *
      * @param player who clicked this button.
-     * @param inv inventory that was clicked in.
-     * @param slot slot that was clicked.
+     * @param menu   inventory that was clicked in.
+     * @param slot   slot that was clicked.
      */
-    public void click(Player player, Inventory inv, int slot) {
-        if (wasClicked(inv, slot) && click != null) {
-            click.click(player);
+    final void click(Player player, GlobalMenu menu, int slot) {
+        if (this.menu == menu && slot == this.SLOT && clickEvent != null) {
+            clickEvent.click(player);
             update();
         }
     }
@@ -101,34 +105,62 @@ public class Button {
      * Updates the icon for the button by running its update method.
      */
     public void update() {
-        stack = updateIcon.run();
-        inventory.setItem(slot, stack);
+        if (menu == null) return;
+        stack = UPDATER.run();
+        Inventory inv = menu.getInventory();
+        if (inv == null) {
+            menu.rebuild();
+            inv = menu.getInventory();
+            if (inv == null) return; // Critical error
+        }
+        inv.setItem(SLOT, stack);
         if (toggleDisplay) {
             if (updateToggle != null)
                 enabled = updateToggle.toggle();
-            inventory.setItem(slot + 9, new ItemBuilder(enabled ? Material.LIME_STAINED_GLASS_PANE
+            inv.setItem(SLOT + 9, new ItemBuilder(enabled ? Material.LIME_STAINED_GLASS_PANE
                     : Material.GRAY_STAINED_GLASS_PANE)
                     .setName((enabled ? "&a" : "&8") + toggleName).build());
         }
     }
 
-    public int getSlot() {
-        return slot;
+    /**
+     * @return the slot the button is set in the inventory.
+     */
+    public final int getSlot() {
+        return SLOT;
     }
 
-    public boolean wasClicked(Inventory inv, int slot) {
-        return inv == this.inventory && slot == this.slot;
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Button)) return false;
+        Button button = (Button) o;
+        return SLOT == button.SLOT;
     }
 
-    interface UpdateIcon {
+    @Override
+    public final int hashCode() {
+        return Objects.hash(SLOT);
+    }
+
+    /**
+     * Used for creating an updating icon for a button.
+     */
+    public interface UpdateIcon {
         ItemStack run();
     }
 
-    interface UpdateToggle {
+    /**
+     * Used for setting the toggle state of a button.
+     */
+    public interface UpdateToggle {
         boolean toggle();
     }
 
-    interface ClickEvent {
+    /**
+     * Called by the button when it is clicked on.
+     */
+    public interface ClickEvent {
         void click(Player player);
     }
 }

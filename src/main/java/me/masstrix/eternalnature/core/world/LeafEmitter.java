@@ -17,21 +17,18 @@
 package me.masstrix.eternalnature.core.world;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.config.SystemConfig;
-import me.masstrix.eternalnature.core.ConfigReloadUpdate;
+import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.core.EternalWorker;
-import me.masstrix.eternalnature.core.entity.EntityStorage;
-import me.masstrix.eternalnature.core.render.LeafParticle;
-import me.masstrix.eternalnature.data.UserData;
+import me.masstrix.eternalnature.core.particle.LeafParticle;
+import me.masstrix.eternalnature.player.UserData;
 import me.masstrix.eternalnature.util.BlockScanner;
 import me.masstrix.eternalnature.util.MathUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Leaves;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -39,41 +36,50 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
+@Configurable.Path("global.falling-leaves")
+public class LeafEmitter implements EternalWorker, Configurable {
 
-    private double spawnChance = 0.3;
+    private boolean enabled;
+    private double spawnChance = 0.005;
     private int maxParticles = 200;
-    private int scanDelay = 20 * 5;
-    private EternalNature plugin;
-    private Set<Location>  locations = new HashSet<>();
-    private Set<LeafParticle> effects = new HashSet<>();
+    private int scanDelay = 2;
+    private final EternalNature PLUGIN;
+    private final Set<Location> LOCATIONS;
+    private final Set<LeafParticle> PARTICLES;
+    private final BlockScanner SCANNER;
     private BukkitTask updater, spawner;
-    private EntityStorage storage;
-    private BlockScanner scanner;
 
-    public LeafEmitter(EternalNature plugin, EntityStorage storage) {
-        this.plugin = plugin;
-        this.storage = storage;
-        this.scanner = new BlockScanner(plugin);
-        updateSettings();
+    public LeafEmitter(EternalNature plugin) {
+        this.PLUGIN = plugin;
+        this.SCANNER = new BlockScanner(plugin);
+        LOCATIONS = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        PARTICLES = Collections.newSetFromMap(new ConcurrentHashMap<>());
     }
 
     @Override
-    public void updateSettings() {
-        SystemConfig config = plugin.getSystemConfig();
-        scanDelay = config.getInt(ConfigOption.LEAF_EFFECT_SCAN_DELAY);
-        maxParticles = config.getInt(ConfigOption.LEAF_EFFECT_MAX_PARTICLES);
-        spawnChance = config.getDouble(ConfigOption.LEAF_EFFECT_CHANCE);
-        // Fixes older versions or mistakes in the config.
-        if (spawnChance > 1) {
-            spawnChance = (double) ConfigOption.LEAF_EFFECT_CHANCE.getDefault();
-            config.set(ConfigOption.LEAF_EFFECT_CHANCE, spawnChance);
-            config.save();
-        }
-        int range = config.getInt(ConfigOption.LEAF_EFFECT_RANGE);
-        scanner.setScanScale(range, range);
-        scanner.setFidelity(config.getInt(ConfigOption.LEAF_EFFECT_FIDELITY));
+    public void updateConfig(ConfigurationSection section) {
+        enabled = section.getBoolean("enabled");
+        scanDelay = section.getInt("scan-delay");
+        maxParticles = section.getInt("max-particles");
+        spawnChance = section.getDouble("spawn-chance");
+        int range = section.getInt("range");
+        int fidelity = section.getInt("fidelity");
+        SCANNER.setScanScale(range, range + 4);
+        SCANNER.setFidelity(fidelity);
+    }
+
+    public int getParticleCount() {
+        return PARTICLES.size();
+    }
+
+    public int getMaxParticles() {
+        return maxParticles;
+    }
+
+    public double getSpawnChance() {
+        return spawnChance;
     }
 
     @Override
@@ -87,16 +93,16 @@ public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
             public void run() {
                 if (passed++ >= ticks) {
                     passed = 0;
-                    if (!plugin.getSystemConfig().isEnabled(ConfigOption.LEAF_EFFECT)) return;
+                    if (!enabled) return;
                     scan();
                     // Reduce the amount of scans being done as more players are online
                     int online = Bukkit.getOnlinePlayers().size();
                     if (online > 20) {
-                        ticks = (online / 5) + scanDelay;
+                        ticks = (online / 20) + scanDelay;
                     }
                 }
             }
-        }.runTaskTimer(plugin, 10, 1);
+        }.runTaskTimerAsynchronously(PLUGIN, 10, 20);
 
         // Stop a spawner if it has already been started.
         if (spawner != null)
@@ -107,21 +113,38 @@ public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
             @Override
             public void run() {
                 Set<LeafParticle> dead = new HashSet<>();
-                for (LeafParticle effect : effects) {
+                for (LeafParticle effect : PARTICLES) {
                     effect.tick();
                     if (!effect.isAlive())
                         dead.add(effect);
                 }
-                effects.removeAll(dead);
-                if (effects.size() >= maxParticles) return;
-                if (!plugin.getSystemConfig().isEnabled(ConfigOption.LEAF_EFFECT)) return;
-                for (Location loc : locations) {
-                    if (MathUtil.chance(spawnChance)) {
-                        effects.add(new LeafParticle(storage, plugin, loc));
-                    }
+                PARTICLES.removeAll(dead);
+                if (PARTICLES.size() >= maxParticles) return;
+                if (!enabled) return;
+                for (Location loc : LOCATIONS) {
+                    if (!MathUtil.chance(spawnChance)) continue;
+                    double offsetX = MathUtil.randomDouble() - 0.5;
+                    double offsetZ = MathUtil.randomDouble() - 0.5;
+                    WorldData worldData = PLUGIN.getEngine().getWorldProvider().getWorld(loc.getWorld());
+                    Location spawnLoc = loc.clone().add(offsetX, -0.5, offsetZ);
+                    LeafParticle particle = new LeafParticle(spawnLoc, PLUGIN.getEngine());
+                    particle.setForces(worldData.getWind());
+                    PARTICLES.add(particle);
                 }
             }
-        }.runTaskTimer(plugin, 30, 1);
+        }.runTaskTimerAsynchronously(PLUGIN, 10, 1);
+    }
+
+    /**
+     * Spawns a new leaf particle already assigned to this emiiter and returns it.
+     *
+     * @param loc location to spawn the particle at.
+     * @return leaf particle that was spawned.
+     */
+    public LeafParticle spawn(Location loc) {
+        LeafParticle particle = new LeafParticle(loc);
+        PARTICLES.add(particle);
+        return particle;
     }
 
     /**
@@ -129,18 +152,18 @@ public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
      * spawn leafs from.
      */
     public void scan() {
-        locations.clear();
+        LOCATIONS.clear();
         for (Player player : Bukkit.getOnlinePlayers()) {
             // Ignore afk players.
-            UserData userData = plugin.getEngine().getUserData(player.getUniqueId());
-            if (userData.getPlayerIdleInfo().isDeepIdle()) continue;
+            UserData userData = PLUGIN.getEngine().getUserData(player.getUniqueId());
+            if (userData.getPlayerIdleInfo().isAfk()) continue;
 
             // Set the location of the player and scan around them.
-            scanner.setLocation(player.getLocation());
-            scanner.scan(block -> {
+            SCANNER.setLocation(player.getLocation());
+            SCANNER.scan(block -> {
                 Block below = block.getRelative(BlockFace.DOWN);
-                if (block.getBlockData() instanceof Leaves && below.isPassable())
-                    locations.add(block.getLocation().add(0.5, 0, 0.5));
+                if (block.getBlockData() instanceof Leaves && below.isPassable() && !below.isLiquid())
+                    LOCATIONS.add(block.getLocation().add(0.5, 0, 0.5));
             });
         }
     }
@@ -150,10 +173,16 @@ public class LeafEmitter implements EternalWorker, ConfigReloadUpdate {
      */
     @Override
     public void end() {
-        updater.cancel();
-        spawner.cancel();
-        locations.clear();
-        effects.forEach(LeafParticle::remove);
-        effects.clear();
+        if (updater != null) {
+            updater.cancel();
+            updater = null;
+        }
+        if (spawner != null) {
+            spawner.cancel();
+            spawner = null;
+        }
+        LOCATIONS.clear();
+        PARTICLES.forEach(LeafParticle::remove);
+        PARTICLES.clear();
     }
 }

@@ -16,16 +16,18 @@
 
 package me.masstrix.eternalnature.command;
 
+import me.masstrix.eternalnature.EternalEngine;
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.PluginData;
-import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.core.render.LeafParticle;
+import me.masstrix.eternalnature.config.ConfigPath;
 import me.masstrix.eternalnature.core.temperature.TempModifierType;
-import me.masstrix.eternalnature.core.temperature.Temperatures;
+import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
+import me.masstrix.eternalnature.core.temperature.modifier.BiomeModifier;
+import me.masstrix.eternalnature.core.world.LeafEmitter;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
-import me.masstrix.eternalnature.data.UserData;
 import me.masstrix.eternalnature.menus.Menus;
+import me.masstrix.eternalnature.player.UserData;
 import me.masstrix.eternalnature.util.BuildInfo;
 import me.masstrix.version.checker.VersionCheckInfo;
 import net.md_5.bungee.api.ChatColor;
@@ -33,12 +35,19 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class NatureCommand extends EternalCommand {
+
+    private static final String WORLD_NOT_LOADED = PluginData.PREFIX + "&cNo world is loaded with that name.";
 
     private EternalNature plugin;
 
@@ -61,7 +70,6 @@ public class NatureCommand extends EternalCommand {
             msg("&a/eternal stats &7- Shows background stats.");
             msg("&a/eternal version &7- View version and update info.");
             msg("&a/eternal setting &7- Opens a GUI to edit settings.");
-            msg("&a/eternal fixLeafEffect &7- Removes any stuck leaf particles.");
             msg("&a/hydrate <user> &7- Hydrates a user to max.");
             msg("");
             return;
@@ -69,8 +77,7 @@ public class NatureCommand extends EternalCommand {
 
         if (args[0].equalsIgnoreCase("reload")) {
             msg(PluginData.PREFIX + "&7Reloading files...");
-            plugin.getEngine().getDefaultTemperatures().loadData();
-            plugin.getSystemConfig().reload();
+            plugin.getRootConfig().reload();
             msg(PluginData.PREFIX + "&aReloaded config files");
         }
 
@@ -82,8 +89,6 @@ public class NatureCommand extends EternalCommand {
                 msg("     &7&o/world options");
                 msg("");
                 msg("&a/eternal world list &7- Lists all loaded worlds.");
-                msg("&a/eternal world reloadAll &7- Reloads all worlds.");
-                msg("&a/eternal world " + world + " reload &7- Reloads the worlds configs.");
                 msg("&a/eternal world " + world + " info &7- Displays info about that world.");
                 msg("&a/eternal world " + world + " makeCustomConfig &7- " +
                         "Makes a custom temperature config for world specific configuration.");
@@ -95,16 +100,11 @@ public class NatureCommand extends EternalCommand {
             String sub = args[1];
 
             if (sub.equalsIgnoreCase("list") && args.length == 2) {
-                Collection<String> worlds = provider.getWorldNames();
+                List<String> worlds = provider.getWorldNames();
                 msg("");
                 msg("     &2&lLoaded Worlds");
                 worlds.forEach(name -> msg(" &2• &f" + name));
                 msg("");
-                return;
-            }
-            else if (sub.equalsIgnoreCase("reloadAll") && args.length == 2) {
-                provider.getWorlds().forEach(WorldData::reload);
-                msg(PluginData.PREFIX + "&aReloaded all worlds data.");
                 return;
             }
 
@@ -120,9 +120,13 @@ public class NatureCommand extends EternalCommand {
             // the need for a world to be loaded and lets the user
             // define any name for the world being created.
             if (sub.equalsIgnoreCase("makeCustomConfig")) {
-                WorldData data = provider.getWorld(world);
+                WorldData data = provider.getWorld(Bukkit.getWorld(world));
+                if (data == null) {
+                    msg(WORLD_NOT_LOADED);
+                    return;
+                }
                 msg(PluginData.PREFIX + "&7Creating custom config for world " + world + "...");
-                boolean success = data.createCustomTemperatureConfig(false);
+                boolean success = data.createCustomTemperatureConfig();
                 if (success)
                     msg(PluginData.PREFIX + "&aCreated custom config for world &e" + world + "&a.");
                 else msg(PluginData.PREFIX + "&7World &e" + world + "&7 already had a custom config.");
@@ -130,58 +134,60 @@ public class NatureCommand extends EternalCommand {
             }
 
             // Stop if the world does not exist
-            if (!provider.isLoaded(world)) {
-                msg(PluginData.PREFIX + "&cNo world was found with that name.");
+            World bukkitWorld = Bukkit.getWorld(world);
+            if (bukkitWorld == null) {
+                msg(WORLD_NOT_LOADED);
+                return;
+            }
+
+            if (!provider.isLoaded(bukkitWorld)) {
+                msg(PluginData.PREFIX + "&cWorld does not have any loaded data.");
                 return;
             }
 
             // Handle sub commands for /eternal world
-            if (sub.equalsIgnoreCase("reload")) {
-                WorldData data = provider.getWorld(world);
-                msg(PluginData.PREFIX + "&7Reloading files...");
-                data.reload();
-                msg(PluginData.PREFIX + "&aReloaded config files");
-            }
-            else if (sub.equalsIgnoreCase("info")) {
-                WorldData data = provider.getWorld(world);
-                Temperatures t = data.getTemperatures();
+            if (sub.equalsIgnoreCase("info")) {
+                WorldData data = provider.getWorld(bukkitWorld);
+                TemperatureProfile t = data.getTemperatures();
                 msg("");
                 msg("     &2&lEternal Nature");
-                msg("     &6&o" + world + "'s info");
-                msg("");
-                msg("Uses custom data set: &6" + data.usesCustomConfig());
-                msg("Biomes Loaded: &6" + t.count(TempModifierType.BIOME));
-                msg("Blocks Loaded: &6" + t.count(TempModifierType.BLOCK));
-                msg("Clothing Loaded: &6" + t.count(TempModifierType.CLOTHING));
+                msg("     &6&o" + world + "&6's info");
                 msg("");
                 if (wasPlayer()) {
                     Player player = (Player) getSender();
-                    Block standing = player.getLocation().getBlock();
-                    msg("Currently in biome: &7" + t.getModifier(standing.getBiome()).getName());
-                    msg("");
+
+                    if (data.asBukkit() == player.getWorld()) {
+                        Block standing = player.getLocation().getBlock();
+                        BiomeModifier mod = (BiomeModifier) t.getModifier(TempModifierType.BIOME, standing.getBiome());
+                        if (mod == null) {
+                            msg("Current Biome: &7Unknown");
+                        } else {
+                            msg("Current Biome:: &7" + mod.getName()
+                                    + " (&f" + mod.getEmission() + "&7)");
+                        }
+                    } else {
+                        msg("&7&oYou are not in this world.");
+                    }
                 }
+                msg("Hottest record: &c" + t.getMaxTemp());
+                msg("Coldest record: &b" + t.getMinTemp());
+                msg("");
             }
             else {
                 msg(PluginData.PREFIX + "&cInvalid use. For help use /eternal world");
             }
         }
 
-        else if (args[0].equalsIgnoreCase("fixLeafEffect")) {
-            int count = LeafParticle.removeBrokenParticles();
-            msg(PluginData.PREFIX + "Removed " + count + " leaf particles from the world.");
-        }
-
         else if (args[0].equalsIgnoreCase("resetConfig")) {
             msg(PluginData.PREFIX + "&7Resetting files...");
             plugin.saveResource("temperature-config.yml", true);
             plugin.saveResource("config.yml", true);
-            plugin.getEngine().getDefaultTemperatures().loadData();
-            plugin.getSystemConfig().reload();
+            plugin.getEngine().getDefaultTempProfile().reload();
+            plugin.getRootConfig().reload();
             msg(PluginData.PREFIX + "&aReset config files back to default");
         }
 
         else if (args[0].equalsIgnoreCase("settings")) {
-            //if (wasPlayer()) plugin.getSettingsMenu().open((Player) getSender());
             if (wasPlayer()) {
                 plugin.getEngine().getMenuManager()
                         .getMenu(Menus.SETTINGS.getId()).open((Player) getSender());
@@ -190,13 +196,18 @@ public class NatureCommand extends EternalCommand {
             }
         }
 
-        else if (args[0].equalsIgnoreCase("stats")) {
+        else if (args[0].equalsIgnoreCase("stats")
+                || args[0].equalsIgnoreCase("info")) {
+            EternalEngine engine = plugin.getEngine();
+            LeafEmitter leafEmitter = (LeafEmitter) engine.getWorker(LeafEmitter.class);
+
             msg("");
             msg("     &2&lEternal Nature");
             msg("     &7Background Stats");
             msg("");
-            msg("Players cached: &7" + plugin.getEngine().getCashedUsers().size());
-            msg("Worlds Loaded: &7" + plugin.getEngine().getWorldProvider().getLoaded());
+            msg("Players Cached: &7" + engine.getCashedUsers().size());
+            msg("Worlds Loaded: &7" + engine.getWorldProvider().getLoaded());
+            msg("Leaf Particles: &a" + leafEmitter.getParticleCount() + "&7/" + leafEmitter.getMaxParticles());
             msg("");
         }
 
@@ -211,7 +222,7 @@ public class NatureCommand extends EternalCommand {
                 msg("   &7&oThis version is a snapshot.");
             }
             if (plugin.getVersionInfo() == null) {
-                if (plugin.getSystemConfig().isEnabled(ConfigOption.UPDATES_CHECK)) {
+                if (plugin.getRootConfig().getYml().getBoolean(ConfigPath.UPDATE_CHECK)) {
                     msg("&cUnable to check plugin version.");
                 } else {
                     msg("&cVersion checking is disabled.");
@@ -274,12 +285,11 @@ public class NatureCommand extends EternalCommand {
         }
         else if (args.length >= 2) {
             if (args[0].equalsIgnoreCase("world")) {
-                Collection<String> names = plugin.getEngine().getWorldProvider().getWorldNames();
+                List<String> names = plugin.getEngine().getWorldProvider().getWorldNames();
 
                 if (args.length == 2) {
                     List<String> worlds = new ArrayList<>(names);
                     worlds.add("list");
-                    worlds.add("reloadAll");
                     return worlds;
                 }
 

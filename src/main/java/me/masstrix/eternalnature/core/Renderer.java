@@ -18,33 +18,40 @@ package me.masstrix.eternalnature.core;
 
 import me.masstrix.eternalnature.EternalEngine;
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.config.ConfigOption;
-import me.masstrix.eternalnature.data.UserData;
+import me.masstrix.eternalnature.config.Configurable;
+import me.masstrix.eternalnature.player.UserData;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-public class Renderer implements EternalWorker, ConfigReloadUpdate {
+@Configurable.Path("global")
+public class Renderer implements EternalWorker, Configurable {
 
     private EternalNature plugin;
     private EternalEngine engine;
     private BukkitTask renderTask;
-    private EntityCleanup entityCleanup;
+    private int renderDelay = 20;
 
     public Renderer(EternalNature plugin, EternalEngine engine) {
         this.plugin = plugin;
         this.engine = engine;
-        this.entityCleanup = new EntityCleanup();
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        renderDelay = section.getInt("render-delay-ticks", 20);
+        start();
     }
 
     @Override
     public void start() {
-        entityCleanup.run();
+        end(); // Make sure any previous tasks are first stopped
         renderTask = new BukkitRunnable() {
             @Override
             public void run() {
                 render();
             }
-        }.runTaskTimer(plugin, 0, plugin.getSystemConfig().getInt(ConfigOption.RENDER_DELAY_TICKS));
+        }.runTaskTimer(plugin, 0, renderDelay);
     }
 
     /**
@@ -61,13 +68,5 @@ public class Renderer implements EternalWorker, ConfigReloadUpdate {
     public void end() {
         if (renderTask != null)
             renderTask.cancel();
-        entityCleanup.run();
-    }
-
-    @Override
-    public void updateSettings() {
-        if (renderTask != null)
-            renderTask.cancel();
-        start();
     }
 }

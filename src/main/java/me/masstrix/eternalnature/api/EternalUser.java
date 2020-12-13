@@ -71,4 +71,17 @@ public interface EternalUser {
      * @return if the player is currently thirsty.
      */
     boolean isThirsty();
+
+    /**
+     * @return how many seconds until the thirst effect has worn off.
+     */
+    int getThirstTime();
+
+    /**
+     * Adds time to the thirst effect of the player. This will stack on top of any
+     * current time.
+     *
+     * @param sec time in seconds to add thirst for the player.
+     */
+    void addThirst(int sec);
 }

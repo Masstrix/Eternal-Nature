@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 public class Lang {
@@ -12,17 +13,19 @@ public class Lang {
     private static final String DATA_TEXT = "text";
     private static final Pattern PATTERN = Pattern.compile(".*=");
 
+    private final LanguageEngine LE;
     private boolean persistent;
     private File file;
     private String locale = "";
     private Map<String, String> header = new HashMap<>();
     private Map<String, String> text = new HashMap<>();
 
-    public Lang(File file) {
-        this(file, false);
+    public Lang(LanguageEngine engine, File file) {
+        this(engine, file, false);
     }
 
-    public Lang(File file, boolean persistent) {
+    public Lang(LanguageEngine engine, File file, boolean persistent) {
+        this.LE = engine;
         this.persistent = persistent;
         this.file = file;
 
@@ -204,10 +207,10 @@ public class Lang {
             }
 
             if (readText) {
-                System.out.print("Loaded Language " + getNiceName());
+                LE.log(Level.CONFIG, "Loaded Language " + getNiceName());
             }
         } catch (IOException e) {
-            System.out.println("Failed to language load file " + file.getName());
+            LE.log(Level.SEVERE, "Failed to load language file " + file.getName());
             e.printStackTrace();
         } finally {
             if (reader != null) {
@@ -227,7 +230,7 @@ public class Lang {
     public void unload() {
         if (persistent) return;
         text.clear();
-        System.out.println("Unloaded language " + getNiceName() + " (" + getLocale() + ")");
+        LE.log(Level.INFO, "Unloaded Language " + getNiceName() + " (" + getLocale() + ")");
     }
 
     /**

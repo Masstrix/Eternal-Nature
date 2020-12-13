@@ -16,33 +16,32 @@
 
 package me.masstrix.eternalnature;
 
-import me.masstrix.eternalnature.core.*;
-import me.masstrix.eternalnature.core.entity.EntityStorage;
-import me.masstrix.eternalnature.core.temperature.Temperatures;
+import me.masstrix.eternalnature.config.Configuration;
+import me.masstrix.eternalnature.core.EternalWorker;
+import me.masstrix.eternalnature.core.Renderer;
+import me.masstrix.eternalnature.core.UserWorker;
+import me.masstrix.eternalnature.core.entity.shadow.ShadowEntityManager;
+import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
 import me.masstrix.eternalnature.core.world.*;
-import me.masstrix.eternalnature.data.UserData;
-import me.masstrix.eternalnature.menus.*;
+import me.masstrix.eternalnature.menus.MenuManager;
+import me.masstrix.eternalnature.menus.settings.*;
+import me.masstrix.eternalnature.player.UserData;
 import me.masstrix.eternalnature.util.Stopwatch;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 public class EternalEngine {
 
     private static boolean enabled = false;
     private EternalNature plugin;
-    private Renderer renderer;
-    private UserWorker userWorker;
     private WorldProvider worldProvider;
-    private Temperatures defaultTemps;
+    private TemperatureProfile defaultTempProfile;
     private AutoPlanter autoPlanter;
-    private EntityStorage entityStorage;
     private MenuManager menuManager;
+    private EternalHeartbeat heartbeat;
 
     private List<EternalWorker> workers = new ArrayList<>();
     private Map<UUID, UserData> users = new HashMap<>();
@@ -58,27 +57,29 @@ public class EternalEngine {
         if (enabled) return;
         enabled  = true;
         this.plugin = plugin;
-        this.defaultTemps = new Temperatures(plugin);
-        this.entityStorage = new EntityStorage(plugin);
+        this.defaultTempProfile = new TemperatureProfile(
+                new Configuration(plugin, "temperature-config")
+                        .create(true));
         this.menuManager = new MenuManager(plugin);
+        heartbeat = new EternalHeartbeat(plugin, 10);
 
-        // Load default temperature data
-        this.defaultTemps.createFiles(false);
-        this.defaultTemps.loadData();
-
-        try {
-            entityStorage.restartSystem();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        registerWorkers(userWorker = new UserWorker(plugin, this),
+        AgingItemWorker agingItemWorker;
+        LeafEmitter leafEmitter;
+        TreeSpreader treeSpreader;
+        Renderer renderer;
+        registerWorkers(
+                heartbeat,
+                new UserWorker(plugin, this),
                 renderer = new Renderer(plugin, this),
+                new ShadowEntityManager(plugin),
                 worldProvider = new WorldProvider(plugin),
                 autoPlanter = new AutoPlanter(plugin),
-                new AgingItemWorker(plugin),
-                new LeafEmitter(plugin, entityStorage),
-                new TreeSpreader(plugin));
+                agingItemWorker = new AgingItemWorker(plugin),
+                leafEmitter = new LeafEmitter(plugin),
+                treeSpreader = new TreeSpreader(plugin));
         getWorker(TreeSpreader.class);
+
+        Configuration config = plugin.getRootConfig();
 
         plugin.registerListeners(menuManager);
         menuManager.register(
@@ -88,31 +89,33 @@ public class EternalEngine {
                 new LangSettingsMenu(plugin, menuManager),
                 new LeafParticleMenu(plugin, menuManager),
                 new OtherSettingsMenu(plugin, menuManager));
+        menuManager.getMenus().forEach(config::subscribe);
+
+        config.subscribe(autoPlanter);
+        config.subscribe(worldProvider);
+        config.subscribe(defaultTempProfile);
+        config.subscribe(renderer);
+        config.subscribe(agingItemWorker);
+        config.subscribe(leafEmitter);
+        config.subscribe(treeSpreader);
+    }
+
+    public EternalNature getPlugin() {
+        return plugin;
+    }
+
+    public EternalHeartbeat getHeartbeat() {
+        return heartbeat;
     }
 
     public MenuManager getMenuManager() {
         return menuManager;
     }
 
-    public void updateSettings() {
-        plugin.getLogger().info("Updating settings");
-        for (EternalWorker worker : workers) {
-            if (ConfigReloadUpdate.class.isAssignableFrom(worker.getClass())) {
-                ((ConfigReloadUpdate) worker).updateSettings();
-            }
-        }
-    }
-
-    void start() {
+    EternalEngine start() {
         loadPlayerData();
         workers.forEach(EternalWorker::start);
-    }
-
-    /**
-     * @return the entity storage.
-     */
-    public EntityStorage getEntityStorage() {
-        return entityStorage;
+        return this;
     }
 
     private void loadPlayerData() {
@@ -134,24 +137,19 @@ public class EternalEngine {
         if (users.containsKey(uuid)) {
             return users.get(uuid);
         }
-        File file = new File(plugin.getDataFolder(), "players.yml");
-        UserData user = null;
-        if (file.exists()) {
-            YamlConfiguration config = new YamlConfiguration();
-            try {
-                config.load(file);
-                if (config.contains(uuid.toString())) {
-                    user = new UserData(plugin, uuid,
-                            (float) config.getDouble(uuid + ".temp", 0),
-                            (float) config.getDouble(uuid+ ".hydration", 0));
-                    user.setThirstTimer(config.getInt(uuid + ".effects.thirst", 0));
-                }
-            } catch (IOException | InvalidConfigurationException e) {
-                e.printStackTrace();
-            }
+
+        ConfigurationSection section = plugin.getPlayerConfig().getYml()
+                .getConfigurationSection(uuid.toString());
+        UserData user;
+        if (section != null) {
+            user = new UserData(plugin, uuid, section.getDouble("temp"), section.getDouble("hydration"));
+            user.setThirstTimer(section.getInt("effects.thirst"));
+        } else {
+            user = new UserData(plugin, uuid);
         }
-        if (user == null) user = new UserData(plugin, uuid);
+
         users.put(uuid, user);
+        plugin.getRootConfig().subscribe(user);
         return user;
     }
 
@@ -170,11 +168,8 @@ public class EternalEngine {
         return null;
     }
 
-    /**
-     * @return the default temperature config.
-     */
-    public Temperatures getDefaultTemperatures() {
-        return defaultTemps;
+    public TemperatureProfile getDefaultTempProfile() {
+        return defaultTempProfile;
     }
 
     public WorldProvider getWorldProvider() {
@@ -216,7 +211,9 @@ public class EternalEngine {
      * @param uuid uuid of player being unloaded.
      */
     public void unloadUserData(UUID uuid) {
-        users.get(uuid).endSession();
+        UserData user = users.get(uuid);
+        plugin.getRootConfig().unsubscribe(user);
+        user.endSession();
         users.remove(uuid);
     }
 
