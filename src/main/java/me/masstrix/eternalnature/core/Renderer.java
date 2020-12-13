@@ -18,15 +18,19 @@ package me.masstrix.eternalnature.core;
 
 import me.masstrix.eternalnature.EternalEngine;
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.player.UserData;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-public class Renderer implements EternalWorker {
+@Configurable.Path("global")
+public class Renderer implements EternalWorker, Configurable {
 
     private EternalNature plugin;
     private EternalEngine engine;
     private BukkitTask renderTask;
+    private int renderDelay = 20;
 
     public Renderer(EternalNature plugin, EternalEngine engine) {
         this.plugin = plugin;
@@ -34,13 +38,20 @@ public class Renderer implements EternalWorker {
     }
 
     @Override
+    public void updateConfig(ConfigurationSection section) {
+        renderDelay = section.getInt("render-delay-ticks", 20);
+        start();
+    }
+
+    @Override
     public void start() {
+        end(); // Make sure any previous tasks are first stopped
         renderTask = new BukkitRunnable() {
             @Override
             public void run() {
                 render();
             }
-        }.runTaskTimer(plugin, 0, 20);
+        }.runTaskTimer(plugin, 0, renderDelay);
     }
 
     /**

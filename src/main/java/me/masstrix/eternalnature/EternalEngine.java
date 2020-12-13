@@ -66,10 +66,11 @@ public class EternalEngine {
         AgingItemWorker agingItemWorker;
         LeafEmitter leafEmitter;
         TreeSpreader treeSpreader;
+        Renderer renderer;
         registerWorkers(
                 heartbeat,
                 new UserWorker(plugin, this),
-                new Renderer(plugin, this),
+                renderer = new Renderer(plugin, this),
                 new ShadowEntityManager(plugin),
                 worldProvider = new WorldProvider(plugin),
                 autoPlanter = new AutoPlanter(plugin),
@@ -93,6 +94,7 @@ public class EternalEngine {
         config.subscribe(autoPlanter);
         config.subscribe(worldProvider);
         config.subscribe(defaultTempProfile);
+        config.subscribe(renderer);
         config.subscribe(agingItemWorker);
         config.subscribe(leafEmitter);
         config.subscribe(treeSpreader);
