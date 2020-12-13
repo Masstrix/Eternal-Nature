@@ -441,12 +441,13 @@ public class UserData implements EternalUser, Configurable {
     }
 
     public void dehydrate(double amount) {
+        boolean showParticles = this.hydration > 0;
         this.hydration -= amount;
         if (hydration < 0) hydration = 0;
         if (hydration > 20) hydration = 20;
 
         Player player = Bukkit.getPlayer(id);
-        if (player != null)
+        if (player != null && showParticles)
             player.getWorld().spawnParticle(Particle.WATER_SPLASH,
                     player.getEyeLocation(), 15, 0, 0, 0, 0);
     }
