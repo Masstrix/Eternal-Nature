@@ -70,6 +70,17 @@ hydration:
     enabled: true
     style: BOSSBAR
     warning-flash: true
+    format: "%flash%H²O %data% %effects%"
+    icon:
+      ico: "⭘"
+      normal:
+        full: "aqua"
+        half: "cyan"
+        empty: "gray"
+      thirsty:
+        full: "green"
+        half: "dark green"
+        empty: "gray"
   drink-from-open-water: true
   thirst-effect:
     enabled: true

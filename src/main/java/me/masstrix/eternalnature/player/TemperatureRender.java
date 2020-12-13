@@ -117,7 +117,7 @@ public class TemperatureRender implements StatRenderer {
 
         if (renderMethod == StatusRenderMethod.BOSSBAR) {
             if (bossBar == null) {
-                bossBar = Bukkit.createBossBar("Hydration", BarColor.BLUE, BarStyle.SEGMENTED_10);
+                bossBar = Bukkit.createBossBar("Hydration", BarColor.BLUE, BarStyle.SOLID);
                 bossBar.addPlayer(player);
             }
 

@@ -99,7 +99,7 @@ public class Actionbar {
         render = false;
         for (ActionbarItem item : items) {
             BaseComponent[] append = item.getActionbarText();
-            if (append == null) continue;
+            if (append == null || append.length == 0) continue;
             if (!first)
                 builder.append(spacer, ComponentBuilder.FormatRetention.NONE);
             builder.append("", ComponentBuilder.FormatRetention.NONE);
