@@ -46,7 +46,7 @@ import java.util.logging.Level;
 
 public class EternalNature extends JavaPlugin {
 
-    private static final MinecraftVersion REQUIRED_VER = new MinecraftVersion("1.14");
+    private static final MinecraftVersion REQUIRED_VER = new MinecraftVersion("1.16");
     private EternalEngine engine;
     private LanguageEngine languageEngine;
     private VersionCheckInfo versionCheckInfo = null;
