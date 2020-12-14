@@ -272,6 +272,21 @@ public class UserData implements EternalUser, Configurable {
     }
 
     /**
+     * Finds and returns a stat renderer by class type. This will look through
+     * all stat renderers and find the first matching renderer to the class.
+     *
+     * @param clazz class to get.
+     * @return a stat renderer or null if non exists for the class.
+     */
+    public ActionbarItem getStatRenderer(Class<? extends ActionbarItem> clazz) {
+        for (ActionbarItem a : statRenderers) {
+            if (a.getClass().equals(clazz) || clazz.isAssignableFrom(a.getClass()))
+                return a;
+        }
+        return null;
+    }
+
+    /**
      * Called by {@link me.masstrix.eternalnature.core.Renderer} to render all components
      * for the players perspective.
      */

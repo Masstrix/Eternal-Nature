@@ -211,14 +211,23 @@ public class Wind implements Ticking, Configurable {
     }
 
     /**
+     * Returns if the wind is gusty, when gusty entities and players will start getting pushed
+     * by the wind.
+     *
+     * @return if it is currently gusty.
+     */
+    public boolean isGusty() {
+        return getGustStrength() >= 0.01;
+    }
+
+    /**
      * Pushes an entity with the current wind conditions. Entities can only be
      * pushed if the wind is gusty.
      *
      * @param entity entity to push by the wind.
      */
     public void push(Entity entity) {
-        double strength = Math.abs(getGustStrength());
-        if (strength < 0.01) return;
+        if (isGusty()) return;
 
         if (entity instanceof Player) {
             Player player = (Player) entity;

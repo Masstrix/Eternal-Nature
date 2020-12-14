@@ -58,14 +58,7 @@ public class HydrationRenderer implements StatRenderer {
                 int percent = (int) ((hydration / 20F) * 100);
                 return new Pair<>(new ComponentBuilder(percent + "%").create(), percent + "%");
             }
-            ComponentBuilder builder = new ComponentBuilder();
-            for (int i = 0; i < 10; i++) {
-                builder.append(icon);
-                int pos = i * 2;
-                int id = pos < hydration && pos + 1 < hydration ? 0 : pos < hydration && pos + 1 >= hydration ? 1 : 2;
-                builder.color(COLORS[USER.isThirsty() ? id + 3 : id]);
-            }
-            return new Pair<>(builder.create(), "");
+            return new Pair<>(getBubbleBar(), "");
         }).registerTag("effects", () -> {
             StringBuilder text = new StringBuilder();
             ComponentBuilder comp = new ComponentBuilder();
@@ -166,6 +159,40 @@ public class HydrationRenderer implements StatRenderer {
             PLAYER.setExp(MathUtil.minMax(percentage, 0, 1));
             PLAYER.setLevel(0);
         }
+    }
+
+    public String getFullPercent() {
+        double hydration = USER.getHydration();
+        int percent = (int) ((hydration / 20F) * 100);
+        return percent + "%";
+    }
+
+    public String getBubbleBarAsLegacy() {
+        StringBuilder bubbleBar = new StringBuilder();
+        for (int i = 0; i < 10; i++) {
+            int pos = i * 2;
+            int id = pos < hydration && pos + 1 < hydration ? 0 : pos < hydration && pos + 1 >= hydration ? 1 : 2;
+            bubbleBar.append(COLORS[USER.isThirsty() ? id + 3 : id]).append(icon);
+        }
+        return bubbleBar.toString();
+    }
+
+    public BaseComponent[] getBubbleBar() {
+        ComponentBuilder builder = new ComponentBuilder();
+        for (int i = 0; i < 10; i++) {
+            builder.append(icon);
+            int pos = i * 2;
+            int id = pos < hydration && pos + 1 < hydration ? 0 : pos < hydration && pos + 1 >= hydration ? 1 : 2;
+            builder.color(COLORS[USER.isThirsty() ? id + 3 : id]);
+        }
+        return builder.create();
+    }
+
+    public String getLegacy() {
+        boolean update = this.hydration != hydration
+                || USER.getHydration() <= 4
+                || USER.ACTIONBAR.isPrepared();
+        return FORMAT.getLegacy(update);
     }
 
     @Override

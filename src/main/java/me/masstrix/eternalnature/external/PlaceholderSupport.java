@@ -23,10 +23,12 @@ import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
 import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
+import me.masstrix.eternalnature.player.HydrationRenderer;
 import me.masstrix.eternalnature.player.UserData;
 import me.masstrix.eternalnature.util.BuildInfo;
 import me.masstrix.eternalnature.util.FindableMatch;
 import me.masstrix.eternalnature.util.SecondsFormat;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
@@ -77,22 +79,48 @@ public class PlaceholderSupport extends PlaceholderExpansion implements Configur
         UserData data = PLUGIN.getEngine().getUserData(player.getUniqueId());
         if (data == null) return "";
 
-        if (identifier.equals("temperature")) {
-            return String.valueOf(data.getTemperature());
+        if (identifier.equals("wind_gusting")) {
+            return data.getWorld().getWind().isGusty() ? "true" : "false";
         }
 
         if (identifier.equals("hydration")) {
             return String.valueOf(data.getHydration());
         }
 
+        if (identifier.equals("hydration_bubbles")) {
+            HydrationRenderer renderer = (HydrationRenderer) data.getStatRenderer(HydrationRenderer.class);
+            if (renderer == null) return "";
+            return renderer.getBubbleBarAsLegacy();
+        }
+
+        if (identifier.equals("hydration_percent")) {
+            HydrationRenderer renderer = (HydrationRenderer) data.getStatRenderer(HydrationRenderer.class);
+            if (renderer == null) return "";
+            return renderer.getFullPercent();
+        }
+
+        if (identifier.equals("temperature")) {
+            return String.valueOf(data.getTemperature());
+        }
+
+        if (identifier.equals("temperature_color")) {
+            TemperatureIcon icon = getTemperatureIcon(player, data);
+            return icon != null ? icon.getColor().toString() : "";
+        }
+
+        if (identifier.equals("temperature_color_rgb")) {
+            ChatColor color = TemperatureIcon.getGradatedColor((float) data.getTemperature());
+            return color != null ? color.toString() : "";
+        }
+
         if (identifier.equals("temperature_icon")) {
             TemperatureIcon icon = getTemperatureIcon(player, data);
-            return icon.getColor() + icon.getIcon();
+            return icon.getIcon();
         }
 
         if (identifier.equals("temperature_name")) {
             TemperatureIcon icon = getTemperatureIcon(player, data);
-            return icon.getColor() + icon.getDisplayName();
+            return icon.getDisplayName();
         }
 
         if (identifier.equals("thirst_effect_timer")) {
