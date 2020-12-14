@@ -127,6 +127,10 @@ public class LeafParticle extends BaseParticle implements Leaf {
         }
 
         Location loc = getLocation();
+        if (loc == null) {
+            remove();
+            return;
+        }
         Block block = loc.getBlock();
         hasSettled = !block.isPassable();
         boolean inWater = loc.getBlock().getType() == Material.WATER;
@@ -179,6 +183,7 @@ public class LeafParticle extends BaseParticle implements Leaf {
     }
 
     private static Location getArmTip(ShadowArmorStand as) {
+        if (as == null) return null;
 
         float offsetY = as.isSmall() ? 11f : 22f;
         float offsetShoulder = as.isSmall() ? 3f : 5f;
@@ -194,6 +199,9 @@ public class LeafParticle extends BaseParticle implements Leaf {
 
         // Get Hand Location
         Vector pose = as.getPose(ArmorStandBodyPart.RIGHT_ARM);
+        if (pose == null) {
+            return null;
+        }
         EulerAngle ea = new EulerAngle(
                 Math.toRadians(pose.getX()),
                 Math.toRadians(pose.getY()),
