@@ -84,6 +84,26 @@ menu.temp.sweat.title=Sudoración
 menu.temp.sweat.description=Si los jugadores habilitados perderán la hidratación más rápido cuanto más alta sea su temperatura.
 menu.temp.display.title=Modo de Visualización
 menu.temp.display.description=Establecer el método de visualización para los jugadores.
+menu.temp.use-rgb.title=Usar colores RGB
+menu.temp.use-rgb.description=Cuándo se activa el rgb, la transición de colores será más suave.
+
+// Escaneó de temperatura
+menu.temp.scanning.title=Escaneó de temperatura
+menu.temp.scanning.description=Cambia los ajustes de escaneo para los cálculos de temperatura.
+menu.temp.scanning.area.title=Área de escaneó
+menu.temp.scanning.area.description=Esta es el área que será escaneada alrededor de cada jugador cuando se actualice su temperatura. Se recomienda mantenerla baja.
+menu.temp.scanning.height.title=Altura de escaneó
+menu.temp.scanning.height.description=La altura que el escáner usará al actualizar la temperatura de un jugador. Se recomienda mantenerla baja.
+menu.temp.scanning.use-blocks.title=Usar Bloques
+menu.temp.scanning.use-blocks.description=Si está activada, los bloques cercanos serán tomados en cuenta al calcular las temperaturas.
+menu.temp.scanning.use-biomes.title=Usar Biomas
+menu.temp.scanning.use-biomes.description=Si está activada, los biomas serán tomados en cuenta al calcular las temperaturas.
+menu.temp.scanning.use-weather.title=Usar Lluvía
+menu.temp.scanning.use-weather.description=Si está activada, la lluvía será tomada en cuenta al calcular las temperaturas.
+menu.temp.scanning.use-items.title=Usar Items
+menu.temp.scanning.use-items.description=Si está activada, los items serán tomados en cuenta al calcular las temperaturas.
+menu.temp.scanning.use-environment.title=Usar Ambiente
+menu.temp.scanning.use-environment.description=Si se habilita, se tendrán en cuenta factores ambientales como la profundidad de los jugadores, si están en el agua, o la altura de los jugadores en el mundo.
 
 // Hidratación
 menu.hydration.title=Opciones de hidratación
