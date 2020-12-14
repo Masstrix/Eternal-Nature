@@ -23,6 +23,7 @@ public enum Menus {
     HYDRATION_SETTINGS("hydration_settings"),
     OTHER_SETTINGS("other_settings"),
     TEMP_SETTINGS("temp_settings"),
+    TEMP_SCANNING_SETTINGS("temp_scanning_settings"),
     LANG_SETTINGS("lang_settings");
 
     private final String id;

@@ -86,6 +86,7 @@ public class EternalEngine {
                 new SettingsMenu(plugin, menuManager),
                 new HydrationSettingsMenu(plugin, menuManager),
                 new TempSettingsMenu(plugin, menuManager),
+                new TempScanningMenu(plugin, menuManager),
                 new LangSettingsMenu(plugin, menuManager),
                 new LeafParticleMenu(plugin, menuManager),
                 new OtherSettingsMenu(plugin, menuManager));

@@ -84,6 +84,26 @@ menu.temp.sweat.title=Sweating
 menu.temp.sweat.description=If enabled players will lose hydration faster the higher there temperature is.
 menu.temp.display.title=Display Mode
 menu.temp.display.description=Set where temperature is displayed for players.
+menu.temp.use-rgb.title=Use RGB colors
+menu.temp.use-rgb.description=When enabled the color of the temperature text will smoothly move between colors.
+
+// Temperature scanning Menu
+menu.temp.scanning.title=Temperature Scanner
+menu.temp.scanning.description=Change the scanning settings for temperature calculations.
+menu.temp.scanning.area.title=Scan Area
+menu.temp.scanning.area.description=This is the area that will be scanned around each player when updating there temperature. Recommended to keep this low.
+menu.temp.scanning.height.title=Scan Height
+menu.temp.scanning.height.description=Height the scanner will use when updating a players temperature. Recommended to keep this low.
+menu.temp.scanning.use-blocks.title=Use Blocks
+menu.temp.scanning.use-blocks.description=If enabled nearby blocks will be accounted for when calculating temperatures.
+menu.temp.scanning.use-biomes.title=Use Biomes
+menu.temp.scanning.use-biomes.description=If enabled biomes will be accounted for when calculating temperatures.
+menu.temp.scanning.use-weather.title=Use Weather
+menu.temp.scanning.use-weather.description=If enabled weather will be accounted for when calculating temperatures.
+menu.temp.scanning.use-items.title=Use Items
+menu.temp.scanning.use-items.description=If enabled held items will be accounted for when calculating temperatures.
+menu.temp.scanning.use-environment.title=Use Environment
+menu.temp.scanning.use-environment.description=If enabled environmental factors will be accounted for such as player depth if they are in water or the players height in the world.
 
 // hydration Menu
 menu.hydration.title=Hydration Settings

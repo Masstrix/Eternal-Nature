@@ -46,6 +46,7 @@ public class TempSettingsMenu extends GlobalMenu {
     private double heatThr;
     private StatusRenderMethod renderMethod;
     private boolean displayEnabled;
+    private boolean useRgb;
 
     public TempSettingsMenu(EternalNature plugin, MenuManager menuManager) {
         super(Menus.TEMP_SETTINGS, 5);
@@ -64,6 +65,7 @@ public class TempSettingsMenu extends GlobalMenu {
         heatThr = section.getInt("damage.threshold.heat");
         renderMethod = StatusRenderMethod.valueOf(section.getString("display.style"));
         displayEnabled = section.getBoolean("display.enabled");
+        useRgb = section.getBoolean("display.use-rgb-colors", true);
         build();
     }
 
@@ -114,6 +116,16 @@ public class TempSettingsMenu extends GlobalMenu {
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
+        // Temp Scanning menu
+        setButton(new Button(asSlot(1, 6), new ItemBuilder(Material.SCAFFOLDING)
+                .setName("&a" + le.getText("menu.temp.scanning.title"))
+                .addDescription(le.getText("menu.temp.scanning.description"))
+                .addLore("", "&e" + le.getText("menu.common.edit"))
+                .build())
+                .onClick(player -> {
+                    menuManager.getMenu(Menus.TEMP_SCANNING_SETTINGS).open(player);
+                }));
+
         setButton(new Button(asSlot(4, 4), () -> new ItemBuilder(Material.JUNGLE_SIGN)
                 .setName("&a" + le.getText("menu.temp.display.title"))
                 .addDescription(le.getText("menu.temp.display.description"))
@@ -135,6 +147,18 @@ public class TempSettingsMenu extends GlobalMenu {
                     .build();
         }).onClick(player -> {
             config.toggle("temperature.display.enabled");
+            config.save().reload();
+            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+        }));
+
+        setButton(new Button(asSlot(4, 3), () -> {
+            return new ItemBuilder(Material.RED_DYE)
+                    .setName("&a" + le.getText("menu.temp.use-rgb.title"))
+                    .addDescription(le.getText("menu.temp.use-rgb.description"))
+                    .addSwitch("Currently:", useRgb)
+                    .build();
+        }).onClick(player -> {
+            config.toggle("temperature.display.use-rgb-colors");
             config.save().reload();
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
         }));
