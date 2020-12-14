@@ -64,8 +64,9 @@ public class TemperatureRender implements StatRenderer {
 
         if (beforeMethod != renderMethod) {
             reset();
-            USER.ACTIONBAR.prepare();
         }
+
+        USER.ACTIONBAR.prepare();
     }
 
     @Override
@@ -134,7 +135,7 @@ public class TemperatureRender implements StatRenderer {
         }
 
         if (renderMethod == StatusRenderMethod.ACTIONBAR) {
-            if (temperature == lastTemp && !willDamage) return;
+            if (temperature == lastTemp && !willDamage && !USER.ACTIONBAR.isPrepared()) return;
 
             text = displayFormat;
             String[] split = text.split(" ");

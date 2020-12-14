@@ -109,10 +109,10 @@ public class HydrationRenderer implements StatRenderer {
 
         if (beforeMethod != renderMethod) {
             reset();
-            USER.ACTIONBAR.prepare();
         }
 
         this.FORMAT.praseFormat(section.getString("display.format"));
+        USER.ACTIONBAR.prepare();
     }
 
     @Override
@@ -134,12 +134,16 @@ public class HydrationRenderer implements StatRenderer {
 
         double hydration = USER.getHydration();
 
+        boolean shouldNotUpdate = this.hydration == hydration
+                && USER.getHydration() > 4
+                && !USER.ACTIONBAR.isPrepared();
+
         if (renderMethod == StatusRenderMethod.BOSSBAR) {
             if (bossBar == null) {
                 bossBar = Bukkit.createBossBar("Hydration", BarColor.BLUE, BarStyle.SEGMENTED_10);
                 bossBar.addPlayer(PLAYER);
             }
-            if (this.hydration == hydration && USER.getHydration() > 4) return;
+            if (shouldNotUpdate) return;
             bossBar.setProgress(Math.abs(hydration / 20));
             bossBar.setTitle(StringUtil.color(FORMAT.getLegacy(true)));
             this.hydration = hydration;
@@ -150,7 +154,7 @@ public class HydrationRenderer implements StatRenderer {
         }
 
         if (renderMethod == StatusRenderMethod.ACTIONBAR) {
-            if (this.hydration == hydration && USER.getHydration() > 4) return;
+            if (shouldNotUpdate) return;
             barText = FORMAT.getFormatted(true);
             USER.ACTIONBAR.prepare();
             this.hydration = hydration;

@@ -199,12 +199,6 @@ public class TemperatureIcon implements Configurable, FindableMatch<Float> {
         return ChatColor.of(color);
     }
 
-    public static TemperatureIcon find(MatchMethod method, double temp, TemperatureProfile config) {
-        if (temp >= config.getBurningPoint() - 2) return TemperatureIcon.BURNING;
-        if (temp <= config.getFreezingPoint() + 2) return TemperatureIcon.FREEZING;
-        return (TemperatureIcon) method.find(ICONS.values(), (float) temp);
-    }
-
     /**
      * Finds the most relevant name for the given temperature.
      *
@@ -214,20 +208,9 @@ public class TemperatureIcon implements Configurable, FindableMatch<Float> {
      *               the freezing or burning point.
      * @return the most relevant icon.
      */
-//    public static TemperatureIcon getClosest(MatchingMethod method, double temp, TemperatureProfile config) {
-//        if (temp >= config.getBurningPoint() - 2) return TemperatureIcon.BURNING;
-//        if (temp <= config.getFreezingPoint() + 2) return TemperatureIcon.FREEZING;
-//
-//        TemperatureIcon icon = TemperatureIcon.BURNING;
-//        double selectedDiff = Double.MAX_VALUE;
-//        for (TemperatureIcon i : ICONS.values()) {
-//            if (i.temp == temp) return i;
-//            double diff = Math.abs(i.temp - temp);
-//            if (selectedDiff > diff) {
-//                icon = i;
-//                selectedDiff = diff;
-//            }
-//        }
-//        return icon;
-//    }
+    public static TemperatureIcon find(MatchMethod method, double temp, TemperatureProfile config) {
+        if (temp >= config.getBurningPoint() - 2) return TemperatureIcon.BURNING;
+        if (temp <= config.getFreezingPoint() + 2) return TemperatureIcon.FREEZING;
+        return (TemperatureIcon) method.find(ICONS.values(), (float) temp);
+    }
 }

@@ -123,6 +123,16 @@ public class Actionbar {
     }
 
     /**
+     * Returns if the action bar is set to reconstruct on the next time {@link #render}
+     * is called.
+     *
+     * @return if the action bar is currently prepared to reconstruct.
+     */
+    public boolean isPrepared() {
+        return prepared;
+    }
+
+    /**
      * Sends the action bar to the player.
      */
     public void send() {
