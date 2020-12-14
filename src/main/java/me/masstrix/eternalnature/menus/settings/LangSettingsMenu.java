@@ -46,6 +46,11 @@ public class LangSettingsMenu extends GlobalMenu {
     }
 
     @Override
+    public void updateConfig(ConfigurationSection section) {
+        build();
+    }
+
+    @Override
     public String getTitle() {
         return le.getText("menu.language.title");
     }
@@ -94,12 +99,10 @@ public class LangSettingsMenu extends GlobalMenu {
             int row = slot / 7;
             int column = slot % 7;
 
-            boolean selected = le.isActive(lang);
-
             // Add a loaded language to the menu.
             setButton(new Button(asSlot(row + 2, column + 1), () -> {
-                ItemBuilder builder = new ItemBuilder(selected ? Material.MAP : Material.PAPER);
-                builder.setGlowing(selected);
+                ItemBuilder builder = new ItemBuilder(le.isActive(lang) ? Material.MAP : Material.PAPER);
+                builder.setGlowing(le.isActive(lang));
                 builder.setName("&a" + lang.getNiceName());
                 builder.addLore("");
                 if (le.isActive(lang))
@@ -108,7 +111,7 @@ public class LangSettingsMenu extends GlobalMenu {
                     builder.addLore("&e" + le.getText("menu.common.select"));
                 return builder.build();
             }).onClick(player -> {
-                if (selected) return;
+                if (le.isActive(lang)) return;
 
                 // Update config
                 Configuration config = plugin.getRootConfig();;

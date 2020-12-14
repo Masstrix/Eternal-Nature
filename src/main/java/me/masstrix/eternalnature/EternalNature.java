@@ -160,7 +160,7 @@ public class EternalNature extends JavaPlugin {
     public void writeLangFiles(boolean override) {
         File langFolder = new File(getDataFolder(), "lang");
         // Save internal resource.lang files externally
-        String[] langFiles = new String[] {"en"};
+        String[] langFiles = new String[] {"en", "es"};
         for (String s : langFiles) {
             File destination = new File(langFolder, s + ".lang");
             if (!override && destination.exists()) continue;

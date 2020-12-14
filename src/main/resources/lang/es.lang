@@ -1,0 +1,113 @@
+# header
+name=Español
+#
+
+//
+// Mensajes de muerte
+//
+death.heat=%name% murió de calor
+death.cold=%name% murió de hipotermia
+death.dehydrate=%name% murió de deshidratación
+
+
+//
+// Iconos de temperatura
+//
+temp.icon.burning=Ardiendo
+temp.icon.hot=Caliente
+temp.icon.warm=Cálido
+temp.icon.pleasant=Normal
+temp.icon.cool=Fresco
+temp.icon.cold=Frío
+temp.icon.freezing=Congelando
+
+
+//
+//  Menus
+//
+
+// Opciones
+menu.common.edit=Clic para Mirar y Editar
+menu.common.change=Clic para Cambiar
+menu.common.selected=Seleccionado
+menu.common.select=Clic para Seleccionar
+menu.common.enable=Clic para Activar
+menu.common.disable=Clic para Desactivar
+menu.common.reset=Clic para restablecer
+menu.common.reload=Clic para recargar
+
+// Configuraciones
+menu.settings.title=Eternal Nature configuración
+menu.settings.item.replant.title=Replantar cultivos
+menu.settings.item.replant.description=Establecer para replantar automáticamente los cultivos.
+menu.settings.item.auto-plant.title=Auto Replantar
+menu.settings.item.auto-plant.description=Establecer si las plantas tienen la oportunidad de plantarse automáticamente cuando se dejan en el suelo.
+menu.settings.item.item-aging.title=Descomposición
+menu.settings.item.item-aging.description=Los alimentos se descompondrán si se dejan determinado tiempo en el suelo.
+menu.settings.item.tree-spread.title=Plantaciones aleatorías
+menu.settings.item.tree-spread.description=Establece si los árboles dejarán caer semillas que crecerán lentamente.
+menu.settings.item.reload-config.title=Recargar configuración
+menu.settings.item.reload-config.description=Recarga los archivos del Plugin.
+menu.settings.item.reset-config.title=Reiniciar configuración
+menu.settings.item.reset-config.description=Reinicia la configuración por defecto.
+
+// Languaje
+menu.language.title=Configuraciones de lenguaje
+menu.language.description=Cambia el lenguaje del plugin. Los idiomas se cargan desde la carpeta de lang.
+menu.language.reset.title=Reiniciar los archivos .lang
+menu.language.reset.description=Restablece los archivos de idiomas. Esto no afectará los lenguajes customizados.
+menu.language.reload.title=Recargar lenguajes
+menu.language.reload.description=Actualizará la carpeta .lang para realizar los cambios en la configuración.
+
+// Hojas
+menu.leaf-particles.title=Configuraciones de hojas
+menu.leaf-particles.description=Establece si caerán pequeñas hojas de los árboles.
+menu.leaf-particles.spawn.extreme=MUY ALTO
+menu.leaf-particles.spawn.high=ALTO
+menu.leaf-particles.spawn.medium=MEDIO
+menu.leaf-particles.spawn.low=BAJO
+menu.leaf-particles.spawn.title=Probabilidad de generación
+menu.leaf-particles.spawn.description=Establece la tasa de partículas.
+menu.leaf-particles.enabled.title=Partículas de hojas Activadas
+menu.leaf-particles.enabled.description=Cambiar si las partículas de hojas están activadas. Cuando se activa, las hojas caerán lentamente de las hojas de los árboles.
+
+// Temperatura
+menu.temp.title=Opciones de temperatura
+menu.temp.description=Cambia las opciones de la temperatura.
+menu.temp.enabled.title=Temperatura Activada
+menu.temp.enabled.description=Establece si estará Activada. Los jugadores con la temperatura activada tendrán un nuevo desafio.
+menu.temp.damage.title=Daño por temperatura
+menu.temp.damage.description=Los jugadores empezarán a recibir daños si la temperatura es inferior a %cold_threshold% o arriba de %heat_threshold%.
+menu.temp.damage.dealt=Cantidad de daño
+menu.temp.damage.rate=Tasa de daños
+menu.temp.sweat.title=Sudoración
+menu.temp.sweat.description=Si los jugadores habilitados perderán la hidratación más rápido cuanto más alta sea su temperatura.
+menu.temp.display.title=Modo de Visualización
+menu.temp.display.description=Establecer el método de visualización para los jugadores.
+
+// Hidratación
+menu.hydration.title=Opciones de hidratación
+menu.hydration.description=Cambia las opciones de la hidratación.
+menu.hydration.enabled.title=Temperatura Activada
+menu.hydration.enabled.description=Establece si estará Activada.
+menu.hydration.damage.title=Daño por deshidratación
+menu.hydration.damage.description=Establece si los jugadores perderán vida cuando se les acabe el agua.
+menu.hydration.activity.title=Sudoración de alta actividad
+menu.hydration.activity.description=Si los jugadores con Hidratación habilitada, disminuirá más rápido cuando realicen tareas de alta actividad como correr.
+menu.hydration.display.title=Modo de visualización
+menu.hydration.display.description=Establecer el método de visualización para los jugadores.
+menu.hydration.open_water.title=Beber de los océanos, lagos y ríos
+menu.hydration.open_water.description=Cuando se habilita, los jugadores pueden beber de aguas abiertas como el océano, lagos y ríos.
+menu.hydration.thirst.title=Efecto de Sed
+menu.hydration.thirst.description=Cuando está habilitado, los jugadores pueden tener sed después de beber o comer algunas cosas.
+
+// Visualización
+menu.display.enabled.title=Modo de Visualización
+menu.display.enabled.description=Configura la manera de visualizar. Si está desactivado, la auctionbar o bossbar no se mostrará. Esto puede ser útil para desactivar si se muestra en otro lugar con otro plugin como PlaceHolderAPI.
+
+// Actualizaciones
+menu.other.title=Otras configuraciones
+menu.other.update-notify.title=Notificaciones de Actualización
+menu.other.update-notify.description=Notifica a los administradores si hay una nueva versión disponible.
+menu.other.update-checks.title=Verificar Actualizaciones
+menu.other.update-checks.description=Cambiar si se hacen comprobaciones de actualización automáticas.
