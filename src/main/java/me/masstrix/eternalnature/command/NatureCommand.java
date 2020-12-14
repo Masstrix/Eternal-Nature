@@ -219,7 +219,7 @@ public class NatureCommand extends EternalCommand {
             msg(" Build: &7" + BuildInfo.getBuild());
             msg(" Current Version: &7" + BuildInfo.getVersion());
             if (BuildInfo.isSnapshot()) {
-                msg("   &7&oThis version is a snapshot.");
+                msg("   &6&oThis version is a snapshot.");
             }
             if (plugin.getVersionInfo() == null) {
                 if (plugin.getRootConfig().getYml().getBoolean(ConfigPath.UPDATE_CHECK)) {
@@ -255,7 +255,7 @@ public class NatureCommand extends EternalCommand {
                         break;
                     }
                     case AHEAD: {
-                        msg("&c This is a development build and may be unstable. Please report any bugs.");
+                        msg("&6This version is ahead of the latest known currently. This might be because it's a recent release.");
                         break;
                     }
                     case CURRENT: {
