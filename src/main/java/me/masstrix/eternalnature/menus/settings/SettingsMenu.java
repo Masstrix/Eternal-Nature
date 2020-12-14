@@ -250,7 +250,7 @@ public class SettingsMenu extends GlobalMenu {
                 .build()).setToggle(LANG.getText("menu.settings.item.tree-spread.title"),
                 () -> randomSpreadEnabled)
                 .onClick(player -> {
-                    CONFIG.toggle("global.randomly-spread-trees");
+                    CONFIG.toggle("global.randomly-spread-trees.enabled");
                     CONFIG.save().reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));

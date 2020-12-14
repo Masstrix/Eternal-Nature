@@ -28,10 +28,13 @@ import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 @Configurable.Path("temperature.scanning")
 public class TempScanningMenu extends GlobalMenu {
 
+    private final EternalNature PLUGIN;
     private final MenuManager MANAGER;
     private final Configuration CONFIG;
     private final LanguageEngine LE;
@@ -49,6 +52,7 @@ public class TempScanningMenu extends GlobalMenu {
 
     public TempScanningMenu(EternalNature plugin, MenuManager menuManager) {
         super(Menus.TEMP_SCANNING_SETTINGS, 5);
+        this.PLUGIN = plugin;
         this.CONFIG = plugin.getRootConfig();
         this.MANAGER = menuManager;
         this.LE = plugin.getLanguageEngine();
@@ -62,10 +66,10 @@ public class TempScanningMenu extends GlobalMenu {
     @Override
     public void updateConfig(ConfigurationSection section) {
         useBlocks = section.getBoolean("use-blocks", true);
-        useBiomes = section.getBoolean("use-blocks", true);
-        useWeather = section.getBoolean("use-blocks", true);
-        useItems = section.getBoolean("use-blocks", true);
-        useEnvironment = section.getBoolean("use-blocks", true);
+        useBiomes = section.getBoolean("use-biomes", true);
+        useWeather = section.getBoolean("use-weather", true);
+        useItems = section.getBoolean("use-items", true);
+        useEnvironment = section.getBoolean("use-environment", true);
         area = section.getInt("advanced.area", 11);
         height = section.getInt("advanced.height", 5);
         build();
@@ -144,40 +148,70 @@ public class TempScanningMenu extends GlobalMenu {
 
         // Area changer
         setButton(new Button(asSlot(1, 7), () -> new ItemBuilder(Material.GREEN_STAINED_GLASS_PANE)
-                .setName("&a+")
+                .setName("&a+1")
+                .addLore(String.valueOf(area))
                 .build()).onClick(player -> {
-
+                    area++;
+            CONFIG.set("temperature.scanning.advanced.area", area);
+            CONFIG.save().reload();
+            playVolumeChange(player, 2, 3, Sound.BLOCK_NOTE_BLOCK_PLING, true);
         }));
         setButton(new Button(asSlot(2, 7), () -> new ItemBuilder(Material.SCAFFOLDING)
                 .setName("&a" + LE.getText("menu.temp.scanning.area.title"))
                 .addDescription(LE.getText("menu.temp.scanning.area.description"))
-                .addLore("")
-                .addLore("Currently: " + area)
+                .addLore("Currently: &a" + area)
                 .build()));
         setButton(new Button(asSlot(3, 7), () -> new ItemBuilder(Material.RED_STAINED_GLASS_PANE)
-                .setName("&c-")
+                .setName("&c-1")
+                .addLore(String.valueOf(area))
                 .build()).onClick(player -> {
-
+            area--;
+            CONFIG.set("temperature.scanning.advanced.area", area);
+            CONFIG.save().reload();
+            playVolumeChange(player, 2, 3, Sound.BLOCK_NOTE_BLOCK_PLING, false);
         }));
 
         // Height changer
         setButton(new Button(asSlot(1, 8), () -> new ItemBuilder(Material.GREEN_STAINED_GLASS_PANE)
-                .setName("&a+")
+                .setName("&a+1")
+                .addLore(String.valueOf(height))
                 .build()).onClick(player -> {
-
+            height++;
+            CONFIG.set("temperature.scanning.advanced.height", height);
+            CONFIG.save().reload();
+            playVolumeChange(player, 2, 3, Sound.BLOCK_NOTE_BLOCK_PLING, true);
         }));
         setButton(new Button(asSlot(2, 8), () -> new ItemBuilder(Material.SCAFFOLDING)
                 .setName("&a" + LE.getText("menu.temp.scanning.height.title"))
                 .addDescription(LE.getText("menu.temp.scanning.height.description"))
-                .addLore("")
-                .addLore("Currently: " + height)
-                .build()).onClick(player -> {
-
-        }));
+                .addLore("Currently: &a" + height)
+                .build()));
         setButton(new Button(asSlot(3, 8), () -> new ItemBuilder(Material.RED_STAINED_GLASS_PANE)
-                .setName("&c-")
+                .setName("&c-1")
+                .addLore(String.valueOf(height))
                 .build()).onClick(player -> {
-
+            height--;
+            CONFIG.set("temperature.scanning.advanced.height", height);
+            CONFIG.save().reload();
+            playVolumeChange(player, 2, 3, Sound.BLOCK_NOTE_BLOCK_PLING, false);
         }));
+    }
+
+    private void playVolumeChange(Player player, int times, int delay, Sound sound, boolean up) {
+        float pitch = (1F / times) * 0.5F;
+        new BukkitRunnable() {
+            int it = 0;
+            float p = up ? 0.5F : 1F;
+            @Override
+            public void run() {
+                player.playSound(player.getLocation(), sound, 1, p);
+                if (up) p += pitch;
+                else p -= pitch;
+
+                if (it++ == times) {
+                    this.cancel();
+                }
+            }
+        }.runTaskTimer(PLUGIN, 0, delay);
     }
 }
