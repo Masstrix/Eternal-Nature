@@ -5,6 +5,9 @@
 .editorconfig
 _config.yml
 
+#github
+/.github
+
 # Java
 *.class
 
