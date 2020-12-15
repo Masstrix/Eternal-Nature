@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'me.masstrix'
-version '2.1'
+version '2.1.1'
 
 sourceCompatibility = 1.8
 
@@ -72,6 +72,7 @@ task compileForSnapshot() {
 
 task compileForRelease() {
     doFirst {
+        isSnapshot = false
         fileSuffix = ""
         println 'Building release...'
     }
@@ -109,8 +110,8 @@ task makeJar {
 }
 
 // Updates the javadocs for the project.
-task updateJavaDoc('type': Copy) {
-    project.delete(files('docs'))
-    from javadoc
-    into 'docs'
-}
+//task updateJavaDoc('type': Copy) {
+//    project.delete(files('docs'))
+//    from javadoc
+//    into 'docs'
+//}
