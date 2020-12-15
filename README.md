@@ -50,3 +50,11 @@ on [Discord][discord].
 
 * English
 * Español
+
+<br><br>
+<div align="center">
+    <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=CFWPD6QYNTRLC&source=url">
+        <img src="https://img.shields.io/badge/PayPal-Donate-blue?style=for-the-badge">
+    </a>
+</div>
+<br><br>
