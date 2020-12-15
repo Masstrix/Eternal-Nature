@@ -27,6 +27,7 @@ import me.masstrix.eternalnature.player.HydrationRenderer;
 import me.masstrix.eternalnature.player.UserData;
 import me.masstrix.eternalnature.util.BuildInfo;
 import me.masstrix.eternalnature.util.FindableMatch;
+import me.masstrix.eternalnature.util.MathUtil;
 import me.masstrix.eternalnature.util.SecondsFormat;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
@@ -84,7 +85,7 @@ public class PlaceholderSupport extends PlaceholderExpansion implements Configur
         }
 
         if (identifier.equals("hydration")) {
-            return String.valueOf(data.getHydration());
+            return String.valueOf((int) data.getHydration());
         }
 
         if (identifier.equals("hydration_bubbles")) {
@@ -100,7 +101,7 @@ public class PlaceholderSupport extends PlaceholderExpansion implements Configur
         }
 
         if (identifier.equals("temperature")) {
-            return String.valueOf(data.getTemperature());
+            return String.valueOf(MathUtil.round(data.getTemperature(), 1));
         }
 
         if (identifier.equals("temperature_color")) {
