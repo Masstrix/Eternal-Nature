@@ -1,0 +1,133 @@
+# 页眉
+name=简体中文
+#
+
+//
+// 死亡信息
+//
+death.heat=%name% 因过热虚脱而亡
+death.cold=%name% 因体温过低而亡
+death.dehydrate=%name% 因脱水而亡
+
+
+//
+// 体温标志
+//
+temp.icon.burning=热到自燃
+temp.icon.hot=炎热
+temp.icon.warm=温暖
+temp.icon.pleasant=舒适
+temp.icon.cool=凉爽
+temp.icon.cold=寒冷
+temp.icon.freezing=严寒刺骨
+
+
+//
+//  菜单
+//
+
+// 通用菜单
+menu.common.edit=点击以查看 & 编辑
+menu.common.change=点击以更改
+menu.common.selected=选中
+menu.common.select=点击以选择
+menu.common.enable=点击以启用
+menu.common.disable=点击以禁用
+menu.common.reset=点击以重置
+menu.common.reload=点击以重载
+
+// 设置菜单
+menu.settings.title=Eternal Nature 设置
+menu.settings.item.replant.title=自动补种作物
+menu.settings.item.replant.description=如果您启用该设置，在您收获作物时作物将会自动补种
+menu.settings.item.auto-plant.title=自动种植
+menu.settings.item.auto-plant.description=如果您启用该设置，当植物被遗落在地上时，它将自动种植。
+menu.settings.item.item-aging.title=物品保质期
+menu.settings.item.item-aging.description=类似食物的物品，如果长时间放在地上会逐渐腐烂老化。
+menu.settings.item.tree-spread.title=树木随机蔓延
+menu.settings.item.tree-spread.description=设置树是否会随机掉落树苗，致使森林能缓慢扩展。
+menu.settings.item.reload-config.title=重载配置文件
+menu.settings.item.reload-config.description=Reloads the config files.
+menu.settings.item.reset-config.title=重置配置文件
+menu.settings.item.reset-config.description=重置配置文件为默认值。
+
+// Language Settings Menu
+menu.language.title=语言设置
+menu.language.description=更改插件所使用的语言。相关内容是从插件 lang文件加载的。
+menu.language.reset.title=重置 .lang 语言
+menu.language.reset.description=这将重置插件内置的语言文件。它不会影响自定义语言。
+menu.language.reload.title=重载语言文件
+menu.language.reload.description=这将重新加载所有语言，若有更改则将更新当前语言内容。
+
+// 落叶效果菜单
+menu.leaf-particles.title=落叶粒子设置
+menu.leaf-particles.description=设置树叶是否会在掉落时随机产生一个粒子效果。
+menu.leaf-particles.spawn.extreme=非常频繁
+menu.leaf-particles.spawn.high=频繁
+menu.leaf-particles.spawn.medium=适中
+menu.leaf-particles.spawn.low=少有
+menu.leaf-particles.spawn.title=产生几率
+menu.leaf-particles.spawn.description=设置粒子效果的产生速率
+menu.leaf-particles.enabled.title=开关落叶粒子效果
+menu.leaf-particles.enabled.description=切换落叶粒子的开关。启用时，落叶效果将从树叶方块中缓慢落下。
+
+// 体温菜单
+menu.temp.title=体温设置
+menu.temp.description=更改体温工作方式的设置。
+menu.temp.enabled.title=开关体温功能
+menu.temp.enabled.description=设置是否启用体温功能。这将能使玩家面临新的挑战。
+menu.temp.damage.title=体温伤害
+menu.temp.damage.description=如果温度低于 %cold_threshold% 或高于 %heat_threshold%，玩家将开始受到伤害。
+menu.temp.damage.dealt=伤害造成
+menu.temp.damage.rate=伤害速率
+menu.temp.sweat.title=出汗
+menu.temp.sweat.description=如果启用的话，温度越高，玩家流失水分的速度就越快。
+menu.temp.display.title=显示方式
+menu.temp.display.description=设置显示玩家当前体温的位置。
+menu.temp.use-rgb.title=使用 RGB 颜色代码
+menu.temp.use-rgb.description=启用时，温度文本的颜色将在不同颜色之间渐变过渡。
+
+// 体温侦测菜单
+menu.temp.scanning.title=体温计算
+menu.temp.scanning.description=更改温度计算的检测设置。
+menu.temp.scanning.area.title=环境侦测
+menu.temp.scanning.area.description=在更新玩家体温时将扫描每个玩家周围的区域。建议保持在较低的值。
+menu.temp.scanning.height.title=高度侦测
+menu.temp.scanning.height.description=在更新玩家体温时将扫描每个玩家所处的高度。建议保持在较低的值。
+menu.temp.scanning.use-blocks.title=方块侦测
+menu.temp.scanning.use-blocks.description=如果启用，则计算温度时将扫描附近的方块。
+menu.temp.scanning.use-biomes.title=生态群系侦测
+menu.temp.scanning.use-biomes.description=如果启用的话，则计算温度时将扫描所处的生态群系。
+menu.temp.scanning.use-weather.title=天气侦测
+menu.temp.scanning.use-weather.description=如果启用，则在计算温度时将扫描当时天气。
+menu.temp.scanning.use-items.title=物品侦测
+menu.temp.scanning.use-items.description=如果启用，则在计算温度时将扫描手持的物品。
+menu.temp.scanning.use-environment.title=环境侦测
+menu.temp.scanning.use-environment.description=如果启用，环境因素将被包含进温度计算，例如玩家在水中的深度或所处的海拔。
+
+// 水合菜单
+menu.hydration.title=水合设置
+menu.hydration.description=更改饥渴作用的设置。
+menu.hydration.enabled.title=开关饥渴功能
+menu.hydration.enabled.description=设置是否开启饥渴功能。
+menu.hydration.damage.title=脱水伤害
+menu.hydration.damage.description=设置玩家消耗完20❤血后是否会受到伤害。
+menu.hydration.activity.title=运动出汗
+menu.hydration.activity.description=如果启用的话，玩家在进行高强度运动（如短跑）时，脱水速率会更快。
+menu.hydration.display.title=显示方式
+menu.hydration.display.description=设置玩家显示饥渴值的位置。
+menu.hydration.open_water.title=从露天水源中汲取水分
+menu.hydration.open_water.description=如果启用的话，玩家可以从开放水域如海洋中饮水。
+menu.hydration.thirst.title=脱水效果
+menu.hydration.thirst.description=启用后，玩家可能会在喝了或吃了一些东西后变得口渴。
+
+// 杂项菜单
+menu.display.enabled.title=切换是否使用信息显示
+menu.display.enabled.description=设置是否使用插件的默认显示信息的方式。如果禁用，则action bar或Boss血条将不显示相关内容。如果使用另一个插件（如PlaceHolderAPI）在其他地方显示这些信息，则禁用这个配置。
+
+// 其他菜单
+menu.other.title=其他设置
+menu.other.update-notify.title=更新通知
+menu.other.update-notify.description=如果有新版本可用，请在管理员或操作人员进入游戏时进行通知。
+menu.other.update-checks.title=更新检测
+menu.other.update-checks.description=切换是否进行自动更新检查。
