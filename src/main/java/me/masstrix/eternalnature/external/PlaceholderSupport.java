@@ -50,7 +50,7 @@ public class PlaceholderSupport extends PlaceholderExpansion implements Configur
 
     @Override
     public String getIdentifier() {
-        return "eternalnature";
+        return "nature";
     }
 
     @Override
@@ -124,8 +124,13 @@ public class PlaceholderSupport extends PlaceholderExpansion implements Configur
             return icon.getDisplayName();
         }
 
-        if (identifier.equals("thirst_effect_timer")) {
+        if (identifier.equals("thirst_timer")) {
             if (!data.isThirsty()) return "";
+            return new SecondsFormat().format(data.getThirstTime());
+        }
+
+        if (identifier.equals("thirst_status")) {
+            if (!data.isThirsty()) return "Not Thirsty";
             return new SecondsFormat().format(data.getThirstTime());
         }
 
