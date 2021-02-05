@@ -39,6 +39,7 @@ public class LeafParticleMenu extends GlobalMenu {
     private final LanguageEngine LANG;
     private final Configuration CONFIG;
 
+    private boolean alwaysReachGround;
     private boolean enabled;
     private double chance;
 
@@ -54,6 +55,7 @@ public class LeafParticleMenu extends GlobalMenu {
     public void updateConfig(ConfigurationSection section) {
         enabled = section.getBoolean("enabled");
         chance = section.getDouble("spawn-chance");
+        alwaysReachGround = section.getBoolean("always-reach-ground");
         build();
     }
 
@@ -74,6 +76,17 @@ public class LeafParticleMenu extends GlobalMenu {
                 .build()).setToggle(LANG.getText("menu.leaf-particles.enabled.title"), () -> enabled)
                 .onClick(player -> {
                     CONFIG.set(ConfigPath.LEAF_EFFECT_ENABLED, (enabled = !enabled));
+                    CONFIG.save().reload();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
+
+        setButton(new Button(asSlot(1, 4), () -> new ItemBuilder(Material.GRASS_BLOCK)
+                .setName("&a" + LANG.getText("menu.leaf-particles.reach-ground.title"))
+                .addDescription(LANG.getText("menu.leaf-particles.reach-ground.description"))
+                .addSwitch("Currently:", alwaysReachGround)
+                .build()).setToggle(LANG.getText("menu.leaf-particles.reach-ground.title"), () -> alwaysReachGround)
+                .onClick(player -> {
+                    CONFIG.set(ConfigPath.LEAF_EFFECT_ALWAYS_REACH_GROUND, (alwaysReachGround = !alwaysReachGround));
                     CONFIG.save().reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));

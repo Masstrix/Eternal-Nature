@@ -70,6 +70,8 @@ menu.leaf-particles.spawn.title=Spawn Chance
 menu.leaf-particles.spawn.description=Set the spawn rate of particles.
 menu.leaf-particles.enabled.title=Leaf Particles Enabled
 menu.leaf-particles.enabled.description=Toggle if leaf particles are enabled. When enabled leaves will slowly fall from leave blocks.
+menu.leaf-particles.reach-ground.title=Always Reach Ground
+menu.leaf-particles.reach-ground.description=When enabled leaf particles will always reach the ground before de-spawning.
 
 // Temperature Menu
 menu.temp.title=Temperature Settings

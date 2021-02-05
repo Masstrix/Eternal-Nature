@@ -39,6 +39,10 @@ global:
     max-particles: 300
     scan-delay: 2
     spawn-chance: 0.005
+    life:
+      min: 120
+      max: 150
+    wait-to-rest: false
   randomly-spread-trees:
     enabled: true
     range: 20

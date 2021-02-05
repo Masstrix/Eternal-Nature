@@ -42,7 +42,10 @@ public class LeafParticle extends BaseParticle implements Leaf {
     private ShadowArmorStand leaf;
     private double animationOffset;
     private boolean hasSettled;
+    // This defines if the particle should float on top of water.
+    // Currently unused.
     private boolean willFloat;
+    private boolean waitToRestOnGround;
     private double fallRate;
     private final double ARM_OFFSET = degreesToEuler(MathUtil.randomDouble() * 360);
 
@@ -66,6 +69,19 @@ public class LeafParticle extends BaseParticle implements Leaf {
      *               to the effect.
      */
     public LeafParticle(Location loc, EternalEngine engine) {
+        this(loc, engine, LeafOptions.DEFAULT);
+    }
+
+    /**
+     * Creates a new leaf particle. The particle uses the base of a {@link BaseParticle} to create an
+     * armor stand holding a kelp item. If spawned natrually then the particle will be ticked by the
+     * {@link me.masstrix.eternalnature.core.world.LeafEmitter} to slowly fall down.
+     *
+     * @param loc     location to spawn the particle from.
+     * @param engine  an instance of the eternal engine.
+     * @param options options for spawning the particle.
+     */
+    public LeafParticle(Location loc, EternalEngine engine, LeafOptions options) {
         if (loc == null) return;
         if (engine != null) {
             // Call the spawn ever.
@@ -75,10 +91,11 @@ public class LeafParticle extends BaseParticle implements Leaf {
                 return true;
             });
         }
-        lifeTime = MathUtil.randomInt(120, 150);
+        lifeTime = MathUtil.randomInt(options.lifeMin, options.lifeMax);
         fallRate = MathUtil.randomDouble(0.01, 0.1);
         movementNoise = new SimplexNoiseOctave(MathUtil.randomInt(10000));
         willFloat = MathUtil.chance(0.3);
+        waitToRestOnGround = options.forceReachGround;
 
         loc.setYaw(MathUtil.randomInt(0, 360));
         leaf = new ShadowArmorStand(loc);
@@ -120,7 +137,7 @@ public class LeafParticle extends BaseParticle implements Leaf {
     @Override
     public void tick() {
         // Remove the particle if it's lifetime is reached
-        if (super.lifeTime-- <= 0) {
+        if (super.lifeTime-- <= 0 && !waitToRestOnGround) {
             remove();
             super.lifeTime = 0;
             return;
@@ -132,6 +149,7 @@ public class LeafParticle extends BaseParticle implements Leaf {
             return;
         }
         Block block = loc.getBlock();
+        boolean wasHasSettled = hasSettled;
         hasSettled = !block.isPassable();
         boolean inWater = loc.getBlock().getType() == Material.WATER;
         if (inWater && !hasSettled && willFloat) {
@@ -139,6 +157,14 @@ public class LeafParticle extends BaseParticle implements Leaf {
             //      Also make some of them float on the top.
             //      Water direction is client side so that will need to be worked
             //      out to get the flowing direction.
+        }
+
+        // If the waitToRestOnGround is set to true and the particle just hit the ground
+        // set the particles life to be an appropriate value to last some amount of time
+        // on the ground.
+        if (!wasHasSettled && hasSettled && waitToRestOnGround && lifeTime < 0) {
+            waitToRestOnGround = false;
+            while(lifeTime < 0) lifeTime += 15;
         }
 
         // Burn the particle
@@ -220,5 +246,47 @@ public class LeafParticle extends BaseParticle implements Leaf {
         v.rotateAroundY(yaw);
         v.rotateAroundZ(roll);
         return v;
+    }
+
+    /**
+     * Stores the options fpr a leaf particle for when a new particle is spawned. This allows for
+     * more control on how the particle should function as it is alive.
+     */
+    public static class LeafOptions {
+        public static final LeafOptions DEFAULT = new LeafOptions()
+                .setLifeMax(150)
+                .setLifeMin(120)
+                .setForceReachGround(false);
+
+        private int lifeMax;
+        private int lifeMin;
+        private boolean forceReachGround;
+
+        public int getLifeMax() {
+            return lifeMax;
+        }
+
+        public LeafOptions setLifeMax(int lifeMax) {
+            this.lifeMax = lifeMax;
+            return this;
+        }
+
+        public int getLifeMin() {
+            return lifeMin;
+        }
+
+        public LeafOptions setLifeMin(int lifeMin) {
+            this.lifeMin = lifeMin;
+            return this;
+        }
+
+        public boolean isForceReachGround() {
+            return forceReachGround;
+        }
+
+        public LeafOptions setForceReachGround(boolean forceReachGround) {
+            this.forceReachGround = forceReachGround;
+            return this;
+        }
     }
 }

@@ -50,6 +50,7 @@ public class LeafEmitter implements EternalWorker, Configurable {
     private final Set<LeafParticle> PARTICLES;
     private final BlockScanner SCANNER;
     private BukkitTask updater, spawner;
+    private LeafParticle.LeafOptions options = LeafParticle.LeafOptions.DEFAULT;
 
     public LeafEmitter(EternalNature plugin) {
         this.PLUGIN = plugin;
@@ -68,6 +69,10 @@ public class LeafEmitter implements EternalWorker, Configurable {
         int fidelity = section.getInt("fidelity");
         SCANNER.setScanScale(range, range + 4);
         SCANNER.setFidelity(fidelity);
+        options = new LeafParticle.LeafOptions()
+                .setLifeMax(section.getInt("life.max"))
+                .setLifeMin(section.getInt("life.min"))
+                .setForceReachGround(section.getBoolean("always-reach-ground"));
     }
 
     public int getParticleCount() {
@@ -127,7 +132,7 @@ public class LeafEmitter implements EternalWorker, Configurable {
                     double offsetZ = MathUtil.randomDouble() - 0.5;
                     WorldData worldData = PLUGIN.getEngine().getWorldProvider().getWorld(loc.getWorld());
                     Location spawnLoc = loc.clone().add(offsetX, -0.5, offsetZ);
-                    LeafParticle particle = new LeafParticle(spawnLoc, PLUGIN.getEngine());
+                    LeafParticle particle = new LeafParticle(spawnLoc, PLUGIN.getEngine(), options);
                     particle.setForces(worldData.getWind());
                     PARTICLES.add(particle);
                 }
@@ -136,7 +141,7 @@ public class LeafEmitter implements EternalWorker, Configurable {
     }
 
     /**
-     * Spawns a new leaf particle already assigned to this emiiter and returns it.
+     * Spawns a new leaf particle already assigned to this emitter and returns it.
      *
      * @param loc location to spawn the particle at.
      * @return leaf particle that was spawned.
