@@ -139,6 +139,7 @@ public class Plant {
                     place.getBlock().setType(block);
                     if (PLANTER.getPlaySounds())
                         place.getWorld().playSound(place, getPlaceSound(), 1, 1);
+                    PLANTER.plugin.getDebugLogger().info("[AutoPlanter] Planted a " + plantType.name() + " at " + replace.getLocation());
                 }
             }
             if (remove)

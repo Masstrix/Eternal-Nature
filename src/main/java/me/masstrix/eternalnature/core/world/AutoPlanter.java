@@ -35,7 +35,7 @@ import java.util.*;
 @Configurable.Path("global.auto-plant")
 public class AutoPlanter implements EternalWorker, Configurable {
 
-    private final EternalNature plugin;
+    protected final EternalNature plugin;
     private final Set<Plant> plants = new HashSet<>();
     private final Configuration CONFIG;
     private BukkitTask task;
@@ -75,6 +75,7 @@ public class AutoPlanter implements EternalWorker, Configurable {
                 }
             }
         }
+        plugin.getDebugLogger().info("Loaded " + count + " plants");
         plugin.getLogger().info("Loaded " + count + " plants");
     }
 

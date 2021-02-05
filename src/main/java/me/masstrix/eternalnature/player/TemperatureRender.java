@@ -21,6 +21,8 @@ import me.masstrix.eternalnature.config.StatusRenderMethod;
 import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
 import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
 import me.masstrix.eternalnature.core.world.WorldData;
+import me.masstrix.eternalnature.log.DebugDelayEntry;
+import me.masstrix.eternalnature.log.DebugLogger;
 import me.masstrix.eternalnature.util.*;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -125,7 +127,16 @@ public class TemperatureRender implements StatRenderer {
             double temp = temperature + min;
             double progress = temp / max;
 
-            bossBar.setProgress(MathUtil.minMax(progress, 0, 1));
+            if (Double.isNaN(progress)) {
+                DebugLogger logger = DebugLogger.get("EternalNature");
+                if (!logger.isDelayed(this.getClass(), "BossBar")) {
+                    logger.addDelayEntry(new DebugDelayEntry(this.getClass(), "BossBar", 500));
+                    logger.warning("Boss barr progress for temperature bar is NaN.");
+                    logger.warning("   min: " + min + ", max: " + max + ", temp: " + temp + ", progress: " + progress);
+                }
+            } else {
+                bossBar.setProgress(MathUtil.minMax(progress, 0, 1));
+            }
             bossBar.setTitle(StringUtil.color(text));
             bossBar.setColor(BossBarUtil.from(color));
             return;

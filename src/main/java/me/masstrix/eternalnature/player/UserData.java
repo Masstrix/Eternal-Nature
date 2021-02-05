@@ -31,6 +31,11 @@ import me.masstrix.eternalnature.listeners.DeathListener;
 import me.masstrix.eternalnature.util.MathUtil;
 import me.masstrix.eternalnature.util.Stopwatch;
 import me.masstrix.lang.langEngine.LanguageEngine;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Waterlogged;
@@ -74,6 +79,8 @@ public class UserData implements EternalUser, Configurable {
     private Vector motion = new Vector();
     private boolean inMotion;
     private long lastMovementCheck = 0;
+    private boolean isBurning;
+    private boolean isFreezing;
 
     //
     // Configuration
@@ -110,7 +117,9 @@ public class UserData implements EternalUser, Configurable {
         this.ACTIONBAR = new Actionbar(Bukkit.getPlayer(id));
 
         Player player = Bukkit.getPlayer(id);
+        String playerName = null;
         if (player != null) {
+            playerName = player.getName();
             WorldProvider provider = plugin.getEngine().getWorldProvider();
             WorldData data = provider.getWorld(player.getWorld());
             Location loc = player.getLocation();
@@ -118,6 +127,9 @@ public class UserData implements EternalUser, Configurable {
                     loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
         }
         setup();
+
+        // debugging
+        plugin.getDebugLogger().info("Created user " + id + (playerName != null ? " (" + playerName + ")" : ""));
     }
 
     public UserData(EternalNature plugin, UUID id, double temperature, double hydration) {
@@ -129,6 +141,11 @@ public class UserData implements EternalUser, Configurable {
         this.ACTIONBAR = new Actionbar(Bukkit.getPlayer(id));
         distanceNextThirst = MathUtil.randomInt(dehydrateChance, dehydrateChance + dehydrateChanceRange);
         setup();
+
+        // debugging
+        Player player = Bukkit.getPlayer(id);
+        String playerName = player != null ? player.getName() : null;
+        plugin.getDebugLogger().info("Created user " + id + (playerName != null ? " (" + playerName + ")" : ""));
     }
 
     /**
@@ -221,8 +238,8 @@ public class UserData implements EternalUser, Configurable {
             // Update the players temperature
             updateTemperature(false);
 
-            boolean isBurning = this.temperature >= tempProfile.getBurningPoint();
-            boolean isFreezing = this.temperature <= tempProfile.getFreezingPoint();
+            isBurning = this.temperature >= tempProfile.getBurningPoint();
+            isFreezing = this.temperature <= tempProfile.getFreezingPoint();
 
             // Check if the player should be damaged and
             // damage them if is all true.
@@ -232,6 +249,9 @@ public class UserData implements EternalUser, Configurable {
                 String msg = isBurning ? "death.heat" : "death.cold";
                 damageCustom(player, tmpDamageAmount, LANG.getText(msg));
             }
+        } else {
+            isBurning = false;
+            isFreezing = false;
         }
 
         // Updates the players hydration levels and applys damage id damage is enabled
@@ -268,6 +288,59 @@ public class UserData implements EternalUser, Configurable {
                 thirstTimer--;
             }
             constantTick = System.currentTimeMillis();
+        }
+
+        // Extra debug info to be displayed to the player when debug mode is enabled.
+        if (debugEnabled) {
+            ComponentBuilder builder = new ComponentBuilder();
+
+            builder.append("\n————————————————\n").color(ChatColor.GRAY);
+            builder.append("  Eternal Nature Debug Info\n").color(ChatColor.DARK_GREEN);
+
+            builder.append("").color(ChatColor.GRAY).italic(true);
+            if (!isTmpEnabled) builder.append("\n • Temperature is disabled.");
+            if (!isHydEnabled) builder.append("\n • Hydration is disabled.");
+            if (!isThirstEnabled) builder.append("\n • Thirst is disabled.\n");
+
+            // Temperature debug info
+            if (isTmpEnabled) {
+                builder.append("\nTemperature: ", ComponentBuilder.FormatRetention.NONE)
+                        .color(ChatColor.WHITE)
+                        .append("" + MathUtil.round(temperature, 2))
+                        .color(ChatColor.DARK_GREEN)
+                        .append("/" + MathUtil.round(tempExact, 2))
+                        .color(ChatColor.GRAY);
+                if (isBurning) builder.append(" ☀").color(ChatColor.RED)
+                        .append("(DMG)").color(ChatColor.GRAY);
+                if (isFreezing) builder.append(" ※").color(ChatColor.AQUA)
+                        .append("(DMG)").color(ChatColor.GRAY);
+            }
+
+            // Hydration debug info
+            if (isHydEnabled) {
+                builder.append("\nHydration: ", ComponentBuilder.FormatRetention.NONE)
+                        .color(ChatColor.WHITE)
+                        .append("" + MathUtil.round(hydration, 2))
+                        .color(ChatColor.DARK_GREEN);
+            }
+
+            if (isThirstEnabled) {
+                builder.append("\nThirst: ", ComponentBuilder.FormatRetention.NONE)
+                        .color(ChatColor.WHITE)
+                        .append("" + thirstAmount + " | " + thirstTimer)
+                        .color(ChatColor.DARK_GREEN);
+            }
+
+            builder.append("\n\n");
+            builder.append("Click Here").color(ChatColor.GREEN)
+                    .bold(true)
+                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("\u00A7eClick to disable debug mode.")))
+                    .event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/en debug"));
+            builder.append(" to disable debug mode.", ComponentBuilder.FormatRetention.NONE).color(ChatColor.DARK_GREEN);
+
+            builder.append("\n————————————————").color(ChatColor.GRAY);
+
+            player.spigot().sendMessage(builder.create());
         }
     }
 
@@ -515,9 +588,13 @@ public class UserData implements EternalUser, Configurable {
             player.setLastDamageCause(new EntityDamageEvent(player, EntityDamageEvent.DamageCause.CUSTOM, amount));
             DeathListener.logCustomReason(player, deathMsg.replaceAll("%name%", player.getDisplayName()));
             player.setHealth(0.0);
+            PLUGIN.getDebugLogger().info(String.format("%1$s was killed for %2$f (message: %3$s",
+                    player.getName(), amount, deathMsg));
         } else {
             player.damage(amount);
             player.setLastDamageCause(new EntityDamageEvent(player, EntityDamageEvent.DamageCause.CUSTOM, amount));
+            PLUGIN.getDebugLogger().info(String.format("%1$s was damaged for %2$f (message: %3$s",
+                    player.getName(), amount, deathMsg));
         }
     }
 
@@ -560,6 +637,24 @@ public class UserData implements EternalUser, Configurable {
         tempExact = worldData.getAmbientTemperature(5, 15,
                 loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
         this.temperature = tempExact;
+    }
+
+    /**
+     * Returns if the player is hot enough to be getting burnt.
+     *
+     * @return if the player is burning.
+     */
+    public boolean isPlayerBurning() {
+        return isBurning;
+    }
+
+    /**
+     * Returns if the player is cold enough to be getting frozen.
+     *
+     * @return if the player is freezing.
+     */
+    public boolean isPlayerFreezing() {
+        return isFreezing;
     }
 
     /**

@@ -25,6 +25,7 @@ import me.masstrix.eternalnature.core.metric.Metrics;
 import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
 import me.masstrix.eternalnature.external.PlaceholderSupport;
 import me.masstrix.eternalnature.listeners.*;
+import me.masstrix.eternalnature.log.DebugLogger;
 import me.masstrix.eternalnature.util.BuildInfo;
 import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.lang.langEngine.LanguageEngine;
@@ -50,6 +51,7 @@ public class EternalNature extends JavaPlugin {
     private EternalEngine engine;
     private LanguageEngine languageEngine;
     private VersionCheckInfo versionCheckInfo = null;
+    private DebugLogger debugLogger;
 
     private Configuration playerCfg;
     private Configuration config;
@@ -77,9 +79,30 @@ public class EternalNature extends JavaPlugin {
         return config;
     }
 
+    public DebugLogger getDebugLogger() {
+        return debugLogger;
+    }
+
+    @Override
+    public void onLoad() {
+        BuildInfo.load(this);
+        debugLogger = new DebugLogger(this);
+        debugLogger.info("----------------------------------------");
+        debugLogger.info("Plugin Information");
+        debugLogger.info("Name: " + getDescription().getName());
+        debugLogger.info("Version: " + getDescription().getVersion());
+        if (BuildInfo.isSnapshot()) debugLogger.info("This version is a snapshot.");
+        debugLogger.info("----------------------------------------");
+        
+        // This will make sure only 30 days worth of logs are kept. Any log files that are older than
+        // 30 days will be deleted.
+        debugLogger.cleanOldLogs(30);
+    }
+
     @Override
     public void onEnable() {
         BuildInfo.load(this);
+        debugLogger.info("Enabling Plugin");
         MinecraftVersion serverVer = MinecraftRelease.getServerVersion();
 
         // Make sure the server is new enough to run the plugin
@@ -117,6 +140,7 @@ public class EternalNature extends JavaPlugin {
             new VersionChecker(PluginData.RESOURCE_ID, getDescription().getVersion()).run(info -> {
                 if (info.isUnknown()) {
                     getLogger().log(Level.WARNING, "Failed to check plugin version. Are you running offline?");
+                    debugLogger.warning("Failed to check version.");
                 }
                 else if (info.isDev()) {
                     getLogger().log(Level.WARNING, "You are running a development build. Expect extra bugs.");
@@ -134,6 +158,7 @@ public class EternalNature extends JavaPlugin {
                 }
 
                 this.versionCheckInfo = info;
+                debugLogger.info("Finished checking plugin version.");
             });
         }
         
@@ -166,6 +191,7 @@ public class EternalNature extends JavaPlugin {
             if (!override && destination.exists()) continue;
             try {
                 URL url = getClass().getResource("/lang/" + s + ".lang");
+                debugLogger.info("Writing language file " + s + ".lang");
 
                 InputStreamReader streamReader = new InputStreamReader(url.openStream(), StandardCharsets.UTF_8);
                 BufferedReader reader = new BufferedReader(streamReader);
@@ -183,6 +209,7 @@ public class EternalNature extends JavaPlugin {
                 writer.close();
             } catch (IOException e) {
                 e.printStackTrace();
+                debugLogger.error("Failed to write file.", e);
             }
         }
     }
@@ -190,6 +217,8 @@ public class EternalNature extends JavaPlugin {
     @Override
     public void onDisable() {
         if (engine != null) engine.shutdown();
+        debugLogger.info("Shutdown Plugin");
+        debugLogger.close();
     }
 
     private void registerCommands(EternalCommand... commands) {

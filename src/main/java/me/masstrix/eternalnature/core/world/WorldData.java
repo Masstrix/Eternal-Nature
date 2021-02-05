@@ -38,6 +38,7 @@ public class WorldData implements EternalWorld, Configurable {
     private final Wind WIND;
 
     public WorldData(EternalNature plugin, World world) {
+        plugin.getDebugLogger().info("Loading world " + world.getName());
         this.plugin = plugin;
         this.WORLD = world;
         this.WIND = new Wind(this, plugin, world.getSeed());
