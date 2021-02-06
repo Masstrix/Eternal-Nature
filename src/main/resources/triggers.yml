@@ -1,0 +1,64 @@
+# Triggers are events that happen when a player does something or something related to the
+# player happens.
+#
+#  Conditions
+#   • hydration, accepts less-than, equals, greater-than.
+#   • temperature, accepts less-than, equals, greater-than.
+#
+#  Actions
+#   Executed when the player meets all the conditions for the trigger.
+#   • message, accepts a list or string. This also supports PlaceholderAPI.
+#   • play-sound, accepts a list of sounds formatted with a sound and optionally
+#     volume and pitch.
+#
+#  This is an example trigger below. When a players hydration is equal to or
+#  below 10, they will get sent a message and hear a sound every second.
+#
+#  example:
+#    # A range of conditions that must be met for this trigger to be fired.
+#    conditions:
+#      hydration:
+#        below: 10
+#        equals: 10
+#    # Sets if the trigger will continue to be executed if all conditions are met.
+#    repeat: true
+#    # Sets how long to wait between each time the actions are executed. This time is
+#    # in milliseconds and linked to the player tick rate of 500ms. This value can go
+#    # up in increments of 500.
+#    interval: 1000
+#    # A list of actions that happen every time this trigger is run.
+#    action:
+#      message:
+#        - "This is an example"
+#      play-sound:
+#      - sound: block.grass.break
+#        volume: 1
+#        pitch: 1
+#
+is-cold:
+  conditions:
+    temperature:
+      less-than: 0
+      equals: 0
+  repeat: true
+  interval: 30000
+  actions:
+    message:
+      - ' &e! You are cold, get by a fire and warm up.'
+    play-sound:
+      - sound: block.note_block.chime
+        volume: 0.2
+        pitch: 0.1
+      - sound: block.note_block.iron_xylophone
+        volume: 0.05
+        pitch: 2
+become-dehydrated:
+  conditions:
+    hydration:
+      less-than: 3.5
+  actions:
+    message: ' &b! You''ve become dehydrated'
+    play-sound:
+      sound: block.note_block.iron_xylophone
+      pitch: 0.1
+

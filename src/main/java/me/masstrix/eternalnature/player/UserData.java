@@ -342,6 +342,9 @@ public class UserData implements EternalUser, Configurable {
 
             player.spigot().sendMessage(builder.create());
         }
+
+        // Run triggers for this player.
+        PLUGIN.getTriggerManager().attemptToTrigger(this, player);
     }
 
     /**
@@ -368,6 +371,13 @@ public class UserData implements EternalUser, Configurable {
         if (player == null || !player.isOnline()) return;
         statRenderers.forEach(StatRenderer::render);
         ACTIONBAR.send();
+    }
+
+    /**
+     * @return the users unique id.
+     */
+    public UUID getUniqueId() {
+        return id;
     }
 
     /**

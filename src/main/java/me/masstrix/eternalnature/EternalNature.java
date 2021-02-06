@@ -26,6 +26,7 @@ import me.masstrix.eternalnature.core.temperature.TemperatureIcon;
 import me.masstrix.eternalnature.external.PlaceholderSupport;
 import me.masstrix.eternalnature.listeners.*;
 import me.masstrix.eternalnature.log.DebugLogger;
+import me.masstrix.eternalnature.trigger.TriggerManager;
 import me.masstrix.eternalnature.util.BuildInfo;
 import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.lang.langEngine.LanguageEngine;
@@ -52,6 +53,7 @@ public class EternalNature extends JavaPlugin {
     private LanguageEngine languageEngine;
     private VersionCheckInfo versionCheckInfo = null;
     private DebugLogger debugLogger;
+    private TriggerManager triggerManager;
 
     private Configuration playerCfg;
     private Configuration config;
@@ -81,6 +83,10 @@ public class EternalNature extends JavaPlugin {
 
     public DebugLogger getDebugLogger() {
         return debugLogger;
+    }
+
+    public TriggerManager getTriggerManager() {
+        return triggerManager;
     }
 
     @Override
@@ -170,6 +176,9 @@ public class EternalNature extends JavaPlugin {
             new PlaceholderSupport(this).register();
         }
 
+        triggerManager = new TriggerManager(this);
+        triggerManager.load();
+
         engine.start();
         config.subscribe(TemperatureIcon.BURNING);
         config.save();
@@ -217,6 +226,7 @@ public class EternalNature extends JavaPlugin {
     @Override
     public void onDisable() {
         if (engine != null) engine.shutdown();
+        triggerManager.clear();
         debugLogger.info("Shutdown Plugin");
         debugLogger.close();
     }

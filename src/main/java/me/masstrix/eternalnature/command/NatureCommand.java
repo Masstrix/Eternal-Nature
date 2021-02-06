@@ -70,6 +70,7 @@ public class NatureCommand extends EternalCommand {
             msg("&a/eternal stats &7- Shows background stats.");
             msg("&a/eternal version &7- View version and update info.");
             msg("&a/eternal setting &7- Opens a GUI to edit settings.");
+            msg("&a/eternal reloadTriggers &7- Reloads the triggers config file.");
             msg("&a/hydrate <user> &7- Hydrates a user to max.");
             msg("");
             return;
@@ -79,6 +80,12 @@ public class NatureCommand extends EternalCommand {
             msg(PluginData.PREFIX + "&7Reloading files...");
             plugin.getRootConfig().reload();
             msg(PluginData.PREFIX + "&aReloaded config files");
+        }
+
+        else if (args[0].equalsIgnoreCase("reloadTriggers")) {
+            msg(PluginData.PREFIX + "&7Reloading Triggers...");
+            plugin.getTriggerManager().load();
+            msg(PluginData.PREFIX + "&aReloaded triggers.");
         }
 
         else if (args[0].equalsIgnoreCase("world")) {
@@ -281,7 +288,7 @@ public class NatureCommand extends EternalCommand {
     public List<String> tabComplete(String[] args) {
         if (args.length == 1) {
             return Arrays.asList("reload", "world", "stats",
-                    "version", "settings", "resetConfig", "fixLeafEffect");
+                    "version", "settings", "resetConfig", "fixLeafEffect", "reloadTriggers");
         }
         else if (args.length >= 2) {
             if (args[0].equalsIgnoreCase("world")) {
