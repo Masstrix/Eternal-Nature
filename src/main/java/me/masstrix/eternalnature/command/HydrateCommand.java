@@ -18,6 +18,7 @@ package me.masstrix.eternalnature.command;
 
 import me.masstrix.eternalnature.EternalNature;
 import me.masstrix.eternalnature.player.UserData;
+import me.masstrix.eternalnature.util.StringUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -43,17 +44,21 @@ public class HydrateCommand extends EternalCommand {
         } else {
             player = Bukkit.getPlayer(args[0]);
         }
-        hydrateUser(player);
+        int amount = 20;
+        if (args.length > 1 && StringUtil.isInteger(args[1])) {
+            amount = Integer.parseInt(args[1]);
+        }
+        hydrateUser(player, amount);
     }
 
-    private void hydrateUser(Player player) {
+    private void hydrateUser(Player player, int to) {
         if (player == null) {
             msg("&cNo online player found with that name.");
             return;
         }
         UserData user = plugin.getEngine().getUserData(player.getUniqueId());
         if (user != null) {
-            user.setHydration(20);
+            user.setHydration(to);
             if (wasPlayer())
                 msg("&aYou have been fully hydrated!");
             else msg("&aHydrated " + player.getName());
