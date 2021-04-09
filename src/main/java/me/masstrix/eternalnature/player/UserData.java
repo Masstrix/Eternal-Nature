@@ -160,6 +160,10 @@ public class UserData implements EternalUser, Configurable {
         statRenderers.add(new TemperatureRender(player, this));
         statRenderers.forEach(ACTIONBAR::add);
 
+        // Loads debug options
+        YamlConfiguration playerConfig = PLUGIN.getPlayerConfig().getYml();
+        DEBUG_OPTIONS.loadFromConfig(playerConfig.getConfigurationSection(id.toString()));
+
         // Reload all the stat renderers as well.
         Configuration config = PLUGIN.getRootConfig();
         statRenderers.forEach(config::reload);
@@ -207,8 +211,7 @@ public class UserData implements EternalUser, Configurable {
     }
 
     /**
-     * Returns the debug options for this player. None of these options are saved
-     * between sessions and will reset to default the next time the profile is loaded.
+     * Returns the debug options for this player.
      *
      * @return the debug options for this player.
      */
@@ -227,6 +230,9 @@ public class UserData implements EternalUser, Configurable {
 
         // Update the players idle state.
         playerIdle.check(player.getLocation());
+        // Disables player afk idling if it's disabled by debug mode
+        if (debugEnabled && DEBUG_OPTIONS.isEnabled(DebugOptions.Type.DISABLE_AFK))
+            playerIdle.reset();
 
         // Stop updating if the player is dead. This will stop players who
         // stay on the respawn screen for to long using resources.
@@ -304,7 +310,7 @@ public class UserData implements EternalUser, Configurable {
         }
 
         // Extra debug info to be displayed to the player when debug mode is enabled.
-        if (debugEnabled) {
+        if (debugEnabled && DEBUG_OPTIONS.isEnabled(DebugOptions.Type.LOG_OUTPUT)) {
             ComponentBuilder builder = new ComponentBuilder();
 
             builder.append("\n————————————————\n").color(ChatColor.GRAY);
@@ -347,9 +353,17 @@ public class UserData implements EternalUser, Configurable {
             builder.append("\n\n");
             builder.append("Click Here").color(ChatColor.GREEN)
                     .bold(true)
-                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("\u00A7eClick to disable debug mode.")))
+                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("\u00A7eClick to disable.")))
                     .event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/en debug"));
             builder.append(" to disable debug mode.", ComponentBuilder.FormatRetention.NONE).color(ChatColor.DARK_GREEN);
+
+            builder.append("\n\n");
+            builder.append("Click Here").color(ChatColor.GREEN)
+                    .bold(true)
+                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("\u00A7eClick to disable.")))
+                    .event(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+                            "/en debug set " + DebugOptions.Type.LOG_OUTPUT + " false"));
+            builder.append(" to disable these messages.", ComponentBuilder.FormatRetention.NONE).color(ChatColor.YELLOW);
 
             builder.append("\n————————————————").color(ChatColor.GRAY);
 
@@ -650,6 +664,7 @@ public class UserData implements EternalUser, Configurable {
         config.set(id + ".hydration", hydration);
         config.set(id + ".effects.thirst", thirstTimer);
         config.set(id + ".unit", viewUnit.name());
+        DEBUG_OPTIONS.saveToConfig(config.getConfigurationSection(id.toString()));
         playerConfig.save();
     }
 

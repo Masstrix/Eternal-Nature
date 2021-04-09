@@ -77,4 +77,14 @@ public class PlayerIdle implements IPlayerIdle {
     public boolean isAfk() {
         return afk;
     }
+
+    /**
+     * Resets the players afk state. When called it will take the player out of idle.
+     */
+    public void reset() {
+        lastMovement = System.currentTimeMillis();
+        idle = false;
+        deepIdle = false;
+        afk = false;
+    }
 }

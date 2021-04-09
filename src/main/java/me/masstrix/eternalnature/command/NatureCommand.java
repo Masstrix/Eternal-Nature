@@ -27,6 +27,7 @@ import me.masstrix.eternalnature.core.world.LeafEmitter;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.menus.Menus;
+import me.masstrix.eternalnature.player.DebugOptions;
 import me.masstrix.eternalnature.player.UserData;
 import me.masstrix.eternalnature.util.BuildInfo;
 import me.masstrix.version.checker.VersionCheckInfo;
@@ -35,6 +36,7 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -274,21 +276,100 @@ public class NatureCommand extends EternalCommand {
         }
 
         else if (args[0].equalsIgnoreCase("debug") && wasPlayer()) {
-            UserData data = plugin.getEngine().getUserData(((Player) getSender()).getUniqueId());
-            data.setDebug(!data.isDebugEnabled());
-            if (data.isDebugEnabled()) {
-                msg(PluginData.PREFIX + "&7Enabled &6debug mode.");
-            } else {
-                msg(PluginData.PREFIX + "&7Disabled &6debug mode.");
+            if (args.length == 1) {
+                msg("");
+                msg("     &2&lEternal Nature");
+                msg("     &7&oDebug Options");
+                msg("");
+                msg("&a/eternal debug toggle &7- Toggles debug mode on or off.");
+                msg("&a/eternal debug set <option> <argument> &7- Sets an option for the debug info.");
+                msg("&a/eternal debug options &7- Lists all options that can be set.");
+                return;
+            }
+
+            if (args[1].equalsIgnoreCase("toggle")) {
+                UserData data = getData();
+                data.setDebug(!data.isDebugEnabled());
+                if (data.isDebugEnabled()) {
+                    msg(PluginData.PREFIX + "&7Enabled &6debug mode.");
+                } else {
+                    msg(PluginData.PREFIX + "&7Disabled &6debug mode.");
+                }
+            }
+
+            else if (args[1].equalsIgnoreCase("options")) {
+                UserData data = getData();
+                sendDebugOptionsList(data);
+            }
+
+            else if(args[1].equalsIgnoreCase("set")) {
+                boolean undefined = args.length == 2;
+                DebugOptions.Type type = undefined ? null : DebugOptions.Type.find(args[2]);
+
+                UserData data = getData();
+
+                // Show a list and error for not giving a valid option name
+                if (type == null) {
+                    String error = undefined ? "Please define a option to set" : "No option name matches " + args[2];
+                    msg(PluginData.PREFIX + "&c" + error);
+                    sendDebugOptionsList(data);
+                    return;
+                }
+
+                // show what the option is currently set as
+                if (args.length == 3) {
+                    msg(" Current value for " + type.getSimpleName() + ": " + type.isEnabled(data));
+                }
+                // change the option to the new value
+                else {
+                    // get new value
+                    String arg = args[3];
+                    boolean newVal = arg.equalsIgnoreCase("true") || arg.equals("1");
+                    if (arg.equalsIgnoreCase("toggle"))
+                        newVal = !type.isEnabled(data);
+                    type.set(data, newVal);
+                    data.save();
+                    msg(" Set " + type.getSimpleName() + " to " + newVal);
+                }
             }
         }
+    }
+
+    private void sendDebugOptionsList(UserData data) {
+        msg(" &7Here is a list of all the options:");
+        msg(" &7&o(You can click to toggle them off or on)");
+
+        // Show all options that can be set with clickable toggles
+        for (DebugOptions.Type option : DebugOptions.Type.values()) {
+            sendOptionToggle(data, option);
+        }
+    }
+
+    private void sendOptionToggle(UserData data, DebugOptions.Type option) {
+        boolean enabled = option.isEnabled(data);
+        ClickEvent click = new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+                "/en debug set " + option.name() + " toggle");
+        HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("\u00A7eClick to toggle"));
+
+        TextComponent text = new TextComponent(" • ");
+        TextComponent infoTxt = new TextComponent(option.getSimpleName());
+        infoTxt.setColor(enabled ? ChatColor.GREEN : ChatColor.RED);
+        infoTxt.setClickEvent(click);
+        infoTxt.setHoverEvent(hover);
+
+        ((Player) getSender()).spigot().sendMessage(text, infoTxt);
+    }
+
+    private UserData getData() {
+        return plugin.getEngine().getUserData(((Player) getSender()).getUniqueId());
     }
 
     @Override
     public List<String> tabComplete(String[] args) {
         if (args.length == 1) {
             return Arrays.asList("reload", "world", "stats",
-                    "version", "settings", "resetConfig", "fixLeafEffect", "reloadTriggers");
+                    "version", "settings", "resetConfig",
+                    "fixLeafEffect", "reloadTriggers", "debug");
         }
         else if (args.length >= 2) {
             if (args[0].equalsIgnoreCase("world")) {
@@ -306,6 +387,15 @@ public class NatureCommand extends EternalCommand {
 
                 if (args.length == 3) {
                     return Collections.singletonList("makeCustomConfig");
+                }
+            }
+            else if (args[0].equalsIgnoreCase("debug")) {
+                if (args.length == 2) {
+                    return Arrays.asList("toggle", "set", "options");
+                }
+                if (args[1].equalsIgnoreCase("set")) {
+                    if (args.length == 4) return Arrays.asList("true", "false");
+                    return DebugOptions.Type.getNames();
                 }
             }
         }
