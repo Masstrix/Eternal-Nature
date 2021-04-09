@@ -22,6 +22,9 @@ import me.masstrix.eternalnature.util.StringUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class HydrateCommand extends EternalCommand {
 
     private EternalNature plugin;
@@ -63,5 +66,15 @@ public class HydrateCommand extends EternalCommand {
                 msg("&aYou have been fully hydrated!");
             else msg("&aHydrated " + player.getName());
         }
+    }
+
+    @Override
+    public List<String> tabComplete(String[] args) {
+        if (args.length == 1) {
+            List<String> names = new ArrayList<>();
+            Bukkit.getOnlinePlayers().forEach(p -> names.add(p.getName()));
+            return names;
+        }
+        return super.tabComplete(args);
     }
 }
