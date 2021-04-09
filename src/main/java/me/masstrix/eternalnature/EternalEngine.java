@@ -16,16 +16,19 @@
 
 package me.masstrix.eternalnature;
 
+import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.config.Configuration;
 import me.masstrix.eternalnature.core.EternalWorker;
 import me.masstrix.eternalnature.core.Renderer;
 import me.masstrix.eternalnature.core.UserWorker;
 import me.masstrix.eternalnature.core.entity.shadow.ShadowEntityManager;
 import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
+import me.masstrix.eternalnature.core.temperature.TemperatureUnit;
 import me.masstrix.eternalnature.core.world.*;
 import me.masstrix.eternalnature.menus.MenuManager;
 import me.masstrix.eternalnature.menus.settings.*;
 import me.masstrix.eternalnature.player.UserData;
+import me.masstrix.eternalnature.util.EnumUtils;
 import me.masstrix.eternalnature.util.Stopwatch;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
@@ -33,7 +36,7 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 
-public class EternalEngine {
+public class EternalEngine implements Configurable {
 
     private static boolean enabled = false;
     private EternalNature plugin;
@@ -45,6 +48,27 @@ public class EternalEngine {
 
     private List<EternalWorker> workers = new ArrayList<>();
     private Map<UUID, UserData> users = new HashMap<>();
+
+    //
+    // Config Variables
+    //
+    private TemperatureUnit temperatureUnit = TemperatureUnit.CELSIUS;
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+
+        String unit = section.getString("temperatures.unit");
+        temperatureUnit = EnumUtils.findMatch(TemperatureUnit.values(), unit, TemperatureUnit.CELSIUS);
+    }
+
+    /**
+     * Returns the temperature unit used in every config file.
+     *
+     * @return the unit temperatures are defined in for the config values.
+     */
+    public TemperatureUnit getTemperatureUnit() {
+        return temperatureUnit;
+    }
 
     private EternalEngine() {}
 

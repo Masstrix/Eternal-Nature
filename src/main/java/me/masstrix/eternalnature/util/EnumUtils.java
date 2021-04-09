@@ -28,11 +28,25 @@ public class EnumUtils {
      * @return the enum value or null if the value does no exist.
      */
     public static <T extends Enum<?>> T findMatch(T[] enom, String find) {
+        return findMatch(enom, find, null);
+    }
+
+    /**
+     * Finds and returns an exact match in an enum array. If no matching value
+     * is in the enum then null is returned.
+     *
+     * @param enom array of enum values to look through.
+     * @param find name of value to find.
+     * @param def  default value toi return if no match was found.
+     * @param <T> enum type being searched.
+     * @return the enum value or null if the value does no exist.
+     */
+    public static <T extends Enum<?>> T findMatch(T[] enom, String find, T def) {
         find = find.toUpperCase();
         for (T e : enom) {
             if (e.name().equals(find)) return e;
         }
-        return null;
+        return def;
     }
 
     /**

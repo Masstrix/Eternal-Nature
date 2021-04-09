@@ -116,6 +116,7 @@ hydration:
 temperature:
   enabled: true
   max-delta-change: 15
+  unit: CELSIUS
   damage:
     enabled: true
     amount: 1.0

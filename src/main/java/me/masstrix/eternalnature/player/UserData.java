@@ -24,6 +24,7 @@ import me.masstrix.eternalnature.core.HeightGradient;
 import me.masstrix.eternalnature.core.temperature.TempModifierType;
 import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
 import me.masstrix.eternalnature.core.temperature.TemperatureScanner;
+import me.masstrix.eternalnature.core.temperature.TemperatureUnit;
 import me.masstrix.eternalnature.core.world.WeatherType;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
@@ -62,10 +63,12 @@ public class UserData implements EternalUser, Configurable {
     private final EternalNature PLUGIN;
     private final LanguageEngine LANG;
 
+    private final DebugOptions DEBUG_OPTIONS = new DebugOptions();
     private Stopwatch damageTimer = new Stopwatch();
     private TemperatureScanner tempScanner;
     final Actionbar ACTIONBAR;
     private Set<StatRenderer> statRenderers = new HashSet<>();
+    private TemperatureUnit viewUnit = TemperatureUnit.CELSIUS;
 
     private UUID id;
     private double temperature = 0, tempExact = 0;
@@ -201,6 +204,16 @@ public class UserData implements EternalUser, Configurable {
 
         // Reload temperature scanner settings.
         if (tempScanner != null) config.reload(tempScanner);
+    }
+
+    /**
+     * Returns the debug options for this player. None of these options are saved
+     * between sessions and will reset to default the next time the profile is loaded.
+     *
+     * @return the debug options for this player.
+     */
+    public DebugOptions getDebugOptions() {
+        return DEBUG_OPTIONS;
     }
 
     /**
@@ -378,6 +391,25 @@ public class UserData implements EternalUser, Configurable {
      */
     public UUID getUniqueId() {
         return id;
+    }
+
+    /**
+     * Returns the temperature unit the player prefers to see temperatures displayed in.
+     *
+     * @return the unit this player will see in.
+     */
+    public TemperatureUnit getViewUnit() {
+        return viewUnit;
+    }
+
+    /**
+     * Sets the unit used to display temperatures to the player in. Once set
+     * every temnperature will be converted to this unit for this player.
+     *
+     * @param unit unit for the player to see temperatures in.
+     */
+    public void setViewUnit(TemperatureUnit unit) {
+        this.viewUnit = unit;
     }
 
     /**
@@ -617,6 +649,7 @@ public class UserData implements EternalUser, Configurable {
         config.set(id + ".temp", temperature);
         config.set(id + ".hydration", hydration);
         config.set(id + ".effects.thirst", thirstTimer);
+        config.set(id + ".unit", viewUnit.name());
         playerConfig.save();
     }
 
