@@ -110,6 +110,7 @@ public class ShadowArmorStand extends ShadowEntity {
 
         // Make sure the armor stand is silent by default
         setSilent(true);
+        setInvisible(true);
     }
 
     /**
@@ -152,9 +153,9 @@ public class ShadowArmorStand extends ShadowEntity {
      */
     public void setInvisible(boolean invisible) {
         try {
+            this.invisible = invisible;
             setInvisibleMethod.invoke(entity, invisible);
             sendRefresh();
-            this.invisible = invisible;
         } catch (IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
