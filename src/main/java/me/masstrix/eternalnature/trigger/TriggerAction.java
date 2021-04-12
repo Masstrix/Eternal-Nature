@@ -25,6 +25,8 @@ import org.bukkit.entity.Player;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Stores the functions of an action that is executed when the conditions for a trigger is
@@ -38,10 +40,13 @@ public abstract class TriggerAction {
      * a trigger can preform is registred in this map for parsing from
      * {@link #parse(ConfigurationSection)}.
      */
-    private static final Map<String, Class<? extends TriggerAction>> KEYS = Map.of(
-            "message", Message.class,
-            "play-sound", PlaySound.class
-    );
+    private static final Map<String, Class<? extends TriggerAction>> KEYS;
+
+    static {
+        KEYS = new HashMap<>();
+        KEYS.put("messages", Message.class);
+        KEYS.put("play-sound", PlaySound.class);
+    }
 
     /**
      * Parse the data from the configuration for the action.
