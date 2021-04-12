@@ -55,6 +55,7 @@ public class EternalHeartbeat implements EternalWorker {
 
     @Override
     public void end() {
-        task.cancel();
+        if (task != null)
+            task.cancel();
     }
 }
