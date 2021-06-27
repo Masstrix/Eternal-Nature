@@ -18,9 +18,7 @@ package me.masstrix.eternalnature.core.particle;
 
 import me.masstrix.eternalnature.EternalEngine;
 import me.masstrix.eternalnature.api.Leaf;
-import me.masstrix.eternalnature.core.entity.shadow.ArmorStandBodyPart;
-import me.masstrix.eternalnature.core.entity.shadow.ItemSlot;
-import me.masstrix.eternalnature.core.entity.shadow.ShadowArmorStand;
+import me.masstrix.eternalnature.core.entity.shadow.*;
 import me.masstrix.eternalnature.core.item.CustomItem;
 import me.masstrix.eternalnature.events.LeafSpawnEvent;
 import me.masstrix.eternalnature.util.MathUtil;
@@ -39,7 +37,7 @@ import java.util.Objects;
 public class LeafParticle extends BaseParticle implements Leaf {
 
     private SimplexNoiseOctave movementNoise;
-    private ShadowArmorStand leaf;
+    private ShaArmorStand leaf;
     private double animationOffset;
     private boolean hasSettled;
     // This defines if the particle should float on top of water.
@@ -98,7 +96,7 @@ public class LeafParticle extends BaseParticle implements Leaf {
         waitToRestOnGround = options.forceReachGround;
 
         loc.setYaw(MathUtil.randomInt(0, 360));
-        leaf = new ShadowArmorStand(loc);
+        leaf = new ShaArmorStand(loc);
         leaf.setSmall(true);
         leaf.setMarker(true);
         leaf.setArms(true);
@@ -208,7 +206,7 @@ public class LeafParticle extends BaseParticle implements Leaf {
         animationOffset += 0.01;
     }
 
-    private static Location getArmTip(ShadowArmorStand as) {
+    private static Location getArmTip(ShaArmorStand as) {
         if (as == null) return null;
 
         float offsetY = as.isSmall() ? 11f : 22f;

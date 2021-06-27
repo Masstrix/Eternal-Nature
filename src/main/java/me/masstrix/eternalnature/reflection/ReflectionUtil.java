@@ -16,27 +16,58 @@
 
 package me.masstrix.eternalnature.reflection;
 
+import net.minecraft.server.level.EntityPlayer;
+import net.minecraft.server.level.WorldServer;
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 
 public class ReflectionUtil {
 
+    // Version meta
     private static String version = null;
     private static byte[] versionUnsafe = null;
 
-    private static Class<?> packetClass; // Cache packet class.
-    private static Class<?> craftPlayer; // Cache CraftPlayer class.
-    private static Method getHandlePlayerMethod;
+    // Class cache
+    private static Class<?> packetClass;
+    private static Class<?> craftPlayer;
+    private static Class<?> craftWorld;
+    private static Class<?> craftItem;
 
+    // Method cache
+    private static Method getHandlePlayerMethod;
+    private static Method getWorldHandleMethod;
+    private static Method asNMSItemMethod;
+
+    // Field cache
+    private static String playerConnectionField;
+
+    // Setup all the cache
     static {
         try {
-            packetClass = getNmsClass("Packet");
+            packetClass = getMcProtocol("Packet");
             craftPlayer = getCraftClass("entity.CraftPlayer");
+            craftWorld = getCraftClass("CraftWorld");
+            // Cache CraftPlayer class.
+            craftItem = getCraftClass("inventory.CraftItemStack");
+
             getHandlePlayerMethod = craftPlayer.getMethod("getHandle");
+            getWorldHandleMethod = craftWorld.getDeclaredMethod("getHandle");
+            asNMSItemMethod = craftItem.getMethod("asNMSCopy", ItemStack.class);
+
+            // Locate the name of the PlayerConnection field in the EntityPlayer class
+            for (Field f : EntityPlayer.class.getDeclaredFields()) {
+                if (f.getType().getSimpleName().equals("PlayerConnection")) {
+                    playerConnectionField = f.getName();
+                    break;
+                }
+            }
+
         } catch (NoSuchMethodException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -71,6 +102,38 @@ public class ReflectionUtil {
     }
 
     /**
+     * Returns the WorldServer of a world. This converts it into a minecraft instance
+     * bypassing the CraftWorld using non-version dependent classes.
+     *
+     * @param world world to get the world server for.
+     * @return the world's WorldServer
+     */
+    public static WorldServer getWorldHandle(World world) {
+        Object cWorld = craftWorld.cast(world);
+        try {
+            return (WorldServer) getWorldHandleMethod.invoke(cWorld);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Returns a converted bukkit ItemStack as a minecraft ItemStack.
+     *
+     * @param item item to convert.
+     * @return the converted ItemStack.
+     */
+    public static net.minecraft.world.item.ItemStack asNmsItem(ItemStack item) {
+        try {
+            return (net.minecraft.world.item.ItemStack) asNMSItemMethod.invoke(craftItem, item);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
      * Returns a class from the base server directory.
      *
      * @param name name of the class.
@@ -79,6 +142,14 @@ public class ReflectionUtil {
      */
     public static Class<?> getNmsClass(String name) throws ClassNotFoundException {
         return Class.forName("net.minecraft.server." + getVersion() + "." + name);
+    }
+
+    public static Class<?> getMcProtocol(String name) throws ClassNotFoundException {
+        return Class.forName("net.minecraft.network.protocol." + name);
+    }
+
+    public static Class<?> getClass(String path) throws ClassNotFoundException {
+        return Class.forName(path);
     }
 
     /**
@@ -103,7 +174,7 @@ public class ReflectionUtil {
         try {
             Object craft = craftPlayer.cast(player);
             Object handle = getHandlePlayerMethod.invoke(craft);
-            return handle.getClass().getField("playerConnection").get(handle);
+            return handle.getClass().getField(playerConnectionField).get(handle);
         } catch (Exception e) {
             e.printStackTrace();
             return null;

@@ -50,6 +50,7 @@ import java.util.List;
 public class NatureCommand extends EternalCommand {
 
     private static final String WORLD_NOT_LOADED = PluginData.PREFIX + "&cNo world is loaded with that name.";
+    private TestCommand testCommand = new TestCommand();
 
     private EternalNature plugin;
 
@@ -332,6 +333,10 @@ public class NatureCommand extends EternalCommand {
                     msg(" Set " + type.getSimpleName() + " to " + newVal);
                 }
             }
+        }
+
+        else if (args[0].equalsIgnoreCase("test") && wasPlayer()) {
+            testCommand.execute((Player) getSender(), args);
         }
     }
 

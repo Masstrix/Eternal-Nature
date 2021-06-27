@@ -22,9 +22,11 @@ import me.masstrix.eternalnature.core.EternalWorker;
 import me.masstrix.eternalnature.core.particle.LeafParticle;
 import me.masstrix.eternalnature.player.UserData;
 import me.masstrix.eternalnature.util.BlockScanner;
+import me.masstrix.eternalnature.util.EnumUtils;
 import me.masstrix.eternalnature.util.MathUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Leaves;
@@ -41,6 +43,15 @@ import java.util.concurrent.ConcurrentHashMap;
 @Configurable.Path("global.falling-leaves")
 public class LeafEmitter implements EternalWorker, Configurable {
 
+    /**
+     * Defines the emitter type for leaf particles. If using a custom resource pack
+     * it would be more performant to use the particles otherwise entities will give
+     * a more 3D effect and work more universally with additional control for wind.
+     */
+    enum EmitterType {
+        PARTICLE, ENTITY
+    }
+
     private boolean enabled;
     private double spawnChance = 0.005;
     private int maxParticles = 200;
@@ -51,6 +62,11 @@ public class LeafEmitter implements EternalWorker, Configurable {
     private final BlockScanner SCANNER;
     private BukkitTask updater, spawner;
     private LeafParticle.LeafOptions options = LeafParticle.LeafOptions.DEFAULT;
+    private EmitterType emitterType = EmitterType.ENTITY;
+
+    // Particle fields
+    private Particle particle = Particle.FALLING_WATER;
+
 
     public LeafEmitter(EternalNature plugin) {
         this.PLUGIN = plugin;
@@ -73,24 +89,47 @@ public class LeafEmitter implements EternalWorker, Configurable {
                 .setLifeMax(section.getInt("life.max"))
                 .setLifeMin(section.getInt("life.min"))
                 .setForceReachGround(section.getBoolean("always-reach-ground"));
+
+        // Set the particle emit type
+        String type = section.getString("emitter-type");
+        emitterType = EnumUtils.findMatch(EmitterType.values(), type, EmitterType.ENTITY);
+        String part = section.getString("particle");
+        particle = EnumUtils.findMatch(Particle.values(), part, Particle.ASH);
     }
 
+    /**
+     * Returns how many leaf particles are currently in the world. This will only work
+     * if the emitter type is set to entity.
+     *
+     * @return how many particles are currently spawned in the world.
+     */
     public int getParticleCount() {
         return PARTICLES.size();
     }
 
+    /**
+     * Returns the max number of particles allowed at any given time. This will only work
+     * if the emitter type is set to entity.
+     *
+     * @return the max number of particles allowed at and given time in the world.
+     */
     public int getMaxParticles() {
         return maxParticles;
     }
 
+    /**
+     * @return the chance of a leaf particle being spawned on a block every half a second.
+     */
     public double getSpawnChance() {
         return spawnChance;
     }
 
     @Override
     public void start() {
-        if (updater != null)
-            updater.cancel();
+        // Stop runnables if already started before
+        if (updater != null) updater.cancel();
+        if (spawner != null) spawner.cancel();
+
         updater = new BukkitRunnable() { // Auto scan around players for new leaves.
             int ticks = scanDelay;
             int passed = 0;
@@ -109,29 +148,34 @@ public class LeafEmitter implements EternalWorker, Configurable {
             }
         }.runTaskTimerAsynchronously(PLUGIN, 10, 20);
 
-        // Stop a spawner if it has already been started.
-        if (spawner != null)
-            spawner.cancel();
-
         // Spawn leaf effects in valid locations found.
         spawner = new BukkitRunnable() {
             @Override
             public void run() {
-                Set<LeafParticle> dead = new HashSet<>();
-                for (LeafParticle effect : PARTICLES) {
-                    effect.tick();
-                    if (!effect.isAlive())
-                        dead.add(effect);
+                // Emit entities otherwise
+                if (emitterType == EmitterType.PARTICLE) {
+                    Set<LeafParticle> dead = new HashSet<>();
+                    for (LeafParticle effect : PARTICLES) {
+                        effect.tick();
+                        if (!effect.isAlive())
+                            dead.add(effect);
+                    }
+                    PARTICLES.removeAll(dead);
+                    if (PARTICLES.size() >= maxParticles) return;
                 }
-                PARTICLES.removeAll(dead);
-                if (PARTICLES.size() >= maxParticles) return;
                 if (!enabled) return;
                 for (Location loc : LOCATIONS) {
                     if (!MathUtil.chance(spawnChance)) continue;
                     double offsetX = MathUtil.randomDouble() - 0.5;
                     double offsetZ = MathUtil.randomDouble() - 0.5;
-                    WorldData worldData = PLUGIN.getEngine().getWorldProvider().getWorld(loc.getWorld());
                     Location spawnLoc = loc.clone().add(offsetX, -0.5, offsetZ);
+
+                    if (emitterType == EmitterType.PARTICLE) {
+                        spawnLoc.getWorld().spawnParticle();
+                        continue;
+                    }
+
+                    WorldData worldData = PLUGIN.getEngine().getWorldProvider().getWorld(loc.getWorld());
                     LeafParticle particle = new LeafParticle(spawnLoc, PLUGIN.getEngine(), options);
                     particle.setForces(worldData.getWind());
                     PARTICLES.add(particle);

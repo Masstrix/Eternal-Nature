@@ -24,7 +24,7 @@ import java.util.Set;
 
 public class ShadowEntityManager implements EternalWorker {
 
-    private static Set<ShadowEntity> entities = new HashSet<>();
+    private static Set<ShaEntity<?>> entities = new HashSet<>();
     private EternalNature plugin;
 
     protected ShadowEntityManager() {
@@ -42,7 +42,7 @@ public class ShadowEntityManager implements EternalWorker {
      *
      * @param entity entity to register.
      */
-    public void register(ShadowEntity entity) {
+    public void register(ShaEntity<?> entity) {
         entities.add(entity);
     }
 
@@ -53,17 +53,17 @@ public class ShadowEntityManager implements EternalWorker {
      *
      * @param entity entity being removed.
      */
-    public void unregister(ShadowEntity entity) {
+    public void unregister(ShaEntity<?> entity) {
         entities.remove(entity);
     }
 
     /**
      * Removes all currently loaded and registered shadow entities from the server. This
-     * will call the {@link ShadowEntity#remove()} method removing it from any players the
+     * will call the {@link ShaEntity#remove()} method removing it from any players the
      * entity is currently visible to.
      */
     public void removeAll() {
-        entities.forEach(ShadowEntity::remove);
+        entities.forEach(ShaEntity::remove);
         entities.clear();
     }
 

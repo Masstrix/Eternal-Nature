@@ -16,54 +16,27 @@
 
 package me.masstrix.eternalnature.core.entity.shadow;
 
-import me.masstrix.eternalnature.reflection.ReflectionUtil;
+import net.minecraft.world.entity.EnumItemSlot;
 
 public enum ItemSlot {
-    MAINHAND(0, 0),
-    OFFHAND(1, 1),
-    FEET(2, 0),
-    LEGS(3, 1),
-    CHEST(4, 2),
-    HEAD(5, 3);
+    MAINHAND,
+    OFFHAND,
+    FEET,
+    LEGS,
+    CHEST,
+    HEAD;
 
-    private static Class<?> enumItemSlotClass;
+    private final EnumItemSlot NMS;
 
-    static {
-        try {
-            enumItemSlotClass = ReflectionUtil.getNmsClass("EnumItemSlot");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private int slot;
-    private int ordinal;
-    private Object nms;
-
-    ItemSlot(int slot, int ordinal) {
-        this.slot = slot;
-        this.ordinal = ordinal;
-    }
-
-    public int getSlot() {
-        return slot;
-    }
-
-    public int getOrdinal() {
-        return ordinal;
+    ItemSlot() {
+        this.NMS = EnumItemSlot.values()[this.ordinal()];
     }
 
     public boolean isArmorSlot() {
-        return slot > OFFHAND.slot;
+        return this.ordinal() > OFFHAND.ordinal();
     }
 
-    /**
-     * @return the slot as the nms equivalent.
-     */
-    public Object asNMS() {
-        if (nms == null) {
-            nms = enumItemSlotClass.getEnumConstants()[slot];
-        }
-        return nms;
+    public EnumItemSlot nms() {
+        return NMS;
     }
 }

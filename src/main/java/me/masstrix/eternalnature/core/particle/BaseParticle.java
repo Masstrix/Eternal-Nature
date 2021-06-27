@@ -26,7 +26,7 @@ import org.bukkit.util.Vector;
  * Base for custom particles. This stores the core attributes that would be needed
  * for most particles and implements the base methods needed.
  * <p>
- * It's recommended to use a {@link me.masstrix.eternalnature.core.entity.shadow.ShadowEntity} when
+ * It's recommended to use a {@link me.masstrix.eternalnature.core.entity.shadow.ShaEntity} when
  * creating particles so there are not issues with them becoming stuck in the world if using entities
  * to create the effect.
  */
