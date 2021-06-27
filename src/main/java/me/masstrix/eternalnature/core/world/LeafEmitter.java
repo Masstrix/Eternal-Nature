@@ -171,7 +171,7 @@ public class LeafEmitter implements EternalWorker, Configurable {
                     Location spawnLoc = loc.clone().add(offsetX, -0.5, offsetZ);
 
                     if (emitterType == EmitterType.PARTICLE) {
-                        spawnLoc.getWorld().spawnParticle();
+                        spawnLoc.getWorld().spawnParticle(particle,spawnLoc, 1, 0, 0, 0, 0.01);
                         continue;
                     }
 
