@@ -42,6 +42,7 @@ public class EnumUtils {
      * @return the enum value or null if the value does no exist.
      */
     public static <T extends Enum<?>> T findMatch(T[] enom, String find, T def) {
+        if (find == null) return def;
         find = find.toUpperCase();
         for (T e : enom) {
             if (e.name().equals(find)) return e;
