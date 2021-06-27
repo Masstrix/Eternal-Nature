@@ -70,7 +70,7 @@ public class LeafParticleMenu extends GlobalMenu {
         addBackButton(MANAGER, Menus.SETTINGS);
 
         setButton(new Button(asSlot(1, 3), () -> new ItemBuilder(Material.REDSTONE_TORCH)
-                .setName("&a" + LANG.getText("menu.leaf-particles.enabled.title"))
+                .setName(LANG.getText("menu.leaf-particles.enabled.title"))
                 .addDescription(LANG.getText("menu.leaf-particles.enabled.description"))
                 .addSwitch("Currently:", enabled)
                 .build()).setToggle(LANG.getText("menu.leaf-particles.enabled.title"), () -> enabled)
@@ -81,7 +81,7 @@ public class LeafParticleMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(asSlot(1, 4), () -> new ItemBuilder(Material.GRASS_BLOCK)
-                .setName("&a" + LANG.getText("menu.leaf-particles.reach-ground.title"))
+                .setName(LANG.getText("menu.leaf-particles.reach-ground.title"))
                 .addDescription(LANG.getText("menu.leaf-particles.reach-ground.description"))
                 .addSwitch("Currently:", alwaysReachGround)
                 .build()).setToggle(LANG.getText("menu.leaf-particles.reach-ground.title"), () -> alwaysReachGround)
@@ -102,7 +102,7 @@ public class LeafParticleMenu extends GlobalMenu {
                 .setName("&a" + LANG.getText("menu.leaf-particles.spawn.title"))
                 .addDescription(LANG.getText("menu.leaf-particles.spawn.description"))
                 .addLore("Currently: " +  spawnChances.getSelected().getName())
-                .addLore("&eChange to " +  spawnChances.getNext().getName())
+                .addAction("Change to " +  spawnChances.getNext().getName())
                 .build())
                 .onClick(player -> {
                     spawnChances.next();

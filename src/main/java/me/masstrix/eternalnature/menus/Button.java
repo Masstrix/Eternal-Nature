@@ -35,7 +35,7 @@ public class Button {
     private GlobalMenu menu;
     private final UpdateIcon UPDATER;
     private final int SLOT;
-    private ItemStack stack;
+    ItemStack stack;
     private UpdateToggle updateToggle;
     private ClickEvent clickEvent;
     private boolean toggleDisplay = false, enabled;

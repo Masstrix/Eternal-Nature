@@ -63,45 +63,56 @@ public class NatureCommand extends EternalCommand {
     public void execute(String[] args) {
         if (args.length == 0 || args[0].equalsIgnoreCase("help")) {
             msg("");
-            msg("     &2&lEternal Nature");
-            msg("     &7&oby Masstrix");
+            msg(PluginData.Colors.PRIMARY   + "     &lEternal Nature");
+            msg(PluginData.Colors.TERTIARY + "     &oby Masstrix");
             msg("");
-            msg("&a/eternal reload &7- Reloads all config files.");
-            msg("&a/eternal world <world> &7- Provides options for a world.");
-            msg("&a/eternal reloadWorld <world> &7- Reloads data for a world.");
-            msg("&a/eternal resetConfig &7- Resets all config files.");
-            msg("&a/eternal stats &7- Shows background stats.");
-            msg("&a/eternal version &7- View version and update info.");
-            msg("&a/eternal setting &7- Opens a GUI to edit settings.");
-            msg("&a/eternal reloadTriggers &7- Reloads the triggers config file.");
-            msg("&a/hydrate <user> &7- Hydrates a user to max.");
+            msg(new PluginData.Colors().secondary("/eternal settings")
+                    .message(" - Opens a GUI to change settings."));
+            msg(new PluginData.Colors().secondary("/eternal reload")
+                    .message(" - Reloads all config files"));
+            msg(new PluginData.Colors().secondary("/eternal world <world>")
+                    .message(" - Provides options for a world."));
+            msg(new PluginData.Colors().secondary("/eternal reloadWorld <wold>")
+                    .message(" - Reloads data for a world."));
+            msg(new PluginData.Colors().secondary("/eternal resetConfig")
+                    .message(" - Resets all config files."));
+            msg(new PluginData.Colors().secondary("/eternal stats")
+                    .message(" - Shows background running stats."));
+            msg(new PluginData.Colors().secondary("/eternal version")
+                    .message(" - Check the current plugin version."));
+            msg(new PluginData.Colors().secondary("/eternal reloadTriggers")
+                    .message(" - Reloads the triggers config."));
+            msg(new PluginData.Colors().secondary("/hydrate <player>")
+                    .message(" - Hydrates a player."));
             msg("");
             return;
         }
 
         if (args[0].equalsIgnoreCase("reload")) {
-            msg(PluginData.PREFIX + "&7Reloading files...");
+            msg(PluginData.PREFIX + "Reloading files...");
             plugin.getRootConfig().reload();
-            msg(PluginData.PREFIX + "&aReloaded config files");
+            msg(PluginData.PREFIX + "Reloaded config files");
         }
 
         else if (args[0].equalsIgnoreCase("reloadTriggers")) {
-            msg(PluginData.PREFIX + "&7Reloading Triggers...");
+            msg(PluginData.PREFIX + "Reloading Triggers...");
             plugin.getTriggerManager().load();
-            msg(PluginData.PREFIX + "&aReloaded triggers.");
+            msg(PluginData.PREFIX + "Reloaded triggers.");
         }
 
         else if (args[0].equalsIgnoreCase("world")) {
             String world = args.length > 1 ? args[1] : "<world>";
             if (args.length == 1) {
                 msg("");
-                msg("     &2&lEternal Nature");
-                msg("     &7&o/world options");
+                msg(PluginData.Colors.PRIMARY   + "     &lEternal Nature");
+                msg(PluginData.Colors.TERTIARY + "     &o/world options");
                 msg("");
-                msg("&a/eternal world list &7- Lists all loaded worlds.");
-                msg("&a/eternal world " + world + " info &7- Displays info about that world.");
-                msg("&a/eternal world " + world + " makeCustomConfig &7- " +
-                        "Makes a custom temperature config for world specific configuration.");
+                msg(new PluginData.Colors().secondary("/eternal world list")
+                        .message(" - Lists all loaded world configs."));
+                msg(new PluginData.Colors().secondary("/eternal world " + world + " info")
+                        .message(" - Displays info about that world."));
+                msg(new PluginData.Colors().secondary("/eternal world " + world + " makeCustomConfig")
+                        .message(" - Makes a custom temperature config for world specific configurations"));
                 msg("");
                 return;
             }
@@ -112,7 +123,8 @@ public class NatureCommand extends EternalCommand {
             if (sub.equalsIgnoreCase("list") && args.length == 2) {
                 List<String> worlds = provider.getWorldNames();
                 msg("");
-                msg("     &2&lLoaded Worlds");
+                msg(PluginData.Colors.PRIMARY   + "     &lEternal Nature");
+                msg(PluginData.Colors.SECONDARY + "     &oAll Loaded worlds");
                 worlds.forEach(name -> msg(" &2• &f" + name));
                 msg("");
                 return;
@@ -120,7 +132,7 @@ public class NatureCommand extends EternalCommand {
 
             // Stop if command does not have arguments
             if (args.length < 3) {
-                msg(PluginData.PREFIX + "&cInvalid use. For help use /eternal world");
+                msg(PluginData.PREFIX + PluginData.Colors.ERROR + "Invalid use. For help use /eternal world");
                 return;
             }
 
@@ -135,7 +147,7 @@ public class NatureCommand extends EternalCommand {
                     msg(WORLD_NOT_LOADED);
                     return;
                 }
-                msg(PluginData.PREFIX + "&7Creating custom config for world " + world + "...");
+                msg(PluginData.PREFIX + "Creating custom config for world " + world + "...");
                 boolean success = data.createCustomTemperatureConfig();
                 if (success)
                     msg(PluginData.PREFIX + "&aCreated custom config for world &e" + world + "&a.");
@@ -151,7 +163,7 @@ public class NatureCommand extends EternalCommand {
             }
 
             if (!provider.isLoaded(bukkitWorld)) {
-                msg(PluginData.PREFIX + "&cWorld does not have any loaded data.");
+                msg(PluginData.PREFIX + PluginData.Colors.ERROR +  "World does not have any loaded data.");
                 return;
             }
 
@@ -160,8 +172,8 @@ public class NatureCommand extends EternalCommand {
                 WorldData data = provider.getWorld(bukkitWorld);
                 TemperatureProfile t = data.getTemperatures();
                 msg("");
-                msg("     &2&lEternal Nature");
-                msg("     &6&o" + world + "&6's info");
+                msg(PluginData.Colors.PRIMARY   + "     &lEternal Nature");
+                msg(PluginData.Colors.SECONDARY + "     &o" + world + "'s info");
                 msg("");
                 if (wasPlayer()) {
                     Player player = (Player) getSender();
@@ -212,8 +224,8 @@ public class NatureCommand extends EternalCommand {
             LeafEmitter leafEmitter = (LeafEmitter) engine.getWorker(LeafEmitter.class);
 
             msg("");
-            msg("     &2&lEternal Nature");
-            msg("     &7Background Stats");
+            msg(PluginData.Colors.PRIMARY   + "     &lEternal Nature");
+            msg(PluginData.Colors.TERTIARY + "     &oBackground stats");
             msg("");
             msg("Players Cached: &7" + engine.getCashedUsers().size());
             msg("Worlds Loaded: &7" + engine.getWorldProvider().getLoaded());
@@ -223,8 +235,8 @@ public class NatureCommand extends EternalCommand {
 
         else if (args[0].equalsIgnoreCase("version")) {
             msg("");
-            msg("     &e&lEternal Nature");
-            msg("     &7Version Info");
+            msg(PluginData.Colors.PRIMARY   + "     &lEternal Nature");
+            msg(PluginData.Colors.TERTIARY + "     &oVersion");
             msg("");
             msg(" Build: &7" + BuildInfo.getBuild());
             msg(" Current Version: &7" + BuildInfo.getVersion());
@@ -279,12 +291,15 @@ public class NatureCommand extends EternalCommand {
         else if (args[0].equalsIgnoreCase("debug") && wasPlayer()) {
             if (args.length == 1) {
                 msg("");
-                msg("     &2&lEternal Nature");
-                msg("     &7&oDebug Options");
+                msg(PluginData.Colors.PRIMARY   + "     &lEternal Nature");
+                msg(PluginData.Colors.TERTIARY + "     &oDebug options");
                 msg("");
-                msg("&a/eternal debug toggle &7- Toggles debug mode on or off.");
-                msg("&a/eternal debug set <option> <argument> &7- Sets an option for the debug info.");
-                msg("&a/eternal debug options &7- Lists all options that can be set.");
+                msg(new PluginData.Colors().secondary("/eternal debug toggle")
+                        .message(" - Toggles debug mode on or off"));
+                msg(new PluginData.Colors().secondary("/eternal debug set <option>")
+                        .message(" - Sets an option for the debug info."));
+                msg(new PluginData.Colors().secondary("/eternal debug options")
+                        .message(" - Lists all debug options."));
                 return;
             }
 
@@ -292,9 +307,9 @@ public class NatureCommand extends EternalCommand {
                 UserData data = getData();
                 data.setDebug(!data.isDebugEnabled());
                 if (data.isDebugEnabled()) {
-                    msg(PluginData.PREFIX + "&7Enabled &6debug mode.");
+                    msg(PluginData.PREFIX + "Enabled &6debug mode.");
                 } else {
-                    msg(PluginData.PREFIX + "&7Disabled &6debug mode.");
+                    msg(PluginData.PREFIX + "Disabled &6debug mode.");
                 }
             }
 

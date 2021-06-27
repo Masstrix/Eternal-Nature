@@ -51,6 +51,10 @@ public abstract class EternalCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(StringUtil.color(msg));
     }
 
+    public void msg(Object msg) {
+        sender.sendMessage(StringUtil.color(msg.toString()));
+    }
+
     @Override
     public final List<String> onTabComplete(@Nonnull CommandSender sender, @Nonnull Command cm, @Nonnull String label, @Nonnull String[] args) {
         return tabComplete(args);

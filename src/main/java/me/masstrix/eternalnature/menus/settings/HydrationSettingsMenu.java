@@ -17,6 +17,7 @@
 package me.masstrix.eternalnature.menus.settings;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.config.*;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
 import me.masstrix.eternalnature.menus.Button;
@@ -78,7 +79,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
         addBackButton(menuManager, Menus.SETTINGS);
 
         setButton(new Button(asSlot(1, 2), () -> new ItemBuilder(Material.REDSTONE_TORCH)
-                .setName("&a" + le.getText("menu.hydration.enabled.title"))
+                .setName(le.getText("menu.hydration.enabled.title"))
                 .addDescription(le.getText("menu.hydration.enabled.description"))
                 .addSwitch("Currently:", enabled)
                 .build()).setToggle(le.getText("menu.hydration.enabled.title"),
@@ -90,7 +91,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(asSlot(1, 3), () -> new ItemBuilder(Material.IRON_SWORD)
-                .setName("&a" + le.getText("menu.hydration.damage.title"))
+                .setName(le.getText("menu.hydration.damage.title"))
                 .addDescription(le.getText("menu.hydration.damage.description"))
                 .addSwitch("Currently:", doDamage)
                 .build()).setToggle(le.getText("menu.hydration.damage.title"),
@@ -102,7 +103,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(asSlot(1, 4), () -> new ItemBuilder(Material.RABBIT_FOOT)
-                .setName("&a" + le.getText("menu.hydration.activity.title"))
+                .setName(le.getText("menu.hydration.activity.title"))
                 .addDescription(le.getText("menu.hydration.activity.description"))
                 .addSwitch("Currently:", doActivity)
                 .build()).setToggle(le.getText("menu.hydration.activity.title"),
@@ -114,7 +115,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(asSlot(1, 5), () -> new ItemBuilder(Material.LINGERING_POTION)
-                .setName("&a" + le.getText("menu.hydration.thirst.title"))
+                .setName(le.getText("menu.hydration.thirst.title"))
                 .addDescription(le.getText("menu.hydration.thirst.description")
                         .replace("%amount%", "" + thirstMod))
                 .addSwitch("Currently:", doThirst)
@@ -127,7 +128,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(asSlot(1, 6), () -> new ItemBuilder(Material.WATER_BUCKET)
-                .setName("&a" + le.getText("menu.hydration.open_water.title"))
+                .setName(le.getText("menu.hydration.open_water.title"))
                 .addDescription(le.getText("menu.hydration.open_water.description"))
                 .addSwitch("Currently:", canDrinkOcean)
                 .build()).setToggle(le.getText("menu.hydration.open_water.title"),
@@ -141,7 +142,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
         // Temperature Sweating toggle
         setButton(new Button(asSlot(1, 7), () -> new ItemBuilder(Material.POTION)
                 .setPotionType(PotionType.WATER)
-                .setName("&a" + le.getText("menu.temp.sweat.title"))
+                .setName(le.getText("menu.temp.sweat.title"))
                 .addDescription(le.getText("menu.temp.sweat.description"))
                 .addSwitch("Currently:", doSweat)
                 .build()).setToggle(le.getText("menu.temp.sweat.title"),
@@ -153,11 +154,11 @@ public class HydrationSettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(asSlot(4, 4), () -> new ItemBuilder(Material.JUNGLE_SIGN)
-                .setName("&a" + le.getText("menu.hydration.display.title"))
+                .setName(le.getText("menu.hydration.display.title"))
                 .addDescription(le.getText("menu.hydration.display.description"))
                 .addLore("Currently: &f" + renderMethod.getSimple(),
                         renderMethod.getDescription())
-                .addLore("&eClick to switch to &7" + renderMethod.next().getSimple())
+                .addAction("Click to switch to " + PluginData.Colors.MESSAGE + renderMethod.next().getSimple())
                 .build())
                 .onClick(player -> {
                     CONFIG.set("hydration.display.style", renderMethod.next().name());
@@ -167,7 +168,7 @@ public class HydrationSettingsMenu extends GlobalMenu {
 
         setButton(new Button(asSlot(4, 5), () ->
                 new ItemBuilder(displayEnabled ? Material.LIME_BANNER : Material.GRAY_BANNER)
-                        .setName("&a" + le.getText("menu.display.enabled.title"))
+                        .setName( le.getText("menu.display.enabled.title"))
                         .addDescription(le.getText("menu.display.enabled.description"))
                         .addSwitch("Currently:", displayEnabled)
                         .build()).onClick(player -> {

@@ -16,6 +16,7 @@
 
 package me.masstrix.eternalnature.core.item;
 
+import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.util.StringUtil;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Material;
@@ -46,6 +47,13 @@ public class ItemBuilder {
 
     public ItemBuilder(ItemStack stack) {
         this.stack = stack;
+        this.type = stack.getType();
+        ItemMeta meta = stack.getItemMeta();
+        if (meta != null) {
+            this.name = meta.getDisplayName();
+            if (meta.hasLore())
+                this.lore.addAll(meta.getLore());
+        }
     }
 
     public ItemBuilder(SkullIndex skullSkin) {
@@ -53,15 +61,24 @@ public class ItemBuilder {
     }
 
     public ItemBuilder setName(String name) {
-        this.name = StringUtil.color("&f" + name);
+        this.name = StringUtil.color(PluginData.Colors.PRIMARY + name);
+        return this;
+    }
+
+    public ItemBuilder setName(String name, ChatColor color) {
+        this.name = color + name;
         return this;
     }
 
     public ItemBuilder addLore(String... lore) {
         for (String s : lore) {
-            this.lore.add(StringUtil.color("&7" + s));
+            this.lore.add(StringUtil.color(PluginData.Colors.MESSAGE + s));
         }
         return this;
+    }
+
+    public ItemBuilder addAction(String action) {
+        return addDescription(action, PluginData.Colors.ACTION, false);
     }
 
     /**
@@ -72,8 +89,9 @@ public class ItemBuilder {
      * @return an instance of the item builder.
      */
     public ItemBuilder addDescription(String desc) {
-        return addDescription(desc, ChatColor.GRAY);
+        return addDescription(desc, PluginData.Colors.MESSAGE);
     }
+
 
     /**
      * Adds a description to the item. Descriptions are padded on the top and bottom and
@@ -84,6 +102,19 @@ public class ItemBuilder {
      * @return an instance of the item builder.
      */
     public ItemBuilder addDescription(String desc, ChatColor color) {
+        return addDescription(desc, color, true);
+    }
+
+
+    /**
+     * Adds a description to the item. Descriptions are padded on the top and bottom and
+     * will auto-wrap words when over a threshold length.
+     *
+     * @param desc  description text to append to the items lore.
+     * @param color sets the colour of this description section.
+     * @return an instance of the item builder.
+     */
+    public ItemBuilder addDescription(String desc, ChatColor color, boolean paddingBottom) {
         StringBuilder line = new StringBuilder();
         addLore("");
         boolean complete = false;
@@ -93,7 +124,7 @@ public class ItemBuilder {
             // Subtract the color codes from lines length
             int trulLen = line.length() - StringUtil.getColorCodeCount(line.toString()) * 2;
             if (trulLen >= 25) {
-                addLore(line.toString());
+                addLore(color + line.toString());
                 line = new StringBuilder();
                 if (i >= words.length - 1)
                     complete = true;
@@ -105,13 +136,14 @@ public class ItemBuilder {
         }
         if (!complete)
             addLore(color.toString() + line.toString());
-        addLore("");
+        if (paddingBottom) addLore("");
         return this;
     }
 
     public ItemBuilder addSwitch(String prefix, boolean toggle) {
         addLore(prefix + (toggle ? "&a Enabled" : "&c Disabled"),
-                "&eClick to " + (toggle ? "disable" : "enable"));
+                "",
+                PluginData.Colors.ACTION + "Click to " + (toggle ? "disable" : "enable"));
         return this;
     }
 
@@ -121,7 +153,7 @@ public class ItemBuilder {
     }
 
     public ItemBuilder addSwitch(String prefix, String on, String off, boolean toggle) {
-        addLore(prefix + (toggle ? on : off), "&eClick to " + (toggle ? off : on));
+        addLore(prefix + (toggle ? on : off), PluginData.Colors.ACTION + "Click to " + (toggle ? off : on));
         return this;
     }
 

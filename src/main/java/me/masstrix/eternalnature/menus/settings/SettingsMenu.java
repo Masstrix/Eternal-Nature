@@ -21,10 +21,8 @@ import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.config.Configuration;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
 import me.masstrix.eternalnature.core.item.SkullIndex;
+import me.masstrix.eternalnature.menus.*;
 import me.masstrix.eternalnature.menus.Button;
-import me.masstrix.eternalnature.menus.GlobalMenu;
-import me.masstrix.eternalnature.menus.MenuManager;
-import me.masstrix.eternalnature.menus.Menus;
 import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.lang.langEngine.Lang;
 import me.masstrix.lang.langEngine.LanguageEngine;
@@ -39,6 +37,8 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.potion.PotionType;
+
+import java.awt.*;
 
 public class SettingsMenu extends GlobalMenu {
 
@@ -103,54 +103,51 @@ public class SettingsMenu extends GlobalMenu {
             if (versionInfo != null) {
                 VersionState state = versionInfo.getState();
                 switch (state) {
-                    case AHEAD: {
-                        version = "&6" + version + " (Dev Build)";
-                        break;
-                    }
-                    case CURRENT: {
-                        version = "&a" + version + " (Latest)";
-                        break;
-                    }
-                    case BEHIND: {
-                        version = "&e" + version + " (Outdated)";
-                        break;
-                    }
-                    case UNKNOWN: {
-                        version = "&7" + version;
-                        break;
-                    }
+                    case AHEAD -> version = "&6" + version + " (Dev Build)";
+                    case CURRENT -> version = "&a" + version + " (Latest)";
+                    case BEHIND -> version = "&e" + version + " (Outdated)";
+                    case UNKNOWN -> version = "&7" + version;
                 }
             }
 
             return new ItemBuilder(Material.FERN)
-                    .setName("&2Eternal Nature")
+                    .setName("Eternal Nature")
                     .addDescription("A plugin to make the world be more lively.")
                     .addLore("Developed by &f" + StringUtil.fromStringArray(PLUGIN.getDescription().getAuthors(), ", "),
-                            "Version: " + version,
+                            "Version: &o" + version,
                             "Latest: &7" + latest)
-                    .addLore("", "&eClick to get help", "&elinks to the project.")
+                    .addDescription("Click to get help links to the project",
+                            PluginData.Colors.ACTION, false)
                     .build();
         }).onClick(player -> {
             player.closeInventory();
             ComponentBuilder builder = new ComponentBuilder("");
-            builder.append("\n    [Eternal Nature]\n").color(ChatColor.GREEN);
-            builder.append("    Download Page ", ComponentBuilder.FormatRetention.NONE).color(ChatColor.WHITE);
-            builder.append("VISIT").color(ChatColor.GREEN).bold(true).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+            builder.append("\n       ")
+                    .append("Eternal Nature").bold(true).color(PluginData.Colors.PRIMARY);
+            builder.append("\n       ").bold(false)
+                    .append("Links\n\n").color(PluginData.Colors.TERTIARY);
+            builder.append("    Download Page ", ComponentBuilder.FormatRetention.NONE)
+                    .color(PluginData.Colors.MESSAGE);
+            builder.append("VISIT").color(PluginData.Colors.TERTIARY).bold(true).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
                     new Text("\u00A7eClick to visit the plugins download page\non spigotmc.org.")))
                     .event(new ClickEvent(ClickEvent.Action.OPEN_URL, PluginData.PLUGIN_PAGE));
             builder.append("\n");
-            builder.append("    Official Discord ", ComponentBuilder.FormatRetention.NONE).color(ChatColor.WHITE);
-            builder.append("JOIN").color(ChatColor.GREEN).bold(true).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+            builder.append("    Official Discord ", ComponentBuilder.FormatRetention.NONE)
+                    .color(PluginData.Colors.MESSAGE);
+            builder.append("JOIN").color(ChatColor.of(new Color(114, 137, 218))).bold(true)
+                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
                     new Text("\u00A7eClick to join the official discord.")))
                     .event(new ClickEvent(ClickEvent.Action.OPEN_URL, PluginData.DISCORD));
             builder.append("\n");
-            builder.append("    Plugin Wiki ", ComponentBuilder.FormatRetention.NONE).color(ChatColor.WHITE);
-            builder.append("VISIT").color(ChatColor.GREEN).bold(true).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+            builder.append("    Plugin Wiki ", ComponentBuilder.FormatRetention.NONE)
+                    .color(PluginData.Colors.MESSAGE);
+            builder.append("VISIT").color(PluginData.Colors.TERTIARY).bold(true).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
                     new Text("\u00A7eClick to get help on the plugins wiki.")))
                     .event(new ClickEvent(ClickEvent.Action.OPEN_URL, PluginData.WIKI_PAGE));
             builder.append("\n");
-            builder.append("    Submit a bug report ", ComponentBuilder.FormatRetention.NONE).color(ChatColor.WHITE);
-            builder.append("HERE").color(ChatColor.GREEN).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+            builder.append("    Submit a bug report ", ComponentBuilder.FormatRetention.NONE)
+                    .color(PluginData.Colors.MESSAGE);
+            builder.append("HERE").color(PluginData.Colors.TERTIARY).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
                     new Text("\u00A7eClick to submit a issue/bug report.")))
                     .event(new ClickEvent(ClickEvent.Action.OPEN_URL, PluginData.ISSUES_PAGE));
             builder.append("\n");
@@ -162,7 +159,7 @@ public class SettingsMenu extends GlobalMenu {
 
         setButton(new Button(asSlot(1, 8), () -> {
             ItemBuilder builder = new ItemBuilder(SkullIndex.PLANET_EARTH)
-                    .setName("&a" + LANG.getText("menu.language.title"))
+                    .setName(LANG.getText("menu.language.title"))
                     .addDescription(LANG.getText("menu.language.description"));
 
             for (Lang lang : engine.list()) {
@@ -170,9 +167,9 @@ public class SettingsMenu extends GlobalMenu {
                 if (selected)
                     builder.addLore(" &a• " + lang.getNiceName());
                 else
-                    builder.addLore(" &7• " + lang.getNiceName());
+                    builder.addLore(PluginData.Colors.MESSAGE + " • " + lang.getNiceName());
             }
-            builder.addLore("", "&e" + LANG.getText("menu.common.select"));
+            builder.addAction(LANG.getText("menu.common.select"));
             return builder.build();
         }).onClick(player -> {
             MANAGER.getMenu(Menus.LANG_SETTINGS).open(player);
@@ -180,39 +177,39 @@ public class SettingsMenu extends GlobalMenu {
 
         setButton(new Button(asSlot(1, 2), () -> new ItemBuilder(Material.POTION)
                 .setPotionType(PotionType.SPEED)
-                .setName("&a" + LANG.getText("menu.hydration.title"))
+                .setName(LANG.getText("menu.hydration.title"))
                 .addDescription(LANG.getText("menu.hydration.description"))
                 .addSwitchView("Currently:", hydEnabled)
-                .addLore("", "&e" + LANG.getText("menu.common.edit"))
+                .addAction(LANG.getText("menu.common.edit"))
                 .build()).onClick(player -> {
             MANAGER.getMenu(Menus.HYDRATION_SETTINGS).open(player);
         }));
 
         setButton(new Button(asSlot(1, 4), () -> new ItemBuilder(Material.COMPARATOR)
-                .setName("&a" + LANG.getText("menu.other.title"))
+                .setName(LANG.getText("menu.other.title"))
                 .addLore("",
-                        (notifyUpdates ? "&a" : "&c") + " ▪&7 Update Notifications",
-                        (checkUpdates ? "&a" : "&c") + " ▪&7 Update Checking",
+                        (notifyUpdates ? "&a" : "&c") + " ▪" + PluginData.Colors.MESSAGE + " Update Notifications",
+                        (checkUpdates ? "&a" : "&c") + " ▪" + PluginData.Colors.MESSAGE + " Update Checking",
                         "",
-                        "&e" + LANG.getText("menu.common.edit"))
+                        PluginData.Colors.ACTION + LANG.getText("menu.common.edit"))
                 .build()).onClick(player -> {
             MANAGER.getMenu(Menus.OTHER_SETTINGS).open(player);
         }));
 
         setButton(new Button(asSlot(1, 6), () -> new ItemBuilder(Material.CAMPFIRE)
-                .setName("&a" + LANG.getText("menu.temp.title"))
+                .setName(LANG.getText("menu.temp.title"))
                 .addDescription(LANG.getText("menu.temp.description"))
                 .addSwitchView("Currently:", tmpEnabled)
-                .addLore("", "&e" + LANG.getText("menu.common.edit"))
+                .addAction(LANG.getText("menu.common.edit"))
                 .build()).onClick(player -> {
             MANAGER.getMenu(Menus.TEMP_SETTINGS).open(player);
         }));
 
         setButton(new Button(asSlot(3, 2), () -> new ItemBuilder(Material.KELP)
-                .setName("&a" + LANG.getText("menu.leaf-particles.title"))
+                .setName(LANG.getText("menu.leaf-particles.title"))
                 .addDescription(LANG.getText("menu.leaf-particles.description"))
                 .addSwitchView("Currently:", fallingLeavesEnabled)
-                .addLore("&e" + LANG.getText("menu.common.edit"))
+                .addAction(LANG.getText("menu.common.edit"))
                 .build())
                 .setToggle(LANG.getText("menu.leaf-particles.title"),
                         () -> fallingLeavesEnabled)
@@ -220,7 +217,7 @@ public class SettingsMenu extends GlobalMenu {
                     openMenu(MANAGER, Menus.LEAF_PARTICLE_SETTINGS, player);
                 }));
         setButton(new Button(asSlot(3, 3), () -> new ItemBuilder(Material.OAK_SAPLING)
-                .setName("&a" + LANG.getText("menu.settings.item.auto-plant.title"))
+                .setName(LANG.getText("menu.settings.item.auto-plant.title"))
                 .addDescription(LANG.getText("menu.settings.item.auto-plant.description"))
                 .addSwitch("Currently:", autoPlantEnabled)
                 .build()).setToggle(LANG.getText("menu.settings.item.auto-plant.title"),
@@ -232,7 +229,7 @@ public class SettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(asSlot(3, 4), () -> new ItemBuilder(Material.WOODEN_HOE)
-                .setName("&a" + LANG.getText("menu.settings.item.replant.title"))
+                .setName(LANG.getText("menu.settings.item.replant.title"))
                 .addDescription(LANG.getText("menu.settings.item.replant.description"))
                 .addSwitch("Currently:", replantCropsEnabled)
                 .build()).setToggle(LANG.getText("menu.settings.item.replant.title"),
@@ -244,7 +241,7 @@ public class SettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(asSlot(3, 5), () -> new ItemBuilder(Material.OAK_LEAVES)
-                .setName("&a" + LANG.getText("menu.settings.item.tree-spread.title"))
+                .setName(LANG.getText("menu.settings.item.tree-spread.title"))
                 .addDescription(LANG.getText("menu.settings.item.tree-spread.description"))
                 .addSwitch("Currently:", randomSpreadEnabled)
                 .build()).setToggle(LANG.getText("menu.settings.item.tree-spread.title"),
@@ -256,7 +253,7 @@ public class SettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(asSlot(3, 6), () -> new ItemBuilder(Material.ROTTEN_FLESH)
-                .setName("&a" + LANG.getText("menu.settings.item.item-aging.title"))
+                .setName(LANG.getText("menu.settings.item.item-aging.title"))
                 .addDescription(LANG.getText("menu.settings.item.item-aging.description"))
                 .addSwitch("Currently:", ageItemsEnabled)
                 .build()).setToggle(LANG.getText("menu.settings.item.item-aging.title"),
@@ -267,11 +264,9 @@ public class SettingsMenu extends GlobalMenu {
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));
 
-        setButton(new Button(asSlot(3, 8), () -> new ItemBuilder(Material.WRITABLE_BOOK)
-                .setName("&a" + LANG.getText("menu.settings.item.reset-config.title"))
-                .addDescription(LANG.getText("menu.settings.item.reset-config.description"))
-                .addLore("&e" + LANG.getText("menu.common.reset"))
-                .build())
+        setButton(new SimpleButton(asSlot(3, 8), Material.WRITABLE_BOOK)
+                .setLangEngine(LANG).context("menu.settings.item.reset-config")
+                .common(SimpleButton.Common.RESET)
                 .onClick(player -> {
                     PLUGIN.saveResource("temperature-config.yml", true);
                     PLUGIN.saveResource("config.yml", true);
@@ -279,19 +274,17 @@ public class SettingsMenu extends GlobalMenu {
                     CONFIG.reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                     player.closeInventory();
-                    player.sendMessage(StringUtil.color(PluginData.PREFIX + "&aReset Config back to default."));
+                    player.sendMessage(StringUtil.color(PluginData.PREFIX + "Reset Config back to default."));
                 }));
 
-        setButton(new Button(asSlot(4, 8), () -> new ItemBuilder(Material.BOOK)
-                .setName("&a" + LANG.getText("menu.settings.item.reload-config.title"))
-                .addDescription(LANG.getText("menu.settings.item.reload-config.description"))
-                .addLore("&e" + LANG.getText("menu.common.reload"))
-                .build())
+        setButton(new SimpleButton(asSlot(4, 8), Material.BOOK)
+                .setLangEngine(LANG).context("menu.settings.item.reload-config")
+                .common(SimpleButton.Common.RELOAD)
                 .onClick(player -> {
                     CONFIG.reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                     player.closeInventory();
-                    player.sendMessage(StringUtil.color(PluginData.PREFIX + "&aReloaded Config."));
+                    player.sendMessage(StringUtil.color(PluginData.PREFIX + "Reloaded Config."));
                 }));
     }
 }

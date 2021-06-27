@@ -65,7 +65,7 @@ public class OtherSettingsMenu extends GlobalMenu {
         addBackButton(menuManager, Menus.SETTINGS);
 
         setButton(new Button(asSlot(1, 3), () -> new ItemBuilder(Material.PAPER)
-                .setName("&a" + le.getText("menu.other.update-notify.title"))
+                .setName(le.getText("menu.other.update-notify.title"))
                 .addDescription(le.getText("menu.other.update-notify.description"))
                 .addSwitch("Currently:", updateNotify)
                 .build()).setToggle(le.getText("menu.other.update-notify.title"),
@@ -77,7 +77,7 @@ public class OtherSettingsMenu extends GlobalMenu {
                 }));
 
         setButton(new Button(asSlot(1, 4), () -> new ItemBuilder(Material.KNOWLEDGE_BOOK)
-                .setName("&a" + le.getText("menu.other.update-checks.title"))
+                .setName(le.getText("menu.other.update-checks.title"))
                 .addDescription(le.getText("menu.other.update-checks.description"))
                 .addSwitch("Currently:", updateCheck)
                 .build()).setToggle(le.getText("menu.other.update-checks.title"),

@@ -16,6 +16,7 @@
 
 package me.masstrix.eternalnature.menus;
 
+import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
 import org.bukkit.Bukkit;
@@ -33,7 +34,7 @@ import java.util.*;
 public abstract class GlobalMenu implements Configurable {
 
     static final ItemStack BACK_ICON = new ItemBuilder(Material.ARROW)
-            .setName("&a⬅ Back").build();
+            .setName(PluginData.Colors.PRIMARY + "⬅ Back").build();
 
     private final int slots;
     private final String ID;

@@ -17,6 +17,7 @@
 package me.masstrix.eternalnature.menus.settings;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.config.Configuration;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
@@ -83,7 +84,7 @@ public class TempScanningMenu extends GlobalMenu {
 
         // Use Blocks
         setButton(new Button(asSlot(1, col++), () -> new ItemBuilder(Material.GRASS_BLOCK)
-                .setName("&a" + LE.getText("menu.temp.scanning.use-blocks.title"))
+                .setName(LE.getText("menu.temp.scanning.use-blocks.title"))
                 .addDescription(LE.getText("menu.temp.scanning.use-blocks.description"))
                 .addSwitch("Currently:", useBlocks)
                 .build()).setToggle(LE.getText("menu.temp.enabled.title"),
@@ -96,7 +97,7 @@ public class TempScanningMenu extends GlobalMenu {
 
         // Use Biomes
         setButton(new Button(asSlot(1, col++), () -> new ItemBuilder(Material.JUNGLE_SAPLING)
-                .setName("&a" + LE.getText("menu.temp.scanning.use-biomes.title"))
+                .setName(LE.getText("menu.temp.scanning.use-biomes.title"))
                 .addDescription(LE.getText("menu.temp.scanning.use-biomes.description"))
                 .addSwitch("Currently:", useBiomes)
                 .build()).setToggle(LE.getText("menu.temp.enabled.title"),
@@ -109,7 +110,7 @@ public class TempScanningMenu extends GlobalMenu {
 
         // Use Weather
         setButton(new Button(asSlot(1, col++), () -> new ItemBuilder(Material.WATER_BUCKET)
-                .setName("&a" + LE.getText("menu.temp.scanning.use-weather.title"))
+                .setName(LE.getText("menu.temp.scanning.use-weather.title"))
                 .addDescription(LE.getText("menu.temp.scanning.use-weather.description"))
                 .addSwitch("Currently:", useWeather)
                 .build()).setToggle(LE.getText("menu.temp.enabled.title"),
@@ -122,7 +123,7 @@ public class TempScanningMenu extends GlobalMenu {
 
         // Use Items
         setButton(new Button(asSlot(1, col++), () -> new ItemBuilder(Material.LEATHER_HELMET)
-                .setName("&a" + LE.getText("menu.temp.scanning.use-items.title"))
+                .setName(LE.getText("menu.temp.scanning.use-items.title"))
                 .addDescription(LE.getText("menu.temp.scanning.use-items.description"))
                 .addSwitch("Currently:", useItems)
                 .build()).setToggle(LE.getText("menu.temp.enabled.title"),
@@ -135,7 +136,7 @@ public class TempScanningMenu extends GlobalMenu {
 
         // Use Environment
         setButton(new Button(asSlot(1, col), () -> new ItemBuilder(Material.SEAGRASS)
-                .setName("&a" + LE.getText("menu.temp.scanning.use-environment.title"))
+                .setName(LE.getText("menu.temp.scanning.use-environment.title"))
                 .addDescription(LE.getText("menu.temp.scanning.use-environment.description"))
                 .addSwitch("Currently:", useEnvironment)
                 .build()).setToggle(LE.getText("menu.temp.enabled.title"),
@@ -157,9 +158,9 @@ public class TempScanningMenu extends GlobalMenu {
             playVolumeChange(player, 2, 3, Sound.BLOCK_NOTE_BLOCK_PLING, true);
         }));
         setButton(new Button(asSlot(2, 7), () -> new ItemBuilder(Material.SCAFFOLDING)
-                .setName("&a" + LE.getText("menu.temp.scanning.area.title"))
+                .setName(LE.getText("menu.temp.scanning.area.title"))
                 .addDescription(LE.getText("menu.temp.scanning.area.description"))
-                .addLore("Currently: &a" + area)
+                .addLore("Currently: " + PluginData.Colors.SECONDARY + area)
                 .build()));
         setButton(new Button(asSlot(3, 7), () -> new ItemBuilder(Material.RED_STAINED_GLASS_PANE)
                 .setName("&c-1")
@@ -182,9 +183,9 @@ public class TempScanningMenu extends GlobalMenu {
             playVolumeChange(player, 2, 3, Sound.BLOCK_NOTE_BLOCK_PLING, true);
         }));
         setButton(new Button(asSlot(2, 8), () -> new ItemBuilder(Material.SCAFFOLDING)
-                .setName("&a" + LE.getText("menu.temp.scanning.height.title"))
+                .setName(LE.getText("menu.temp.scanning.height.title"))
                 .addDescription(LE.getText("menu.temp.scanning.height.description"))
-                .addLore("Currently: &a" + height)
+                .addLore("Currently: " + PluginData.Colors.SECONDARY + height)
                 .build()));
         setButton(new Button(asSlot(3, 8), () -> new ItemBuilder(Material.RED_STAINED_GLASS_PANE)
                 .setName("&c-1")

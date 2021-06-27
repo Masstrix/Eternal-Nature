@@ -17,14 +17,12 @@
 package me.masstrix.eternalnature.menus.settings;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.config.Configuration;
 import me.masstrix.eternalnature.config.StatusRenderMethod;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
-import me.masstrix.eternalnature.menus.Button;
-import me.masstrix.eternalnature.menus.GlobalMenu;
-import me.masstrix.eternalnature.menus.MenuManager;
-import me.masstrix.eternalnature.menus.Menus;
+import me.masstrix.eternalnature.menus.*;
 import me.masstrix.eternalnature.util.MathUtil;
 import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.Material;
@@ -80,7 +78,7 @@ public class TempSettingsMenu extends GlobalMenu {
 
         // Enabled toggle
         setButton(new Button(asSlot(1, 2), () -> new ItemBuilder(Material.REDSTONE_TORCH)
-                .setName("&a" + le.getText("menu.temp.enabled.title"))
+                .setName(le.getText("menu.temp.enabled.title"))
                 .addDescription(le.getText("menu.temp.enabled.description"))
                 .addSwitch("Currently:", enabled)
                 .build()).setToggle(le.getText("menu.temp.enabled.title"),
@@ -94,17 +92,19 @@ public class TempSettingsMenu extends GlobalMenu {
         // Temperature damage toggle
         setButton(new Button(asSlot(1, 4), () -> {
             String damageDescription = le.getText("menu.temp.damage.description");
-            damageDescription = damageDescription.replace("%cold_threshold%", "&e" + coldThr + "&7");
-            damageDescription = damageDescription.replace("%heat_threshold%", "&e" + heatThr + "&7");
+            damageDescription = damageDescription.replace("%cold_threshold%",
+                    PluginData.Colors.SECONDARY + String.valueOf(coldThr) + PluginData.Colors.MESSAGE);
+            damageDescription = damageDescription.replace("%heat_threshold%",
+                    PluginData.Colors.SECONDARY + String.valueOf(heatThr) + PluginData.Colors.MESSAGE);
 
             double delaySec = MathUtil.round(damageDelay / 1000D, 1);
             double damageRounded = MathUtil.round(damageDealt, 1);
 
             return new ItemBuilder(Material.IRON_SWORD)
-                    .setName("&a" + le.getText("menu.temp.damage.title"))
+                    .setName(le.getText("menu.temp.damage.title"))
                     .addDescription(damageDescription)
-                    .addLore(le.getText("menu.temp.damage.dealt") + ": &e" + damageRounded)
-                    .addLore(le.getText("menu.temp.damage.rate") + ": &e" + delaySec + "s")
+                    .addLore(le.getText("menu.temp.damage.dealt") + ": " + PluginData.Colors.SECONDARY + damageRounded)
+                    .addLore(le.getText("menu.temp.damage.rate") + ": " + PluginData.Colors.SECONDARY + delaySec + "s")
                     .addLore(" ")
                     .addSwitch("Currently:", doDamage)
                     .build();
@@ -117,21 +117,17 @@ public class TempSettingsMenu extends GlobalMenu {
                 }));
 
         // Temp Scanning menu
-        setButton(new Button(asSlot(1, 6), new ItemBuilder(Material.SCAFFOLDING)
-                .setName("&a" + le.getText("menu.temp.scanning.title"))
-                .addDescription(le.getText("menu.temp.scanning.description"))
-                .addLore("", "&e" + le.getText("menu.common.edit"))
-                .build())
-                .onClick(player -> {
-                    menuManager.getMenu(Menus.TEMP_SCANNING_SETTINGS).open(player);
-                }));
+        setButton(new SimpleButton(asSlot(1, 6), Material.SCAFFOLDING)
+                .setLangEngine(le).context("menu.temp.scanning")
+                .common(SimpleButton.Common.EDIT)
+                .onClick(player -> menuManager.getMenu(Menus.TEMP_SCANNING_SETTINGS).open(player)));
 
         setButton(new Button(asSlot(4, 4), () -> new ItemBuilder(Material.JUNGLE_SIGN)
-                .setName("&a" + le.getText("menu.temp.display.title"))
+                .setName(le.getText("menu.temp.display.title"))
                 .addDescription(le.getText("menu.temp.display.description"))
                 .addLore("Currently: &f" + renderMethod.getSimple(),
                         renderMethod.getDescription())
-                .addLore("&eClick to switch to &7" + renderMethod.opposite().getSimple())
+                .addAction("Click to switch to " + PluginData.Colors.MESSAGE + renderMethod.opposite().getSimple())
                 .build())
                 .onClick(player -> {
                     config.set("temperature.display.style", renderMethod.opposite().name());
@@ -141,7 +137,7 @@ public class TempSettingsMenu extends GlobalMenu {
 
         setButton(new Button(asSlot(4, 5), () -> {
             return new ItemBuilder(displayEnabled ? Material.LIME_BANNER : Material.GRAY_BANNER)
-                    .setName("&a" + le.getText("menu.display.enabled.title"))
+                    .setName(le.getText("menu.display.enabled.title"))
                     .addDescription(le.getText("menu.display.enabled.description"))
                     .addSwitch("Currently:", displayEnabled)
                     .build();
@@ -153,7 +149,7 @@ public class TempSettingsMenu extends GlobalMenu {
 
         setButton(new Button(asSlot(4, 3), () -> {
             return new ItemBuilder(Material.RED_DYE)
-                    .setName("&a" + le.getText("menu.temp.use-rgb.title"))
+                    .setName(le.getText("menu.temp.use-rgb.title"))
                     .addDescription(le.getText("menu.temp.use-rgb.description"))
                     .addSwitch("Currently:", useRgb)
                     .build();
