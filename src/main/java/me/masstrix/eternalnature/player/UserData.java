@@ -17,6 +17,7 @@
 package me.masstrix.eternalnature.player;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.api.EternalUser;
 import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.config.Configuration;
@@ -28,7 +29,9 @@ import me.masstrix.eternalnature.core.temperature.TemperatureUnit;
 import me.masstrix.eternalnature.core.world.WeatherType;
 import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
+import me.masstrix.eternalnature.core.world.wind.Wind;
 import me.masstrix.eternalnature.listeners.DeathListener;
+import me.masstrix.eternalnature.util.Direction;
 import me.masstrix.eternalnature.util.MathUtil;
 import me.masstrix.eternalnature.util.Stopwatch;
 import me.masstrix.lang.langEngine.LanguageEngine;
@@ -314,7 +317,7 @@ public class UserData implements EternalUser, Configurable {
             ComponentBuilder builder = new ComponentBuilder();
 
             builder.append("\n————————————————\n").color(ChatColor.GRAY);
-            builder.append("  Eternal Nature Debug Info\n").color(ChatColor.DARK_GREEN);
+            builder.append("  Eternal Nature Debug Info\n").color(PluginData.Colors.PRIMARY);
 
             builder.append("").color(ChatColor.GRAY).italic(true);
             if (!isTmpEnabled) builder.append("\n • Temperature is disabled.");
@@ -324,11 +327,11 @@ public class UserData implements EternalUser, Configurable {
             // Temperature debug info
             if (isTmpEnabled) {
                 builder.append("\nTemperature: ", ComponentBuilder.FormatRetention.NONE)
-                        .color(ChatColor.WHITE)
+                        .color(PluginData.Colors.MESSAGE)
                         .append("" + MathUtil.round(temperature, 2))
-                        .color(ChatColor.DARK_GREEN)
+                        .color(PluginData.Colors.SECONDARY)
                         .append("/" + MathUtil.round(tempExact, 2))
-                        .color(ChatColor.GRAY);
+                        .color(PluginData.Colors.TERTIARY);
                 if (isBurning) builder.append(" ☀").color(ChatColor.RED)
                         .append("(DMG)").color(ChatColor.GRAY);
                 if (isFreezing) builder.append(" ※").color(ChatColor.AQUA)
@@ -338,32 +341,48 @@ public class UserData implements EternalUser, Configurable {
             // Hydration debug info
             if (isHydEnabled) {
                 builder.append("\nHydration: ", ComponentBuilder.FormatRetention.NONE)
-                        .color(ChatColor.WHITE)
+                        .color(PluginData.Colors.MESSAGE)
                         .append("" + MathUtil.round(hydration, 2))
-                        .color(ChatColor.DARK_GREEN);
+                        .color(PluginData.Colors.SECONDARY);
             }
 
             if (isThirstEnabled) {
                 builder.append("\nThirst: ", ComponentBuilder.FormatRetention.NONE)
-                        .color(ChatColor.WHITE)
+                        .color(PluginData.Colors.MESSAGE)
                         .append("" + thirstAmount + " | " + thirstTimer)
-                        .color(ChatColor.DARK_GREEN);
+                        .color(PluginData.Colors.SECONDARY);
             }
 
-            builder.append("\n\n");
-            builder.append("Click Here").color(ChatColor.GREEN)
-                    .bold(true)
-                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("\u00A7eClick to disable.")))
-                    .event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/en debug"));
-            builder.append(" to disable debug mode.", ComponentBuilder.FormatRetention.NONE).color(ChatColor.DARK_GREEN);
+            // Wind
+            Wind wind = getWorld().getWind();
+            Location loc = player.getLocation();
+            Vector windForce = wind.getForce(loc.getX(), loc.getY(), loc.getZ());
+            Vector windDirection = wind.getWindDirection(loc.getX(), loc.getZ());
+            Direction cardinol = Direction.compass(windDirection.getX(), windDirection.getZ());
+
+            builder.append("\n\nWind Force: ", ComponentBuilder.FormatRetention.NONE)
+                    .color(PluginData.Colors.MESSAGE)
+                    .append(String.format("%.3f", windForce.length()))
+                    .color(PluginData.Colors.SECONDARY);
+            builder.append("\nWind Direction: ", ComponentBuilder.FormatRetention.NONE)
+                    .color(PluginData.Colors.MESSAGE)
+                    .append(String.format("%.3f (%s)",
+                            Math.toDegrees(Math.atan2(windDirection.getX(), windDirection.getZ())),
+                            cardinol.getShortHand()))
+                    .color(PluginData.Colors.SECONDARY);
 
             builder.append("\n\n");
-            builder.append("Click Here").color(ChatColor.GREEN)
-                    .bold(true)
-                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("\u00A7eClick to disable.")))
+            builder.append("Click Here").color(PluginData.Colors.ACTION)
+                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("\u00A7eClick to disable Mode.")))
+                    .event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/en debug"));
+            builder.append(" to disable debug mode.", ComponentBuilder.FormatRetention.NONE)
+                    .color(PluginData.Colors.MESSAGE);
+            builder.append("\n");
+            builder.append("Click Here").color(PluginData.Colors.ACTION)
+                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("\u00A7eClick to disable Messages.")))
                     .event(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
                             "/en debug set " + DebugOptions.Type.LOG_OUTPUT + " false"));
-            builder.append(" to disable these messages.", ComponentBuilder.FormatRetention.NONE).color(ChatColor.YELLOW);
+            builder.append(" to disable these messages.", ComponentBuilder.FormatRetention.NONE).color(PluginData.Colors.MESSAGE);
 
             builder.append("\n————————————————").color(ChatColor.GRAY);
 
