@@ -18,9 +18,13 @@ package me.masstrix.eternalnature.core.particle;
 
 import me.masstrix.eternalnature.EternalEngine;
 import me.masstrix.eternalnature.api.Leaf;
-import me.masstrix.eternalnature.core.entity.shadow.*;
+import me.masstrix.eternalnature.core.entity.shadow.ArmorStandBodyPart;
+import me.masstrix.eternalnature.core.entity.shadow.ItemSlot;
+import me.masstrix.eternalnature.core.entity.shadow.ShaArmorStand;
 import me.masstrix.eternalnature.core.item.CustomItem;
 import me.masstrix.eternalnature.events.LeafSpawnEvent;
+import me.masstrix.eternalnature.util.Direction;
+import me.masstrix.eternalnature.util.LiquidFlow;
 import me.masstrix.eternalnature.util.MathUtil;
 import me.masstrix.eternalnature.util.SimplexNoiseOctave;
 import org.bukkit.Bukkit;
@@ -29,6 +33,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Levelled;
 import org.bukkit.entity.Player;
+import org.bukkit.util.BoundingBox;
 import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
 
@@ -39,12 +44,15 @@ public class LeafParticle extends BaseParticle implements Leaf {
     private SimplexNoiseOctave movementNoise;
     private ShaArmorStand leaf;
     private double animationOffset;
-    private boolean hasSettled;
+    private boolean hasSettled, wasOnGround;
     // This defines if the particle should float on top of water.
     // Currently unused.
     private boolean willFloat;
     private boolean waitToRestOnGround;
     private double fallRate;
+    private int maxLifetime = 20 * 30;
+    private int ticksNotInAir = 0;
+    private int maxTicksNotInAir = 20 * 3;
     private final double ARM_OFFSET = degreesToEuler(MathUtil.randomDouble() * 360);
 
     /**
@@ -90,10 +98,13 @@ public class LeafParticle extends BaseParticle implements Leaf {
             });
         }
         lifeTime = MathUtil.randomInt(options.lifeMin, options.lifeMax);
-        fallRate = MathUtil.randomDouble(0.01, 0.1);
+        fallRate = MathUtil.randomDouble(0.04, 0.1);
         movementNoise = new SimplexNoiseOctave(MathUtil.randomInt(10000));
-        willFloat = MathUtil.chance(0.3);
         waitToRestOnGround = options.forceReachGround;
+
+        // TODO change this to a tick based system that ticks down and sinks after it reaches 0.
+        //      this should start with a random number with a 20% chance to start at 0
+        willFloat = MathUtil.chance(0.8);
 
         loc.setYaw(MathUtil.randomInt(0, 360));
         leaf = new ShaArmorStand(loc);
@@ -135,7 +146,9 @@ public class LeafParticle extends BaseParticle implements Leaf {
     @Override
     public void tick() {
         // Remove the particle if it's lifetime is reached
-        if (super.lifeTime-- <= 0 && !waitToRestOnGround) {
+        if ((super.lifeTime-- <= 0 && !waitToRestOnGround)
+                || ticksLived++ > maxLifetime
+                || ticksNotInAir > maxTicksNotInAir) {
             remove();
             super.lifeTime = 0;
             return;
@@ -146,32 +159,57 @@ public class LeafParticle extends BaseParticle implements Leaf {
             remove();
             return;
         }
+
         Block block = loc.getBlock();
-        boolean wasHasSettled = hasSettled;
-        hasSettled = !block.isPassable();
-        boolean inWater = loc.getBlock().getType() == Material.WATER;
-        if (inWater && !hasSettled && willFloat) {
-            // TODO make leaf particles interact with flowing water.
-            //      Also make some of them float on the top.
-            //      Water direction is client side so that will need to be worked
-            //      out to get the flowing direction.
+        boolean inWater = block.isLiquid();
+
+        // Defines the height of the block the entity is currently above.
+        double blockHeight = 1;
+        BoundingBox blockBounds = block.getBoundingBox();
+        blockHeight = block.getY() + blockBounds.getHeight();
+
+        // Tick the not int air ticks if it's not otherwise reset them.
+        if (hasSettled || inWater) ticksNotInAir++;
+        else ticksNotInAir = 0;
+
+        // Add velocity in the direction of the waters flow
+        if (inWater) {
+            // TODO make leaf particle sink slowly if it is sinking / not floating
+            // TODO make particles float on top of water. Currently they die instantly when going in source blocks
+
+            Levelled data = (Levelled) block.getBlockData();
+            int waterLevel = data.getMaximumLevel() - data.getLevel();
+            double waterHeight = data.getLevel() == 0 ? 0 : data.getLevel() / (double) data.getMaximumLevel();
+
+            blockHeight -= waterHeight;
+
+            // Add water flow velocity
+            Direction flow = LiquidFlow.getFlowDir(block, false);
+            Vector flowAdd = flow.asVector().normalize().multiply(0.01);
+            flowAdd.multiply(waterLevel);
+            flowAdd.multiply(0.2);
+            velocity.add(flowAdd);
+
+            // Water buoyancy if on/in water
+            if (loc.getY() <= blockHeight + 0.05)
+                velocity.add(new Vector(0, 0.05, 0));
         }
+
+        hasSettled = loc.getY() <= blockHeight;
 
         // If the waitToRestOnGround is set to true and the particle just hit the ground
         // set the particles life to be an appropriate value to last some amount of time
         // on the ground.
-        if (!wasHasSettled && hasSettled && waitToRestOnGround && lifeTime < 0) {
+        if (!wasOnGround && hasSettled && waitToRestOnGround && lifeTime < 0) {
             waitToRestOnGround = false;
-            while(lifeTime < 0) lifeTime += 15;
+            while(lifeTime < 0) lifeTime += 40;
         }
 
         // Burn the particle
-        if (loc.getBlock().getType() == Material.LAVA) {
-            Levelled levelled = (Levelled) block.getBlockData();
-            double y = block.getY() + (levelled.getLevel() / (double) levelled.getMaximumLevel());
-
+        Material bt = block.getType();
+        if (bt == Material.LAVA || bt == Material.FIRE || bt == Material.SOUL_FIRE) {
             // Remove particle if in the lava
-            if (loc.getY() < y) {
+            if (loc.getY() <= blockHeight) {
                 this.alive = false;
                 remove();
                 return;
@@ -185,9 +223,11 @@ public class LeafParticle extends BaseParticle implements Leaf {
             velocity.add(force);
         }
 
+        // Gravity
         velocity.add(new Vector(0, !hasSettled ? -fallRate / 6 : 0, 0));
 
         if (!hasSettled) {
+            // Random floating noise
             velocity.add(new Vector(
                     movementNoise.noise(animationOffset) * 0.01,
                     0,
@@ -198,12 +238,14 @@ public class LeafParticle extends BaseParticle implements Leaf {
             double poseZ = movementNoise.noise(animationOffset) * 10;
             leaf.setPose(ArmorStandBodyPart.RIGHT_ARM, new Vector(poseX + ARM_OFFSET, poseY, poseZ));
         } else {
+            // Hand animations for side to side floating animation
             Vector pose = leaf.getPose(ArmorStandBodyPart.RIGHT_ARM);
             pose.divide(new Vector(1.2, 1.2, 1.2));
             leaf.setPose(ArmorStandBodyPart.RIGHT_ARM, pose);
         }
         velocity.divide(new Vector(1.2, 2, 1.2));
         animationOffset += 0.01;
+        wasOnGround = hasSettled;
     }
 
     private static Location getArmTip(ShaArmorStand as) {

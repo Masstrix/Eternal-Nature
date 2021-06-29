@@ -1,80 +1,77 @@
 package me.masstrix.eternalnature.command;
 
 import me.masstrix.eternalnature.EternalNature;
-import me.masstrix.eternalnature.core.entity.shadow.ItemSlot;
-import me.masstrix.eternalnature.core.entity.shadow.ShaArmorStand;
-import org.bukkit.Bukkit;
+import me.masstrix.eternalnature.util.BlockScanner;
+import me.masstrix.eternalnature.util.BlockScannerTask;
+import me.masstrix.eternalnature.util.Direction;
+import me.masstrix.eternalnature.util.LiquidFlow;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.block.data.Levelled;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Vector;
 
 /**
  * This command is intended for test uses only for dev work and testing new features.
  */
 public class TestCommand {
 
+    private BukkitTask task;
+
     public void execute(Player player, String[] args) {
 
-        ShaArmorStand armorStand = new ShaArmorStand(player.getLocation());
-        armorStand.setSlot(ItemSlot.HEAD, new ItemStack(Material.AZALEA));
-        armorStand.setSlot(ItemSlot.CHEST, new ItemStack(Material.CHAINMAIL_CHESTPLATE));
-        armorStand.setSlot(ItemSlot.FEET, new ItemStack(Material.IRON_BOOTS));
-        armorStand.setCustomName("working");
-        armorStand.setCustomNameVisible(true);
-        armorStand.setSmall(true);
 
-        for (Player p : Bukkit.getOnlinePlayers())
-            armorStand.sendTo(p);
+        BlockScannerTask t = block -> {
+            if (block.getType() != Material.WATER) return;
 
-        new BukkitRunnable() {
-            int i = 0;
-            @Override
-            public void run() {
-                foo(this, i++, armorStand);
+            Levelled data = (Levelled) block.getBlockData();
+            Direction flow = LiquidFlow.getFlowDir(block, false);
+
+            Location center = block.getLocation().add(0.5, ((float) data.getLevel() / (float) data.getMaximumLevel()) + 1F, 0.5);
+
+            if (flow == LiquidFlow.SOURCE) {
+                block.getWorld().spawnParticle(Particle.SCRAPE, center, 1, 0, 0, 0, 0);
+                return;
             }
-        }.runTaskTimer(EternalNature.getPlugin(EternalNature.class), 20 * 3, 20);
-    }
 
-    private void foo(BukkitRunnable r, int id, ShaArmorStand armorStand) {
-        int task = 0;
-        if (id == task++) {
-            armorStand.setSmall(false);
-            armorStand.setCustomNameVisible(false);
-        }
-        if (id == task++) {
-            armorStand.setSmall(true);
-            armorStand.setArms(true);
-        }
-        else if (id == task++) {
-            armorStand.setSlot(ItemSlot.MAINHAND, new ItemStack(Material.AMETHYST_BLOCK));
-            armorStand.setSlot(ItemSlot.CHEST, new ItemStack(Material.GOLDEN_CHESTPLATE));
-        }
-        else if (id == task++) {
-            armorStand.setMarker(true);
-        }
-        else if (id == task++) {
-            armorStand.move(0, 0.5, 0);
-        }
-        else if (id == task++) {
-            armorStand.move(0, 0.5, 0);
-        }
-        else if (id == task++) {
-            armorStand.setOnFire(true);
-        }
-        else if (id == task++) {
-            armorStand.setFrozenTicks(100);
-        }
-        else if (id == task++) {
-            armorStand.setCustomName("wooooo");
-            armorStand.setCustomNameVisible(true);
-        }
-        else if (id == task++) {
-            armorStand.setInvisible(true);
-        }
-        else if (id == task++) {
-            r.cancel();
-            armorStand.remove();
+            if (flow == Direction.UNKNOWN) {
+                block.getWorld().spawnParticle(Particle.VILLAGER_ANGRY, center, 1, 0, 0, 0, 0);
+                return;
+            }
+
+            if (flow == Direction.NONE) {
+                block.getWorld().spawnParticle(Particle.TOTEM, center, 1, 0, 0, 0, 0);
+                return;
+            }
+
+            Vector dirAdd = flow.asVector().normalize().multiply(0.1);
+
+
+            for (int i = 0; i < 5; i++) {
+                block.getWorld().spawnParticle(i == 0 ? Particle.SOUL_FIRE_FLAME : Particle.FLAME, center, 1, 0, 0, 0, 0);
+                center.add(dirAdd);
+            }
+        };
+
+        BlockScanner s = new BlockScanner(EternalNature.getPlugin(EternalNature.class))
+                .setScanScale(5, 3)
+                .setFidelity(1)
+                .setHeightOffset(BlockScanner.Position.DOWN)
+                .setLocation(player.getLocation());
+
+        if (task != null && !task.isCancelled()) {
+            task.cancel();
+        } else {
+            task = new BukkitRunnable() {
+                @Override
+                public void run() {
+                    s.setLocation(player.getLocation());
+                    s.scan(t);
+                }
+            }.runTaskTimer(EternalNature.getPlugin(EternalNature.class), 0, 5);
         }
     }
 }

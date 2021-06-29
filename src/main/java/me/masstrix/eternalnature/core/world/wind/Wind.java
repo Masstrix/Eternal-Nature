@@ -227,7 +227,7 @@ public class Wind implements Ticking, Configurable {
      * @param entity entity to push by the wind.
      */
     public void push(Entity entity) {
-        if (isGusty()) return;
+        //if (isGusty()) return;
 
         if (entity instanceof Player) {
             Player player = (Player) entity;

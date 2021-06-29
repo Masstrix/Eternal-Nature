@@ -51,17 +51,20 @@ public class BlockScanner {
         return this;
     }
 
-    public void setHeightOffset(Position position) {
+    public BlockScanner setHeightOffset(Position position) {
         this.yOffset = position;
+        return this;
     }
 
-    public void setFidelity(int fidelity) {
+    public BlockScanner setFidelity(int fidelity) {
         this.fidelity = fidelity;
+        return this;
     }
 
-    public void setScanScale(int area, int height) {
+    public BlockScanner setScanScale(int area, int height) {
         this.area = area;
         this.height = height;
+        return this;
     }
 
     public boolean isDoneScanning() {
@@ -73,8 +76,9 @@ public class BlockScanner {
      *
      * @param loc location of center point.
      */
-    public void setLocation(Location loc) {
+    public BlockScanner setLocation(Location loc) {
         this.loc = loc;
+        return this;
     }
 
     public void scan() {

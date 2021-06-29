@@ -153,7 +153,7 @@ public class LeafEmitter implements EternalWorker, Configurable {
             @Override
             public void run() {
                 // Emit entities otherwise
-                if (emitterType == EmitterType.PARTICLE) {
+                if (emitterType == EmitterType.ENTITY) {
                     Set<LeafParticle> dead = new HashSet<>();
                     for (LeafParticle effect : PARTICLES) {
                         effect.tick();

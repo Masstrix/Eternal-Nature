@@ -35,6 +35,7 @@ public abstract class BaseParticle implements Ticking, EternalParticle {
     Wind wind;
     boolean alive;
     int lifeTime;
+    int ticksLived;
     Vector velocity = new Vector();
 
     public BaseParticle setForces(Wind wind) {
