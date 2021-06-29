@@ -20,10 +20,13 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import me.masstrix.version.Version;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,7 +35,6 @@ public class VersionChecker {
     private static final String SPIGET_URL = "https://api.spiget.org/v2/resources/";
     private static final String LATEST_VERSION = "/versions/latest";
     private static final Gson gson = new Gson();
-    private static ExecutorService task = Executors.newSingleThreadExecutor(r -> new Thread(r, "VersionChecker"));
     private final int ID;
     private final String CURRENT;
 
@@ -47,7 +49,7 @@ public class VersionChecker {
      * @param callback callback method to be ran when the task is complete.
      */
     public void run(VersionCallback callback) {
-        task.execute(() -> {
+        Thread thread = new Thread(() -> {
             try {
                 URL url = new URL(SPIGET_URL + ID + LATEST_VERSION + "?" + System.currentTimeMillis());
                 HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
@@ -70,10 +72,11 @@ public class VersionChecker {
                     e.printStackTrace();
                     callback.done(new VersionCheckInfo(CURRENT, Version.UNKNOWN));
                 }
-            } catch (Exception e) {
+            } catch (IOException e) {
                 e.printStackTrace();
                 callback.done(new VersionCheckInfo(CURRENT, Version.UNKNOWN));
             }
         });
+        thread.start();
     }
 }
