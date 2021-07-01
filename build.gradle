@@ -1,11 +1,9 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
-plugins {
-    id 'java'
-}
+apply plugin: 'java'
 
 group 'me.masstrix'
-version '2.1.2'
+version '2.2'
 
 sourceCompatibility = 16
 
@@ -25,7 +23,8 @@ repositories {
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    // TODO fix testCompile not working
+    //testCompile group: 'junit', name: 'junit', version: '5.7.2'
     compileOnly 'org.spigotmc:spigot:1.17-R0.1-SNAPSHOT'
     compileOnly 'me.clip:placeholderapi:2.10.6'
 }
