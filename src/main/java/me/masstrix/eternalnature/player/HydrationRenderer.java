@@ -41,11 +41,12 @@ public class HydrationRenderer implements StatRenderer {
     private final Player PLAYER;
     private final ChatColor[] COLORS = new ChatColor[6];
     private BaseComponent[] barText;
-    private StatusRenderMethod renderMethod = StatusRenderMethod.BOSSBAR;
+    private StatusRenderMethod renderMethod = StatusRenderMethod.BOSSBAR, lastRenderMethod;
     private BossBar bossBar;
     private boolean isEnabled;
     private boolean warningFlash;
-    private double hydration;
+    // Default to an invalid number to always update on first render
+    private double lastHydration = -1;
     private String icon;
 
     public HydrationRenderer(Player player, UserData data) {
@@ -125,21 +126,20 @@ public class HydrationRenderer implements StatRenderer {
             return;
         }
 
-        double hydration = USER.getHydration();
-
-        boolean shouldNotUpdate = this.hydration == hydration
-                && USER.getHydration() > 4
-                && !USER.ACTIONBAR.isPrepared();
+        double currentHydration = USER.getHydration();
+        boolean hydChanged = this.lastHydration != currentHydration;
+        boolean dmChanged = this.lastRenderMethod != this.renderMethod;
+        this.lastRenderMethod = this.renderMethod;
+        this.lastHydration = currentHydration;
 
         if (renderMethod == StatusRenderMethod.BOSSBAR) {
             if (bossBar == null) {
                 bossBar = Bukkit.createBossBar("Hydration", BarColor.BLUE, BarStyle.SEGMENTED_10);
                 bossBar.addPlayer(PLAYER);
             }
-            if (shouldNotUpdate) return;
-            bossBar.setProgress(Math.abs(hydration / 20));
+            if (!hydChanged && !dmChanged) return;
+            bossBar.setProgress(Math.abs(currentHydration / 20));
             bossBar.setTitle(StringUtil.color(FORMAT.getLegacy(true)));
-            this.hydration = hydration;
             return;
         } else if (bossBar != null){
             bossBar.removeAll();
@@ -147,15 +147,14 @@ public class HydrationRenderer implements StatRenderer {
         }
 
         if (renderMethod == StatusRenderMethod.ACTIONBAR) {
-            if (shouldNotUpdate) return;
+            if (!hydChanged && dmChanged) return;
             barText = FORMAT.getFormatted(true);
             USER.ACTIONBAR.prepare();
-            this.hydration = hydration;
             return;
         }
 
         if (renderMethod == StatusRenderMethod.XP_BAR) {
-            float percentage = (float) (hydration / 20F);
+            float percentage = (float) (currentHydration / 20F);
             PLAYER.setExp(MathUtil.minMax(percentage, 0, 1));
             PLAYER.setLevel(0);
         }
@@ -171,7 +170,7 @@ public class HydrationRenderer implements StatRenderer {
         StringBuilder bubbleBar = new StringBuilder();
         for (int i = 0; i < 10; i++) {
             int pos = i * 2;
-            int id = pos < hydration && pos + 1 < hydration ? 0 : pos < hydration && pos + 1 >= hydration ? 1 : 2;
+            int id = pos < lastHydration && pos + 1 < lastHydration ? 0 : pos < lastHydration && pos + 1 >= lastHydration ? 1 : 2;
             bubbleBar.append(COLORS[USER.isThirsty() ? id + 3 : id]).append(icon);
         }
         return bubbleBar.toString();
@@ -182,14 +181,14 @@ public class HydrationRenderer implements StatRenderer {
         for (int i = 0; i < 10; i++) {
             builder.append(icon);
             int pos = i * 2;
-            int id = pos < hydration && pos + 1 < hydration ? 0 : pos < hydration && pos + 1 >= hydration ? 1 : 2;
+            int id = pos < lastHydration && pos + 1 < lastHydration ? 0 : pos < lastHydration && pos + 1 >= lastHydration ? 1 : 2;
             builder.color(COLORS[USER.isThirsty() ? id + 3 : id]);
         }
         return builder.create();
     }
 
     public String getLegacy() {
-        boolean update = this.hydration != hydration
+        boolean update = this.lastHydration != lastHydration
                 || USER.getHydration() <= 4
                 || USER.ACTIONBAR.isPrepared();
         return FORMAT.getLegacy(update);
