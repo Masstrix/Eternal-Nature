@@ -39,8 +39,8 @@ public class Actionbar {
         this.player = player;
         items = new TreeSet<>((incoming, checked) -> {
             if (incoming == checked) return 0;
-            ActionbarItem.Before before = incoming.getClass().getAnnotation(ActionbarItem.Before.class);
-            return before != null && before.value().equals(incoming.getName()) ? -1 : 1;
+            ActionbarItem.Before b = incoming.getClass().getAnnotation(ActionbarItem.Before.class);
+            return b != null && b.value().equals(checked.getName()) ? -1 : 1;
         });
     }
 
