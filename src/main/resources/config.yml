@@ -42,7 +42,12 @@ global:
     life:
       min: 120
       max: 150
-    wait-to-rest: false
+    always-reach-ground: false
+    emitter-type: ENTITY
+    particle-settings:
+      bunch-max: 2
+      bunch-min: 1
+      particle: falling_spore_blossom
   randomly-spread-trees:
     enabled: true
     range: 20

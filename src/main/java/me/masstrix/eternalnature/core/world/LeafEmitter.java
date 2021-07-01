@@ -23,10 +23,12 @@ import me.masstrix.eternalnature.core.particle.LeafParticle;
 import me.masstrix.eternalnature.player.UserData;
 import me.masstrix.eternalnature.util.BlockScanner;
 import me.masstrix.eternalnature.util.EnumUtils;
+import me.masstrix.eternalnature.util.IngestedTask;
 import me.masstrix.eternalnature.util.MathUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Leaves;
@@ -48,8 +50,38 @@ public class LeafEmitter implements EternalWorker, Configurable {
      * it would be more performant to use the particles otherwise entities will give
      * a more 3D effect and work more universally with additional control for wind.
      */
-    enum EmitterType {
-        PARTICLE, ENTITY
+    public enum EmitterType {
+        PARTICLE(1, "Particle") {
+            @Override
+            public EmitterType next() {
+                return ENTITY;
+            }
+        },
+        ENTITY(10, "Entity") {
+            @Override
+            public EmitterType next() {
+                return PARTICLE;
+            }
+        };
+
+        private final int TICK_RATE;
+        private final String SIMPLE;
+
+        EmitterType(int tickRate, String simple) {
+            this.TICK_RATE = tickRate;
+            this.SIMPLE = simple;
+        }
+
+        public String getSimple() {
+            return SIMPLE;
+        }
+
+        /**
+         * @return the next emitter type in the enum.
+         */
+        public EmitterType next() {
+            return this;
+        }
     }
 
     private boolean enabled;
@@ -66,7 +98,7 @@ public class LeafEmitter implements EternalWorker, Configurable {
 
     // Particle fields
     private Particle particle = Particle.FALLING_WATER;
-
+    private int particleMin, particleMax;
 
     public LeafEmitter(EternalNature plugin) {
         this.PLUGIN = plugin;
@@ -92,9 +124,23 @@ public class LeafEmitter implements EternalWorker, Configurable {
 
         // Set the particle emit type
         String type = section.getString("emitter-type");
+        EmitterType typeBefore = this.emitterType;
         emitterType = EnumUtils.findMatch(EmitterType.values(), type, EmitterType.ENTITY);
-        String part = section.getString("particle");
+        String part = section.getString("particle-settings.particle");
         particle = EnumUtils.findMatch(Particle.values(), part, Particle.ASH);
+        particleMax = section.getInt("particle-settings.bunch-max", 5);
+        particleMin = section.getInt("particle-settings.bunch-min", 1);
+
+        // Make sure not leaf particles are left around if the emitter type is
+        // changed while still running.
+        if (typeBefore != emitterType) {
+            PARTICLES.forEach(LeafParticle::remove);
+            PARTICLES.clear();
+
+            // Restart the spawner to make sure it's running at the correct tick
+            // for that particle type.
+            startSpawner();
+        }
     }
 
     /**
@@ -128,8 +174,6 @@ public class LeafEmitter implements EternalWorker, Configurable {
     public void start() {
         // Stop runnables if already started before
         if (updater != null) updater.cancel();
-        if (spawner != null) spawner.cancel();
-
         updater = new BukkitRunnable() { // Auto scan around players for new leaves.
             int ticks = scanDelay;
             int passed = 0;
@@ -146,42 +190,79 @@ public class LeafEmitter implements EternalWorker, Configurable {
                     }
                 }
             }
-        }.runTaskTimerAsynchronously(PLUGIN, 10, 20);
+        }.runTaskTimerAsynchronously(PLUGIN, 0, 20);
 
-        // Spawn leaf effects in valid locations found.
+        startSpawner();
+    }
+
+    /**
+     * Starts the spawner runnable. If there is already one started then it will be stopped
+     * and a new one started in place. The tick rate of this runnable is linked to the emitter
+     * type and is restarted by the {@link #updateConfig(ConfigurationSection)} automatically for
+     * ant config reloads.
+     */
+    private void startSpawner() {
+        if (spawner != null) spawner.cancel();
         spawner = new BukkitRunnable() {
             @Override
             public void run() {
-                // Emit entities otherwise
-                if (emitterType == EmitterType.ENTITY) {
-                    Set<LeafParticle> dead = new HashSet<>();
-                    for (LeafParticle effect : PARTICLES) {
-                        effect.tick();
-                        if (!effect.isAlive())
-                            dead.add(effect);
-                    }
-                    PARTICLES.removeAll(dead);
-                    if (PARTICLES.size() >= maxParticles) return;
-                }
+                tickEntities();
                 if (!enabled) return;
-                for (Location loc : LOCATIONS) {
-                    if (!MathUtil.chance(spawnChance)) continue;
-                    double offsetX = MathUtil.randomDouble() - 0.5;
-                    double offsetZ = MathUtil.randomDouble() - 0.5;
-                    Location spawnLoc = loc.clone().add(offsetX, -0.5, offsetZ);
 
-                    if (emitterType == EmitterType.PARTICLE) {
-                        spawnLoc.getWorld().spawnParticle(particle,spawnLoc, 1, 0, 0, 0, 0.01);
-                        continue;
-                    }
-
-                    WorldData worldData = PLUGIN.getEngine().getWorldProvider().getWorld(loc.getWorld());
-                    LeafParticle particle = new LeafParticle(spawnLoc, PLUGIN.getEngine(), options);
-                    particle.setForces(worldData.getWind());
-                    PARTICLES.add(particle);
+                if (emitterType == EmitterType.ENTITY) {
+                    spawnParticlesTick(true, loc -> {
+                        WorldData worldData = PLUGIN.getEngine().getWorldProvider().getWorld(loc.getWorld());
+                        LeafParticle particle = new LeafParticle(loc, PLUGIN.getEngine(), options);
+                        particle.setForces(worldData.getWind());
+                        PARTICLES.add(particle);
+                    });
+                }
+                else if (emitterType == EmitterType.PARTICLE) {
+                    spawnParticlesTick(false, loc -> {
+                        World world = loc.getWorld();
+                        if (world == null) return;
+                        int count = MathUtil.randomInt(particleMin, particleMax);
+                        double offsetX = MathUtil.randomDouble() / 2;
+                        double offsetZ = MathUtil.randomDouble() / 2;
+                        world.spawnParticle(particle, loc, count, offsetX, 0, offsetZ, 0);
+                    });
                 }
             }
-        }.runTaskTimerAsynchronously(PLUGIN, 10, 1);
+        }.runTaskTimerAsynchronously(PLUGIN, emitterType.TICK_RATE, 1);
+    }
+
+    /**
+     * Ticks all leaf entities currently spawned. THis also takes care of removing
+     * and particles that are no longer deemed alive.
+     */
+    private void tickEntities() {
+        if (PARTICLES.size() == 0) return;
+        Set<LeafParticle> dead = new HashSet<>();
+        for (LeafParticle effect : PARTICLES) {
+            effect.tick();
+            if (!effect.isAlive())
+                dead.add(effect);
+        }
+        PARTICLES.removeAll(dead);
+    }
+
+    /**
+     * Runs through a loop of all locations executing a task if the chance is lucky.
+     *
+     * @param offset    if the location should have a random offset applied to it.
+     * @param task      task to be executed when the location is lucky.
+     */
+    private void spawnParticlesTick(boolean offset, IngestedTask<Location> task) {
+        for (Location loc : LOCATIONS) {
+            if (!MathUtil.chance(spawnChance)) continue;
+            double offsetX = 0, offsetZ = 0;
+            if (offset) {
+                offsetX = MathUtil.randomDouble() - 0.5;
+                offsetZ = MathUtil.randomDouble() - 0.5;
+            }
+            Location spawnLoc = loc.clone().add(offsetX, -0.5, offsetZ);
+            task.run(spawnLoc);
+        }
     }
 
     /**

@@ -17,15 +17,18 @@
 package me.masstrix.eternalnature.menus.settings;
 
 import me.masstrix.eternalnature.EternalNature;
+import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.config.ConfigPath;
 import me.masstrix.eternalnature.config.Configurable;
 import me.masstrix.eternalnature.config.Configuration;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
+import me.masstrix.eternalnature.core.world.LeafEmitter;
 import me.masstrix.eternalnature.menus.Button;
 import me.masstrix.eternalnature.menus.GlobalMenu;
 import me.masstrix.eternalnature.menus.MenuManager;
 import me.masstrix.eternalnature.menus.Menus;
 import me.masstrix.eternalnature.util.ChangeToggleUtil;
+import me.masstrix.eternalnature.util.EnumUtils;
 import me.masstrix.lang.langEngine.LanguageEngine;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -42,6 +45,7 @@ public class LeafParticleMenu extends GlobalMenu {
     private boolean alwaysReachGround;
     private boolean enabled;
     private double chance;
+    private LeafEmitter.EmitterType emitterType;
 
     public LeafParticleMenu(EternalNature plugin, MenuManager menuManager) {
         super(Menus.LEAF_PARTICLE_SETTINGS, 5);
@@ -56,6 +60,9 @@ public class LeafParticleMenu extends GlobalMenu {
         enabled = section.getBoolean("enabled");
         chance = section.getDouble("spawn-chance");
         alwaysReachGround = section.getBoolean("always-reach-ground");
+        emitterType = EnumUtils.findMatch(LeafEmitter.EmitterType.values(),
+                section.getString("emitter-type"),
+                LeafEmitter.EmitterType.ENTITY);
         build();
     }
 
@@ -99,7 +106,7 @@ public class LeafParticleMenu extends GlobalMenu {
         spawnChances.selectClosest(chance);
 
         setButton(new Button(asSlot(1, 5), () -> new ItemBuilder(Material.ENDER_EYE)
-                .setName("&a" + LANG.getText("menu.leaf-particles.spawn.title"))
+                .setName(LANG.getText("menu.leaf-particles.spawn.title"))
                 .addDescription(LANG.getText("menu.leaf-particles.spawn.description"))
                 .addLore("Currently: " +  spawnChances.getSelected().getName())
                 .addAction("Change to " +  spawnChances.getNext().getName())
@@ -108,6 +115,19 @@ public class LeafParticleMenu extends GlobalMenu {
                     spawnChances.next();
                     double chance = spawnChances.getSelected().getChance();
                     CONFIG.set(ConfigPath.LEAF_EFFECT_CHANCE, chance);
+                    CONFIG.save().reload();
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                }));
+
+
+        setButton(new Button(asSlot(4, 4), () -> new ItemBuilder(Material.JUNGLE_SIGN)
+                .setName(LANG.getText("menu.leaf-particles.emitter-type.title"))
+                .addDescription(LANG.getText("menu.leaf-particles.emitter-type.description"))
+                .addLore("Currently: &f" + emitterType.getSimple())
+                .addAction("Click to switch to " + PluginData.Colors.MESSAGE + emitterType.next().getSimple())
+                .build())
+                .onClick(player -> {
+                    CONFIG.set("global.falling-leaves.emitter-type", emitterType.next().name());
                     CONFIG.save().reload();
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }));

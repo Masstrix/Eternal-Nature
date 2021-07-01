@@ -72,6 +72,8 @@ menu.leaf-particles.enabled.title=Leaf Particles Enabled
 menu.leaf-particles.enabled.description=Toggle if leaf particles are enabled. When enabled leaves will slowly fall from leave blocks.
 menu.leaf-particles.reach-ground.title=Always Reach Ground
 menu.leaf-particles.reach-ground.description=When enabled leaf particles will always reach the ground before de-spawning.
+menu.leaf-particles.emitter-type.title=Emitter Type
+menu.leaf-particles.emitter-type.description=Sets the type of particle that is emitted from leave blocks. This can either be particles or entities.
 
 // Temperature Menu
 menu.temp.title=Temperature Settings
