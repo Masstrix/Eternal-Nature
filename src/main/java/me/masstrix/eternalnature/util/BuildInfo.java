@@ -67,6 +67,10 @@ public class BuildInfo {
         return snapshot;
     }
 
+    public static String getBuildKind() {
+        return snapshot ? "snapshot" : "release";
+    }
+
     /**
      * @return the build version.
      */

@@ -48,7 +48,7 @@ import java.util.logging.Level;
 
 public class EternalNature extends JavaPlugin {
 
-    private static final MinecraftVersion REQUIRED_VER = new MinecraftVersion("1.16");
+    private static final MinecraftVersion REQUIRED_VER = new MinecraftVersion("1.17");
     private EternalEngine engine;
     private LanguageEngine languageEngine;
     private VersionCheckInfo versionCheckInfo = null;
@@ -97,12 +97,12 @@ public class EternalNature extends JavaPlugin {
         debugLogger.info("Plugin Information");
         debugLogger.info("Name: " + getDescription().getName());
         debugLogger.info("Version: " + getDescription().getVersion());
-        if (BuildInfo.isSnapshot()) debugLogger.info("This version is a snapshot.");
+        debugLogger.info("Build Kind: " + BuildInfo.getBuildKind());
         debugLogger.info("----------------------------------------");
         
         // This will make sure only 30 days worth of logs are kept. Any log files that are older than
         // 30 days will be deleted.
-        debugLogger.cleanOldLogs(30);
+        debugLogger.cleanOldLogs(5);
     }
 
     @Override
@@ -117,6 +117,11 @@ public class EternalNature extends JavaPlugin {
                     + " This version requires the server "
                     + "to be running at least "
                     + REQUIRED_VER.getName());
+            debugLogger.warning("Server is running a not supported version. Disabling plugin.");
+            debugLogger.info("--------------------------------------");
+            debugLogger.info("server   version: " + serverVer);
+            debugLogger.info("required version: " + REQUIRED_VER);
+            debugLogger.info("--------------------------------------");
             getPluginLoader().disablePlugin(this);
             return;
         }
