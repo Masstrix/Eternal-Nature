@@ -16,6 +16,8 @@
 
 package me.masstrix.eternalnature.reflection;
 
+import me.masstrix.eternalnature.packet.WrappedPacket;
+import net.minecraft.network.protocol.game.PacketPlayOutEntityDestroy;
 import net.minecraft.server.level.EntityPlayer;
 import net.minecraft.server.level.WorldServer;
 import org.bukkit.Bukkit;
@@ -181,14 +183,24 @@ public class ReflectionUtil {
         }
     }
 
+    /**
+     * Sends a packet to a player. This accepts any class that extends the minecraft {@code Packet}
+     * class or a {@link WrappedPacket}.
+     *
+     * @param to        who this packet is being sent to.
+     * @param packet    the packet or list of packets being sent to the player.
+     */
     public static void sendPacket(Player to, Object... packet) {
         if (to == null || packet == null || packet.length == 0) return;
         Object pc = getConnection(to);
         if (pc == null) return;
         try {
             Method sendMethod = pc.getClass().getDeclaredMethod("sendPacket", packetClass);
-            for (Object p : packet)
+            for (Object p : packet) {
+                if (p instanceof WrappedPacket)
+                    p = ((WrappedPacket) p).getPacket();
                 sendMethod.invoke(pc, p);
+            }
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
