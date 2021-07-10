@@ -49,6 +49,9 @@ import java.util.logging.Level;
 public class EternalNature extends JavaPlugin {
 
     private static final MinecraftVersion REQUIRED_VER = new MinecraftVersion("1.17");
+    private static final MinecraftVersion LATEST_BUILD = new MinecraftVersion("1.17.1");
+    private static boolean serverVerUnTested;
+
     private EternalEngine engine;
     private LanguageEngine languageEngine;
     private VersionCheckInfo versionCheckInfo = null;
@@ -89,6 +92,10 @@ public class EternalNature extends JavaPlugin {
         return triggerManager;
     }
 
+    public static boolean isIsServerVerUnTested() {
+        return serverVerUnTested;
+    }
+
     @Override
     public void onLoad() {
         BuildInfo.load(this);
@@ -124,6 +131,17 @@ public class EternalNature extends JavaPlugin {
             debugLogger.info("--------------------------------------");
             getPluginLoader().disablePlugin(this);
             return;
+        }
+
+        // If the server version is ahead of the latest build version send a message saying
+        // that the plugin has not been tested on this version and it may not function as
+        // expected.
+        if (serverVer.isAhead(LATEST_BUILD)) {
+            getLogger().warning(
+                    "This version of minecraft has not been tested yet for this " +
+                    "plugin and so there might be issues. " +
+                    "If you have issues running the plugin on your server support will not be given.");
+            serverVerUnTested = true;
         }
 
         config = new Configuration(this, "config").create(true);

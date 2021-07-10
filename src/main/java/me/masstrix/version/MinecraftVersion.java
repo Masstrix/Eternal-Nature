@@ -1,5 +1,7 @@
 package me.masstrix.version;
 
+import java.util.Objects;
+
 @IVersion(pattern = "^(\\d*\\.)*\\d*")
 public class MinecraftVersion extends Version {
 
@@ -23,5 +25,17 @@ public class MinecraftVersion extends Version {
 
     private void setProtocol() {
         protocol = MinecraftRelease.getProtocol(super.version);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MinecraftVersion version)) return false;
+        return protocol == version.protocol;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(protocol);
     }
 }
