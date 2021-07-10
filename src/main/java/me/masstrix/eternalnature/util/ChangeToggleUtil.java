@@ -30,10 +30,10 @@ public class ChangeToggleUtil {
      * by the chance once added.
      *
      * @param name name of selection.
-     * @param chance chance value associated with it.
+     * @param val chance value associated with it.
      */
-    public void add(String name, double chance) {
-        selections.add(new ChanceSelection(name, chance));
+    public void add(String name, double val) {
+        selections.add(new ChanceSelection(name, val));
         sort();
     }
 
