@@ -38,6 +38,7 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -82,6 +83,8 @@ public class NatureCommand extends EternalCommand {
                     .message(" - Check the current plugin version."));
             msg(new PluginData.Colors().secondary("/eternal reloadTriggers")
                     .message(" - Reloads the triggers config."));
+            msg(new PluginData.Colors().secondary("/eternal summon <entity>")
+                    .message(" - Summons an custom entity type from the plugin."));
             msg(new PluginData.Colors().secondary("/hydrate <player>")
                     .message(" - Hydrates a player."));
             msg("");
@@ -236,13 +239,9 @@ public class NatureCommand extends EternalCommand {
         else if (args[0].equalsIgnoreCase("version")) {
             msg("");
             msg(PluginData.Colors.PRIMARY   + "     &lEternal Nature");
-            msg(PluginData.Colors.TERTIARY + "     &oVersion");
+            msg(PluginData.Colors.TERTIARY + "     &o" + BuildInfo.getBuildKind());
             msg("");
-            msg(" Build: &7" + BuildInfo.getBuild());
-            msg(" Current Version: &7" + BuildInfo.getVersion());
-            if (BuildInfo.isSnapshot()) {
-                msg("   &6&oThis version is a snapshot.");
-            }
+            msg(" Current Version: &7" + BuildInfo.getVersion() + " &o&8(" + BuildInfo.getBuild() + ")");
             if (plugin.getVersionInfo() == null) {
                 if (plugin.getRootConfig().getYml().getBoolean(ConfigPath.UPDATE_CHECK)) {
                     msg("&cUnable to check plugin version.");
@@ -252,15 +251,14 @@ public class NatureCommand extends EternalCommand {
             } else {
                 VersionCheckInfo info = plugin.getVersionInfo();
                 switch (info.getState()) {
-                    case UNKNOWN: {
+                    case UNKNOWN -> {
                         msg("&cError trying to check version.");
-                        break;
                     }
-                    case BEHIND: {
+                    case BEHIND -> {
                         msg(" Latest: &7" + info.getLatest().getName() + " &6(update available)");
 
                         ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.spigotmc.org/resources/natural-environment.43290/history");
-                        HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new BaseComponent[] {
+                        HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new BaseComponent[]{
                                 new TextComponent("\u00A7eClick to view latest release.\n\u00A77Redirects to spigot.org")
                         });
 
@@ -274,13 +272,11 @@ public class NatureCommand extends EternalCommand {
                         if (wasPlayer()) {
                             ((Player) getSender()).spigot().sendMessage(text, infoTxt);
                         }
-                        break;
                     }
-                    case AHEAD: {
+                    case AHEAD -> {
                         msg("&6This version is ahead of the latest known currently. This might be because it's a recent release.");
-                        break;
                     }
-                    case CURRENT: {
+                    case CURRENT -> {
                         msg("&a Plugin is up to date.");
                     }
                 }
@@ -353,6 +349,20 @@ public class NatureCommand extends EternalCommand {
         else if (args[0].equalsIgnoreCase("test") && wasPlayer()) {
             testCommand.execute((Player) getSender(), args);
         }
+
+        else if (args[0].equalsIgnoreCase("summon") && wasPlayer()) {
+            if (args.length == 1) {
+                return;
+            }
+
+            String entityType = args[1].toLowerCase();
+            Location loc = ((Player) getSender()).getLocation();
+
+            if ("leaf".equals(entityType)) {
+                LeafEmitter leafEmitter = (LeafEmitter) plugin.getEngine().getWorker(LeafEmitter.class);
+                leafEmitter.spawn(loc);
+            }
+        }
     }
 
     private void sendDebugOptionsList(UserData data) {
@@ -389,7 +399,7 @@ public class NatureCommand extends EternalCommand {
         if (args.length == 1) {
             return Arrays.asList("reload", "world", "stats",
                     "version", "settings", "resetConfig",
-                    "fixLeafEffect", "reloadTriggers", "debug");
+                    "fixLeafEffect", "reloadTriggers", "debug", "summon");
         }
         else if (args.length >= 2) {
             if (args[0].equalsIgnoreCase("world")) {
@@ -416,6 +426,11 @@ public class NatureCommand extends EternalCommand {
                 if (args[1].equalsIgnoreCase("set")) {
                     if (args.length == 4) return Arrays.asList("true", "false");
                     return DebugOptions.Type.getNames();
+                }
+            }
+            else if(args[0].equalsIgnoreCase("summon")) {
+                if (args.length == 2) {
+                    return Arrays.asList("leaf");
                 }
             }
         }
