@@ -2,6 +2,8 @@ package me.masstrix.eternalnature.core.entity.shadow;
 
 import com.mojang.datafixers.util.Pair;
 import io.netty.util.internal.ConcurrentSet;
+import me.masstrix.eternalnature.packet.WrappedOutEntityDestroyPacket;
+import me.masstrix.eternalnature.packet.WrappedPacket;
 import me.masstrix.eternalnature.reflection.ReflectionUtil;
 import net.minecraft.network.chat.ChatComponentText;
 import net.minecraft.network.chat.IChatBaseComponent;
@@ -62,6 +64,7 @@ public abstract class ShaEntity <E extends Entity> {
     }
 
     public void sendTo(Player player) {
+        if (VIS.contains(player)) return;
         PacketPlayOutSpawnEntity spawn = new PacketPlayOutSpawnEntity(ENTITY);
         PacketPlayOutEntityMetadata metadata = new PacketPlayOutEntityMetadata(
                 ENTITY.getId(),
@@ -80,7 +83,9 @@ public abstract class ShaEntity <E extends Entity> {
     }
 
     public void hideFrom(Player player) {
-        ReflectionUtil.sendPacket(player, new PacketPlayOutEntityDestroy(ENTITY.getId()));
+        if (!VIS.contains(player)) return;
+        WrappedPacket packet = new WrappedOutEntityDestroyPacket(ENTITY.getId());
+        ReflectionUtil.sendPacket(player, packet);
         VIS.remove(player);
     }
 
