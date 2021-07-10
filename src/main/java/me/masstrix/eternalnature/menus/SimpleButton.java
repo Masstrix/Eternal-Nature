@@ -54,25 +54,6 @@ public class SimpleButton extends Button{
         return this;
     }
 
-    public enum Common {
-        EDIT("edit"),
-        CHANGE("change"),
-        SELECTED("selected"),
-        SELECT("select"),
-        ENABLE("enable"),
-        DISABLE("disable"),
-        RESET("reset"),
-        RELOAD("reload");
-
-        String index;
-        ChatColor color;
-
-        Common(String index) {
-            this.index = "menu.common." + index;
-            this.color = PluginData.Colors.ACTION;
-        }
-    }
-
     public SimpleButton common(Common c) {
         return extra(c.index, c.color);
     }

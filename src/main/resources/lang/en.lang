@@ -36,6 +36,12 @@ menu.common.disable=Click to Disable
 menu.common.reset=Click to Reset
 menu.common.reload=Click to Reload
 
+menu.common.low=Low
+menu.common.medium=Medium
+menu.common.high=High
+menu.common.extreme=Extreme
+menu.common.custom=Custom
+
 // Settings menu items
 menu.settings.title=Eternal Nature Settings
 menu.settings.item.replant.title=Auto Replant Crops
@@ -124,6 +130,15 @@ menu.hydration.open_water.title=Drinking from Ocean
 menu.hydration.open_water.description=When enabled players can drink from open water such as the ocean.
 menu.hydration.thirst.title=Thirst Effect
 menu.hydration.thirst.description=When enabled players may become thirsty after drinking or eating some items.
+
+// Wind Settings Menu
+menu.wind.title=Wind Settings
+menu.wind.description=Change settings for wind and gusts.
+menu.wind.enabled.title=Wind Enabled
+menu.wind.enabled.description=Set if wind is enabled.
+menu.wind.gusts.enabled.title=Gusts Enabled
+menu.wind.gusts.enabled.description=Set if wind is enabled.
+
 
 // Misc Menu
 menu.display.enabled.title=Display Mode Toggle

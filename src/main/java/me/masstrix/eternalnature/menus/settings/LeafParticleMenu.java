@@ -100,7 +100,7 @@ public class LeafParticleMenu extends GlobalMenu {
 
         ChangeToggleUtil spawnChances = new ChangeToggleUtil();
         spawnChances.add("&c" + LANG.getText("menu.leaf-particles.spawn.extreme"), 0.05);
-        spawnChances.add("&c" + LANG.getText("menu.leaf-particles.spawn.high"), 0.01);
+        spawnChances.add("&6" + LANG.getText("menu.leaf-particles.spawn.high"), 0.01);
         spawnChances.add("&e" + LANG.getText("menu.leaf-particles.spawn.medium"), 0.005);
         spawnChances.add("&a" + LANG.getText("menu.leaf-particles.spawn.low"), 0.001);
         spawnChances.selectClosest(chance);

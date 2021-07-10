@@ -16,8 +16,11 @@
 
 package me.masstrix.eternalnature.menus;
 
+import me.masstrix.eternalnature.PluginData;
 import me.masstrix.eternalnature.core.item.ItemBuilder;
 import me.masstrix.eternalnature.util.StringUtil;
+import me.masstrix.lang.langEngine.LanguageEngine;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -31,6 +34,35 @@ import java.util.Objects;
  * update method it makes handling a menus icon a bit easier.
  */
 public class Button {
+
+    public enum Common {
+        EDIT("edit"),
+        CHANGE("change"),
+        SELECTED("selected"),
+        SELECT("select"),
+        ENABLE("enable"),
+        DISABLE("disable"),
+        RESET("reset"),
+        RELOAD("reload"),
+
+        LOW("low"),
+        MEDIUM("medium"),
+        HIGH("high"),
+        EXTREME("extreme"),
+        CUSTOM("custom");
+
+        String index;
+        ChatColor color;
+
+        Common(String index) {
+            this.index = "menu.common." + index;
+            this.color = PluginData.Colors.ACTION;
+        }
+
+        public String text(LanguageEngine engine) {
+            return engine.getText(this.index);
+        }
+    }
 
     private GlobalMenu menu;
     private final UpdateIcon UPDATER;
