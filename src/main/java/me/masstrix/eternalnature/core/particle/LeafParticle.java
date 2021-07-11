@@ -218,9 +218,10 @@ public class LeafParticle extends BaseParticle implements Leaf {
 
         animationOffset += 0.05;
 
+        // Add wind to the leaf's velocity if a wind system is attached to it.
         if (wind != null) {
-            Vector force = wind.getForce(loc.getX(), loc.getY(), loc.getZ());
-            velocity.add(force);
+            // FIXME readd
+            //velocity.add(wind.apply(velocity, loc.getX(), loc.getY(), loc.getZ()));
         }
 
         // Gravity

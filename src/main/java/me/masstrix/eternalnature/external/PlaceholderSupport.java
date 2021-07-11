@@ -25,13 +25,12 @@ import me.masstrix.eternalnature.core.world.WorldData;
 import me.masstrix.eternalnature.core.world.WorldProvider;
 import me.masstrix.eternalnature.player.HydrationRenderer;
 import me.masstrix.eternalnature.player.UserData;
-import me.masstrix.eternalnature.util.BuildInfo;
-import me.masstrix.eternalnature.util.FindableMatch;
-import me.masstrix.eternalnature.util.MathUtil;
-import me.masstrix.eternalnature.util.SecondsFormat;
+import me.masstrix.eternalnature.util.*;
 import net.md_5.bungee.api.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 
 public class PlaceholderSupport extends PlaceholderExpansion implements Configurable {
 
@@ -78,11 +77,9 @@ public class PlaceholderSupport extends PlaceholderExpansion implements Configur
         if (player == null) return "";
 
         UserData data = PLUGIN.getEngine().getUserData(player.getUniqueId());
+        Location loc = player.getLocation();
         if (data == null) return "";
-
-        if (identifier.equals("wind_gusting")) {
-            return data.getWorld().getWind().isGusty() ? "true" : "false";
-        }
+        WorldData world = data.getWorld();
 
         if (identifier.equals("hydration")) {
             return String.valueOf((int) data.getHydration());
@@ -129,11 +126,25 @@ public class PlaceholderSupport extends PlaceholderExpansion implements Configur
             return new SecondsFormat().format(data.getThirstTime());
         }
 
-        if (identifier.equals("thirst_status")) {
-            if (!data.isThirsty()) return "Not Thirsty";
+        if (identifier.equals("effect_thirst")) {
+            if (!data.isThirsty()) return "";
             return new SecondsFormat().format(data.getThirstTime());
         }
 
+        if (identifier.equals("wind_speed")) {
+            return String.valueOf(MathUtil.round(world.getWind().getWindSpeed(
+                    loc.getX(), loc.getY(), loc.getZ()), 2
+            ));
+        }
+
+        if (identifier.equals("wind_direction")) {
+            Vector dir = world.getWind().getDirection(loc.getX(), loc.getZ());
+            return Direction.compass(dir.getX(), dir.getZ()).getShortHand();
+        }
+
+        if (identifier.equals("wind_gusting")) {
+            return String.valueOf(data.getWorld().getWind().isGusty());
+        }
         return null;
     }
 

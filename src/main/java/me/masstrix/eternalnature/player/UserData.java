@@ -34,6 +34,7 @@ import me.masstrix.eternalnature.listeners.DeathListener;
 import me.masstrix.eternalnature.util.Direction;
 import me.masstrix.eternalnature.util.MathUtil;
 import me.masstrix.eternalnature.util.Stopwatch;
+import me.masstrix.eternalnature.util.StringUtil;
 import me.masstrix.lang.langEngine.LanguageEngine;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -356,19 +357,23 @@ public class UserData implements EternalUser, Configurable {
             // Wind
             Wind wind = getWorld().getWind();
             Location loc = player.getLocation();
-            Vector windForce = wind.getForce(loc.getX(), loc.getY(), loc.getZ());
-            Vector windDirection = wind.getWindDirection(loc.getX(), loc.getZ());
+            Vector windDirection = wind.getDirection(loc.getX(), loc.getZ());
+            double windSpeed = wind.getWindSpeed(loc.getX(), loc.getY(), loc.getZ());
             Direction cardinol = Direction.compass(windDirection.getX(), windDirection.getZ());
 
-            builder.append("\n\nWind Force: ", ComponentBuilder.FormatRetention.NONE)
+            builder.append("\n\nWind Speed: ", ComponentBuilder.FormatRetention.NONE)
                     .color(PluginData.Colors.MESSAGE)
-                    .append(String.format("%.3f", windForce.length()))
+                    .append(String.format("%.3f", windSpeed))
                     .color(PluginData.Colors.SECONDARY);
             builder.append("\nWind Direction: ", ComponentBuilder.FormatRetention.NONE)
                     .color(PluginData.Colors.MESSAGE)
                     .append(String.format("%.3f (%s)",
                             Math.toDegrees(Math.atan2(windDirection.getX(), windDirection.getZ())),
                             cardinol.getShortHand()))
+                    .color(PluginData.Colors.SECONDARY);
+            builder.append("\nWind Gust: ", ComponentBuilder.FormatRetention.NONE)
+                    .color(PluginData.Colors.MESSAGE)
+                    .append(String.format("%.3f (%s)", wind.getGustStrength(), wind.isGusty()))
                     .color(PluginData.Colors.SECONDARY);
 
             builder.append("\n\n");
@@ -391,6 +396,74 @@ public class UserData implements EternalUser, Configurable {
 
         // Run triggers for this player.
         PLUGIN.getTriggerManager().attemptToTrigger(this, player);
+
+        //foo();
+    }
+
+    private void foo() {
+        WorldData data = getWorld();
+        Wind wind = data.getWind();
+        Player player = Bukkit.getPlayer(getUniqueId());
+        Location loc = player.getLocation();
+
+        int vision = 60;
+        int linesCount = 10;
+
+        String[] lines = new String[linesCount];
+        double[] speeds = new double[vision];
+        boolean[][] isGreen = new boolean[linesCount][vision];
+
+        double max = 1;
+        int center = vision / 2;
+
+        for (int i = 0; i < vision; i++) {
+            double add = wind.TICK_PROGRESS * 80;
+            double offset = (add * i) - (add * center);
+            double windSpeed = wind.getWindSpeed(loc.getX(), loc.getY(), loc.getZ(), offset);
+            if (windSpeed > max) max = windSpeed;
+            speeds[i] = windSpeed;
+        }
+
+        String txt = "*";
+        String base = txt.repeat(vision);
+
+        for (int i = 0; i < linesCount; i++) {
+            lines[i] = base;
+        }
+
+        // Construct lines
+        for (int i = 0; i < vision; i++) {
+            double speed = speeds[i];
+            double toMax = speed / max;
+
+            int line = Math.max(0, (int) Math.floor(linesCount * toMax) - 1);
+            isGreen[line][i] = true;
+        }
+
+        for (int i = 0; i < linesCount; i++) {
+            boolean[] toggles = isGreen[i];
+            StringBuilder builder = new StringBuilder();
+
+            int index = 0;
+            for (boolean toggle : toggles) {
+                if (index == center) {
+                    builder.append(toggle ? "&b" : "&f");
+                } else {
+                    builder.append(toggle ? "&a" : "&7");
+                }
+                builder.append("█");
+                index++;
+            }
+
+            lines[(linesCount - i) - 1] = builder.toString();
+        }
+
+        StringBuilder combined = new StringBuilder();
+        for (String s : lines) {
+            combined.append("&7").append(s).append("\n");
+        }
+
+        player.setPlayerListFooter(StringUtil.color(combined.toString()));
     }
 
     /**

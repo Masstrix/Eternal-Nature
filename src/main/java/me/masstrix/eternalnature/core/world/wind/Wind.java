@@ -33,19 +33,20 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import org.bukkit.util.noise.SimplexOctaveGenerator;
 
-import java.util.Collection;
 import java.util.List;
 
+// TODO cache wind data to be pooled
 @Configurable.Path("global.wind")
 public class Wind implements Ticking, Configurable {
 
     private final EternalNature PLUGIN;
     private final WorldData world;
     private final SimplexOctaveGenerator[] NOISE = new SimplexOctaveGenerator[2];
-    private float fre = 0.03F;
+    private float fre = 10F;
     private float amp = 0.01F;
     private double gustStrength;
     private double ticks;
+    public final double TICK_PROGRESS = 0.1;
 
     //
     // Configuration
@@ -57,22 +58,27 @@ public class Wind implements Ticking, Configurable {
     private boolean pushPlayers;
     private boolean pushEntities;
 
+    // Defines how strong the wing has to be blowing before
+    // entities are pushed by it.
+    private double pushThreshold = 0.01;
+
     public Wind(WorldData world, EternalNature plugin, long seed) {
         this.world = world;
         this.PLUGIN = plugin;
         ticks = MathUtil.randomInt(1000000);
-        NOISE[0] = new SimplexOctaveGenerator(seed, 1);
+        NOISE[0] = new SimplexOctaveGenerator(seed, 2);
         NOISE[0].setScale(0.01);
-        NOISE[0].setWScale(2);
+        NOISE[0].setWScale(1);
 
-        NOISE[1] = new SimplexOctaveGenerator(seed + 6543, 1);
+        NOISE[1] = new SimplexOctaveGenerator(seed + 6543, 2);
         NOISE[1].setScale(0.01);
-        NOISE[1].setWScale(2);
+        NOISE[1].setWScale(1);
     }
 
     @Override
     public void updateConfig(ConfigurationSection section) {
         enabled = section.getBoolean("enabled", true);
+        pushThreshold = section.getDouble("push-threshold", 0.01);
         gustsEnabled = section.getBoolean("gusts.enabled", true);
         gustsChance = section.getDouble("gusts.chance", 1.0);
         gustsMaxStrength = section.getDouble("gusts.max-strength", 1.0);
@@ -107,15 +113,14 @@ public class Wind implements Ticking, Configurable {
     /**
      * Gets the force of the wind in a given location.
      *
-     * @see #getForce(double, double, double) for more information.
+     * @see #getDirection(double, double) for more information.
      *
      * @param x x position.
-     * @param y y position.
      * @param z z position.
      * @return the force of the wind in that location.
      */
-    public Vector getForce(int x, int y, int z) {
-        return this.getForce((double) x, y, z);
+    public Vector getDirection(int x, int z) {
+        return this.getDirection((double) x, z);
     }
 
     /**
@@ -123,11 +128,10 @@ public class Wind implements Ticking, Configurable {
      * force as a directional vector with the length being how strong the wind is.
      *
      * @param x x position.
-     * @param y y position.
      * @param z z position.
-     * @return the force of the wind in that location.
+     * @return the normalized direction of the wind in that location.
      */
-    public Vector getForce(double x, double y, double z) {
+    public Vector getDirection(double x, double z) {
         if (!enabled) return new Vector();
         final double SCALE = 0.1;
         double valX = NOISE[0].noise((x * SCALE), ticks, (z * SCALE), fre, amp);
@@ -140,20 +144,41 @@ public class Wind implements Ticking, Configurable {
         // Sets the strength of the wind.
         double temp = world.getBiomeEmission((int) x, 0, (int) z);
         double pseudoUpdraft = temp * 0.001;
-        double strength = NOISE[0].noise((x / 10) + (ticks / 10D), ticks, (z / 10) + (ticks / 10D),
-                0.0001, 0.001);
-        strength = Math.max(0, strength * 0.009);
 
-        // Sample the area to get the average height around this
-        // location.
+        return new Vector(cos, 0, sin)
+                .rotateAroundZ(pseudoUpdraft)
+                .normalize();
+    }
+
+    public double getWindSpeed(double x, double y, double z) {
+        return getWindSpeed(x, y, z, 0);
+    }
+
+    /**
+     * Calculates and return the wind speed in a specific location of the world. The
+     * wind speed will decrease to 0 when it's location is below the average terrain height.
+     *
+     * @param x x position.
+     * @param y y position.
+     * @param z z position.
+     * @param timeOffset Time offset to get the wind speed of. THis is useful if you want to
+     *                   know the wind speed in the future.
+     * @return the speed of the wind in the location.
+     */
+    public double getWindSpeed(double x, double y, double z, double timeOffset) {
+        double time = ticks + timeOffset;
+        double strength = NOISE[0].noise((x / 10) + (time / 10D), time * 0.3, (z / 10) + (time / 10D),
+                0.0001, 0.3);
+        strength = Math.max(0, strength + 1);
+
+        // Scan around the location to get the average ground height.
         World world = this.world.asBukkit();
-        if (world == null) return new Vector();
         final int SCAN_AREA = 16;
         final int SAMPLES = 10;
         int totalHeight = 0;
         for (int i = 0; i < SAMPLES; i++) {
-            int sampleX = MathUtil.randomInt(-SCAN_AREA, SCAN_AREA);
-            int sampleZ = MathUtil.randomInt(-SCAN_AREA, SCAN_AREA);
+            int sampleX = (int) (MathUtil.randomInt(-SCAN_AREA, SCAN_AREA) + x);
+            int sampleZ = (int) (MathUtil.randomInt(-SCAN_AREA, SCAN_AREA) + z);
             Block block = world.getHighestBlockAt(sampleX, sampleZ);
             totalHeight += block.getY();
         }
@@ -171,33 +196,22 @@ public class Wind implements Ticking, Configurable {
         if (fallOff > 1)
             fallOff = 1 + Math.min(1, fallOff * 0.05);
 
-        if (fallOff == 0) return new Vector();
-
-        return new Vector(cos, 0, sin)
-                .rotateAroundZ(pseudoUpdraft)
-                .normalize()
-                .multiply((strength + gustStrength) * fallOff);
+        return (strength + gustStrength) * fallOff;
     }
 
     /**
-     * Returns the current direction of the wind in the world for a specific location.
-     * This will be a normalized vector for the current direction of the wind in that
-     * location not accounting for world height.
+     * Gets the true wind speed. The force returned from this vector is far too high
+     * to be used to be applied to an entity and should be multiplied by something like
+     * 0.01 for a more accurate representation of the wind speed.
      *
-     * @param x x position.
-     * @param z z position.
-     * @return the wind direction for that position.
+     * @param x x world position.
+     * @param y y world position.
+     * @param z z world position.
+     * @return  the motion vector of the wind in that location. This vector is facing the
+     *          direction of the wind and has its length set to the wind speed.
      */
-    public Vector getWindDirection(double x, double z) {
-        if (!enabled) return new Vector();
-        final double SCALE = 0.1;
-        double valX = NOISE[0].noise((x * SCALE), ticks, (z * SCALE), fre, amp);
-        double valZ = NOISE[1].noise((x * SCALE), ticks, (z * SCALE), fre, amp);
-
-        // Get the direction of the wind.
-        double cos = Math.cos((valX * 2) - 1);
-        double sin = Math.sin((valZ * 2) - 1);
-        return new Vector(cos, 0, sin).normalize();
+    public Vector getTrueWindForce(double x, double y, double z) {
+        return getDirection(x, z).multiply(getWindSpeed(x, y, z));
     }
 
     /**
@@ -227,39 +241,72 @@ public class Wind implements Ticking, Configurable {
      * @param entity entity to push by the wind.
      */
     public void push(Entity entity) {
-        //if (isGusty()) return;
-
-        if (entity instanceof Player) {
-            Player player = (Player) entity;
+        if (entity instanceof Player player) {
             GameMode gameMode = player.getGameMode();
             if (gameMode == GameMode.SPECTATOR || gameMode == GameMode.CREATIVE) {
                 return;
             }
         }
 
-        Location loc = entity.getLocation();
-        Vector force = getForce(loc.getX(), loc.getY(), loc.getZ());
+//        Location loc = entity.getLocation();
+//        Vector force = getDirection(loc.getX(), loc.getY(), loc.getZ());
+//        double strength = force.length();
+//
+//
+//        Vector currentVelocity = entity.getVelocity();
+//        currentVelocity.add(force);
+//
+//        entity.setVelocity(currentVelocity);
+    }
 
-        Vector velocity = entity.getVelocity();
-        entity.setVelocity(velocity.add(force));
+    /**
+     * Gets the entities motion and adds the wind velocity to it.
+     *
+     * @see #apply(Vector, double, double, double)
+     *
+     * @param entity entity to get the motion from.
+     * @return the entities motion with the wind velocity added to it.
+     */
+    public Vector apply(Entity entity) {
+        if (entity instanceof Player player) {
+            GameMode gameMode = player.getGameMode();
+            if (gameMode == GameMode.SPECTATOR || gameMode == GameMode.CREATIVE) {
+                return entity.getVelocity();
+            }
+        }
+
+        Location loc = entity.getLocation();
+        return apply(entity.getVelocity(), loc.getX(), loc.getY(), loc.getZ());
+    }
+
+    /**
+     * Applies the wind velocity to a motion vector.
+     *
+     * @param motion    motion vector to add.
+     * @param x         x position.
+     * @param y         y position.
+     * @param z         z position.
+     * @return the motion vector of the wind velocity and motion added together.
+     */
+    public Vector apply(Vector motion, double x, double y, double z) {
+        Vector windDir = getDirection(x, z);
+        double windSpeed = getWindSpeed(x, y, z);
+
+        Vector wind = windDir.multiply(windSpeed * 0.01);
+        return motion.add(wind);
     }
 
     private void runPhysics() {
-        if (!enabled || !gustsEnabled || (!pushEntities && !pushPlayers)) return;
-        if (!pushEntities) {
-            Bukkit.getOnlinePlayers().forEach(this::push);
-            return;
-        }
-        List<LivingEntity> entities = world.asBukkit().getLivingEntities();
-        for (LivingEntity e : entities) {
+        if (!enabled || (!pushEntities && !pushPlayers)) return;
+        for (LivingEntity e : world.asBukkit().getLivingEntities()) {
             if (e instanceof Player && pushPlayers) push(e);
-            else if (pushEntities) push(e);
+            //else if (pushEntities) push(e);
         }
     }
 
     @Override
     public void tick() {
-        ticks += 0.1;
+        ticks += TICK_PROGRESS;
         if (enabled && gustsEnabled) {
             double max = 0.01 * this.gustsMaxStrength;
             double fre = 0.06 * this.gustsChance;
@@ -269,6 +316,6 @@ public class Wind implements Ticking, Configurable {
             if (gustStrength > max)
                 gustStrength = max;
         }
-        runPhysics();
+        //runPhysics();
     }
 }
