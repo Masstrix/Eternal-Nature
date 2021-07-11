@@ -27,6 +27,7 @@ import java.io.*;
 import java.util.List;
 import java.util.UUID;
 
+@Deprecated
 public class WaterfallEmitter implements Serializable {
 
     Position pos;

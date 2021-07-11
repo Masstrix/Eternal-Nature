@@ -40,20 +40,20 @@ public class BlockListener implements Listener, Configurable {
 
     private boolean autoRePlantCropEnabled;
     private final EternalNature PLUGIN;
-    private List<WaterfallEmitter> locs = new ArrayList<>();
+    //private List<WaterfallEmitter> locs = new ArrayList<>();
 
     public BlockListener(EternalNature plugin) {
         this.PLUGIN = plugin;
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                List<Location> r = new ArrayList<>();
-                for (WaterfallEmitter l : locs) {
-                    l.tick();
-                }
-            }
-        }.runTaskTimer(plugin, 1, 1);
+//        new BukkitRunnable() {
+//            @Override
+//            public void run() {
+//                List<Location> r = new ArrayList<>();
+//                for (WaterfallEmitter l : locs) {
+//                    l.tick();
+//                }
+//            }
+//        }.runTaskTimer(plugin, 1, 1);
     }
 
     @Override
