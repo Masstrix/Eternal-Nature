@@ -292,10 +292,11 @@ public class Wind implements Ticking, Configurable {
         Vector windDir = getDirection(x, z);
         double windSpeed = getWindSpeed(x, y, z);
 
-        Vector wind = windDir.multiply(windSpeed * 0.01);
+        Vector wind = windDir.multiply(windSpeed * 0.001);
         return motion.add(wind);
     }
 
+    // TODO re implement physics.
     private void runPhysics() {
         if (!enabled || (!pushEntities && !pushPlayers)) return;
         for (LivingEntity e : world.asBukkit().getLivingEntities()) {
