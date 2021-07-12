@@ -206,6 +206,9 @@ public class LeafEmitter implements EternalWorker, Configurable {
                 tickEntities();
                 if (!enabled) return;
 
+                // TODO implement random tick method.
+                //randomTickSpawn();
+
                 if (emitterType == EmitterType.ENTITY) {
                     spawnParticlesTick(true, loc -> {
                         WorldData worldData = PLUGIN.getEngine().getWorldProvider().getWorld(loc.getWorld());
@@ -227,6 +230,43 @@ public class LeafEmitter implements EternalWorker, Configurable {
                 }
             }
         }.runTaskTimerAsynchronously(PLUGIN, emitterType.TICK_RATE, 1);
+    }
+
+    /**
+     * Future method
+     *
+     * Uses random ticks to attempt to find a suitable leave block around each player
+     * and spawns a leaf particle under it if it does find one.
+     *
+     * Currently, this method uses about 50% more cpu time with attempts at 50 over the
+     * scan method with a range of 12 and fidelity of 3.
+     *
+     * This is not yet implemented but may be used in future updates as it could provide
+     * a more optimized way to work in a larger scan area.
+     */
+    private void randomTickSpawn() {
+        int viewDist = 20;
+        int attempts = 50;
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            for (int i = 0; i < attempts; i++) {
+                int x = MathUtil.randomInt(-viewDist, viewDist);
+                int y = MathUtil.randomInt(-viewDist, viewDist);
+                int z = MathUtil.randomInt(-viewDist, viewDist);
+
+                Block block = player.getLocation().getBlock().getRelative(x, y, z);
+                Block under = block.getRelative(BlockFace.DOWN);
+
+                if (block.getBlockData() instanceof Leaves && under.isPassable()) {
+                    // Summon new particle
+                    WorldData data = PLUGIN.getEngine().getWorldProvider().getWorld(block.getWorld());
+                    Material type = block.getType();
+                    Location loc = under.getLocation();
+                    LeafParticle particle = new LeafParticle(loc, PLUGIN.getEngine(), options, type);
+                    particle.setForces(data.getWind());
+                    PARTICLES.add(particle);
+                }
+            }
+        }
     }
 
     /**
