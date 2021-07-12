@@ -19,21 +19,40 @@ package me.masstrix.eternalnature.core.item;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
-public enum EternalItem {
-    
-    FERMENTED_BREAD(new ItemBuilder(Material.BREAD).setName("Fermented Bread"));
+public class EternalItem {
 
-    private final ItemStack stack;
+    public static final int MODEL_BASE = 88000;
 
-    EternalItem(ItemBuilder item) {
-        this(item.build());
+    ItemBuilder stack;
+
+    EternalItem(Material material) {
+        stack = new ItemBuilder(material);
     }
 
     EternalItem(ItemStack stack) {
-        this.stack = stack;
+        this.stack = new ItemBuilder(stack);
     }
 
-    public ItemStack asNewStack() {
-        return new ItemStack(Material.AIR);
+    EternalItem(EternalItem item) {
+        this.stack = new ItemBuilder(item.stack.build());
+    }
+
+    EternalItem setModel(int id) {
+        stack.setCustomModelData(id);
+        return this;
+    }
+
+    EternalItem setName(String name) {
+        stack.setName(name);
+        return this;
+    }
+
+    EternalItem addLore(String... lore) {
+        stack.addLore(lore);
+        return this;
+    }
+
+    public ItemStack create() {
+        return stack.build();
     }
 }

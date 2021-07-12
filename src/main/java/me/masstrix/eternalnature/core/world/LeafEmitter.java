@@ -25,10 +25,7 @@ import me.masstrix.eternalnature.util.BlockScanner;
 import me.masstrix.eternalnature.util.EnumUtils;
 import me.masstrix.eternalnature.util.IngestedTask;
 import me.masstrix.eternalnature.util.MathUtil;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Particle;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Leaves;
@@ -212,7 +209,8 @@ public class LeafEmitter implements EternalWorker, Configurable {
                 if (emitterType == EmitterType.ENTITY) {
                     spawnParticlesTick(true, loc -> {
                         WorldData worldData = PLUGIN.getEngine().getWorldProvider().getWorld(loc.getWorld());
-                        LeafParticle particle = new LeafParticle(loc, PLUGIN.getEngine(), options);
+                        Material type = loc.getBlock().getRelative(BlockFace.UP).getType();
+                        LeafParticle particle = new LeafParticle(loc, PLUGIN.getEngine(), options, type);
                         particle.setForces(worldData.getWind());
                         PARTICLES.add(particle);
                     });

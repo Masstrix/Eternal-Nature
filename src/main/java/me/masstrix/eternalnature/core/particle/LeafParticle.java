@@ -21,7 +21,7 @@ import me.masstrix.eternalnature.api.Leaf;
 import me.masstrix.eternalnature.core.entity.shadow.ArmorStandBodyPart;
 import me.masstrix.eternalnature.core.entity.shadow.ItemSlot;
 import me.masstrix.eternalnature.core.entity.shadow.ShaArmorStand;
-import me.masstrix.eternalnature.core.item.CustomItem;
+import me.masstrix.eternalnature.core.item.LeafItem;
 import me.masstrix.eternalnature.events.LeafSpawnEvent;
 import me.masstrix.eternalnature.util.Direction;
 import me.masstrix.eternalnature.util.LiquidFlow;
@@ -33,6 +33,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Levelled;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
@@ -67,7 +68,7 @@ public class LeafParticle extends BaseParticle implements Leaf {
 
     /**
      * Creates a new leaf effect. Leaves when ticked will slowly fall until they hit a
-     * non passable block or there lifetime has ended. Using this method will also call
+     * non-passable block or there lifetime has ended. Using this method will also call
      * the {@link LeafSpawnEvent}.
      *
      * @param loc    location to spawn the effect at.
@@ -79,15 +80,30 @@ public class LeafParticle extends BaseParticle implements Leaf {
     }
 
     /**
+     * Creates a new leaf effect. Leaves when ticked will slowly fall until they hit a
+     * non-passable block or there lifetime has ended. Using this method will also call
+     * the {@link LeafSpawnEvent}.
+     *
+     * @param loc       location to spawn the particle from.
+     * @param engine    an instance of the eternal engine.
+     * @param options   options for spawning the particle.
+     */
+    public LeafParticle(Location loc, EternalEngine engine, LeafOptions options) {
+        this(loc, engine, options, loc.getBlock().getType());
+    }
+
+    /**
      * Creates a new leaf particle. The particle uses the base of a {@link BaseParticle} to create an
      * armor stand holding a kelp item. If spawned natrually then the particle will be ticked by the
      * {@link me.masstrix.eternalnature.core.world.LeafEmitter} to slowly fall down.
      *
-     * @param loc     location to spawn the particle from.
-     * @param engine  an instance of the eternal engine.
-     * @param options options for spawning the particle.
+     * @param loc       location to spawn the particle from.
+     * @param engine    an instance of the eternal engine.
+     * @param options   options for spawning the particle.
+     * @param type      Material to ge the type of leave from. If it is not a leave block then it
+     *                  will default to always be oak.
      */
-    public LeafParticle(Location loc, EternalEngine engine, LeafOptions options) {
+    public LeafParticle(Location loc, EternalEngine engine, LeafOptions options, Material type) {
         if (loc == null) return;
         if (engine != null) {
             // Call the spawn ever.
@@ -106,13 +122,17 @@ public class LeafParticle extends BaseParticle implements Leaf {
         //      this should start with a random number with a 20% chance to start at 0
         willFloat = MathUtil.chance(0.8);
 
+        LeafItem item = new LeafItem()
+                .color(loc.getBlock().getBiome())
+                .fromMaterial(type);
+
         loc.setYaw(MathUtil.randomInt(0, 360));
         leaf = new ShaArmorStand(loc);
         leaf.setSmall(true);
         leaf.setMarker(true);
         leaf.setArms(true);
         leaf.setInvisible(true);
-        leaf.setSlot(ItemSlot.MAINHAND, CustomItem.LEAF.get());
+        leaf.setSlot(ItemSlot.MAINHAND, item.create());
 
         // Sets how far away a player has to be to see the particle.
         // This will not be sent to a player if they suddenly become in range of it.
@@ -220,8 +240,7 @@ public class LeafParticle extends BaseParticle implements Leaf {
 
         // Add wind to the leaf's velocity if a wind system is attached to it.
         if (wind != null) {
-            // FIXME readd
-            //velocity.add(wind.apply(velocity, loc.getX(), loc.getY(), loc.getZ()));
+            velocity = wind.apply(velocity, loc.getX(), loc.getY(), loc.getZ());
         }
 
         // Gravity
