@@ -1,0 +1,151 @@
+# header
+name=Italiano
+#
+
+//
+// Death messages
+//
+death.heat=%name% è morto di caldo
+death.cold=%name% è morto di ipotermia
+death.dehydrate=%name% è morto di disidratazione
+
+
+//
+// Temperature icons
+//
+temp.icon.burning=Bollente
+temp.icon.hot=Molto Caldo
+temp.icon.warm=Caldo
+temp.icon.pleasant=Piacevole
+temp.icon.cool=Fresco
+temp.icon.cold=Freddo
+temp.icon.freezing=Molto Freddo
+
+
+//
+//  Menus
+//
+
+// Common menu
+menu.common.edit=Clicca per visualizzare e modificare
+menu.common.change=Clicca per cambiare
+menu.common.selected=Selezionato
+menu.common.select=Clicca per selezionare
+menu.common.enable=Clicca per attivare
+menu.common.disable=Clicca per disattivare
+menu.common.reset=Clicca per resettare
+menu.common.reload=Clicca per ricaricare
+
+menu.common.low=Basso
+menu.common.medium=Medio
+menu.common.high=Alto
+menu.common.extreme=Estremo
+menu.common.custom=Personalizzato
+
+// Settings menu items
+menu.settings.title=Impostazioni di Eternal Nature
+menu.settings.item.replant.title=Auto-ripianta colture
+menu.settings.item.replant.description=Imposta se le colture verranno ripiantate automaticamente al momento del raccolto.
+menu.settings.item.auto-plant.title=Auto-pianta
+menu.settings.item.auto-plant.description=Imposta se le piante hanno la possibilità di piantarsi automaticamente quando vengono lasciate a terra.
+menu.settings.item.item-aging.title=Oggetti età
+menu.settings.item.item-aging.description=Alcuni oggetti, come il cibo, si decompongono e invecchiano se lasciati a terra.
+menu.settings.item.tree-spread.title=Diffusione casuale degli alberi
+menu.settings.item.tree-spread.description=Imposta se gli alberi lasceranno cadere in modo casuale gli alberelli, causando una lenta crescita delle foreste.
+menu.settings.item.reload-config.title=Ricarica configurazione
+menu.settings.item.reload-config.description=Ricarica i file di configurazione
+menu.settings.item.reset-config.title=Resetta configurazione
+menu.settings.item.reset-config.description=Resetta i file di configurazione ai valori predefiniti
+
+// Language Settings Menu
+menu.language.title=Impostazioni della lingua
+menu.language.description=Cambia la lingua dei plugin. Le lingue vengono caricate dalla cartella lang dei plugin.
+menu.language.reset.title=Resetta i file .lang
+menu.language.reset.description=Ciò ripristinerà i file di lingua. Non influenzerà le lingue personalizzate.
+menu.language.reload.title=Ricarica lingue
+menu.language.reload.description=Questo ricaricherà tutte le lingue e aggiornerà la lingua corrente se sono state apportate modifiche.
+
+// Leaf Particle Menu
+menu.leaf-particles.title=Impostazioni delle particelle delle foglie
+menu.leaf-particles.description=L'insieme di blocchi emetterà una particella fogliare in modo casuale.
+menu.leaf-particles.spawn.extreme=MOLTO ALTA
+menu.leaf-particles.spawn.high=ALTA
+menu.leaf-particles.spawn.medium=MEDIA
+menu.leaf-particles.spawn.low=BASSA
+menu.leaf-particles.spawn.title=Possibilità di spawn
+menu.leaf-particles.spawn.description=Imposta la velocità di generazione delle particelle.
+menu.leaf-particles.enabled.title=Particelle fogliari abilitate
+menu.leaf-particles.enabled.description=Attiva/disattiva le particelle fogliari. Quando abilitate, le foglie cadranno lentamente dai blocchi.
+menu.leaf-particles.reach-ground.title=Raggiungi sempre il suolo
+menu.leaf-particles.reach-ground.description=Quando è abilitato, le particelle fogliari raggiungeranno sempre il suolo prima del despawn.
+menu.leaf-particles.emitter-type.title=Tipo di emettitore
+menu.leaf-particles.emitter-type.description=Imposta il tipo di particella emessa dai blocchi. Possono essere particelle o entità.
+
+// Temperature Menu
+menu.temp.title=Impostazioni della temperatura
+menu.temp.description=Modifica le impostazioni per il funzionamento della temperatura.
+menu.temp.enabled.title=Temperatura attivata
+menu.temp.enabled.description=Imposta se la temperatura è abilitata. Mentre attivato i giocatori avranno una nuova sfida.
+menu.temp.damage.title=Danno
+menu.temp.damage.description=I giocatori inizieranno a ricevere danni se la temperatura è inferiore a %cold_threshold% o sopra a %heat_threshold%.
+menu.temp.damage.dealt=Danno inflitto
+menu.temp.damage.rate=Tasso di danno
+menu.temp.sweat.title=Sudorazione
+menu.temp.sweat.description=Se i giocatori abilitati perderanno l'idratazione più velocemente più alta è la temperatura.
+menu.temp.display.title=Modalità display
+menu.temp.display.description=Imposta dove viene visualizzata la temperatura per i giocatori.
+menu.temp.use-rgb.title=Utilizza i colori RGB
+menu.temp.use-rgb.description=Quando abilitato, il colore del testo della temperatura si sposterà lentamente tra i colori.
+
+// Temperature scanning Menu
+menu.temp.scanning.title=Scanner temperatura
+menu.temp.scanning.description=Modificare le impostazioni di scansione per i calcoli della temperatura.
+menu.temp.scanning.area.title=Area di scansione
+menu.temp.scanning.area.description=Questa è l'area che verrà scansionata intorno a ciascun giocatore durante l'aggiornamento della temperatura. Consigliato per mantenerlo basso.
+menu.temp.scanning.height.title=Altezza di scansione
+menu.temp.scanning.height.description=Altezza che lo scanner utilizzerà quando aggiornerà la temperatura di un giocatore. Consigliato per mantenerlo basso.
+menu.temp.scanning.use-blocks.title=Usa blocchi
+menu.temp.scanning.use-blocks.description=Se abilitato, i blocchi vicini verranno presi in considerazione durante il calcolo delle temperature.
+menu.temp.scanning.use-biomes.title=Usa biomi
+menu.temp.scanning.use-biomes.description=Se abilitati, i biomi verranno presi in considerazione durante il calcolo delle temperature.
+menu.temp.scanning.use-weather.title=Usa meteo
+menu.temp.scanning.use-weather.description=Se abilitato, il meteo verrà preso in considerazione durante il calcolo delle temperature.
+menu.temp.scanning.use-items.title=Use oggetti
+menu.temp.scanning.use-items.description=Se abilitato, gli elementi trattenuti verranno presi in considerazione durante il calcolo delle temperature.
+menu.temp.scanning.use-environment.title=Usa atmosfera
+menu.temp.scanning.use-environment.description=Se abilitati, verranno presi in considerazione fattori ambientali come la profondità del giocatore se si trova in acqua o l'altezza del giocatore nel mondo.
+// hydration Menu
+menu.hydration.title=Impostazioni di idratazione
+menu.hydration.description=Modifica le impostazioni per il funzionamento dell'idratazione.
+menu.hydration.enabled.title=Idratazione abilitata
+menu.hydration.enabled.description=Imposta se l'idratazione è abilitata.
+menu.hydration.damage.title=Danno di idratazione
+menu.hydration.damage.description=Imposta se i giocatori verranno danneggiati quando finiranno h20.
+menu.hydration.activity.title=Sudorazione ad alta attività
+menu.hydration.activity.description=Se abilitato, l'idratazione dei giocatori diminuirà più velocemente durante le attività ad alta attività come lo sprint.
+menu.hydration.display.title=Modalità display
+menu.hydration.display.description=Imposta dove viene visualizzata l'idratazione per i giocatori.
+menu.hydration.open_water.title=Bere dall'oceano
+menu.hydration.open_water.description=Quando abilitati, i giocatori possono bere da acque libere come l'oceano.
+menu.hydration.thirst.title=Effetto sete
+menu.hydration.thirst.description=Quando abilitato, i giocatori possono avere sete dopo aver bevuto o mangiato alcuni oggetti.
+
+// Wind Settings Menu
+menu.wind.title=Impostazioni vento
+menu.wind.description=Modificare le impostazioni per vento e raffiche.
+menu.wind.enabled.title=Vento abilitato
+menu.wind.enabled.description=Imposta se il vento è abilitato.
+menu.wind.gusts.enabled.title=Gusts Enabled
+menu.wind.gusts.enabled.description=Imposta se le raffiche sono abilitate.
+
+
+// Misc Menu
+menu.display.enabled.title=Attiva/disattiva la modalità di visualizzazione
+menu.display.enabled.description=Imposta se viene utilizzata la visualizzazione predefinita del plug-in. Se disabilitato, la visualizzazione nella barra delle azioni o nella bossbar non verrà abilitata. Questo può essere utile per disabilitarlo se lo visualizzi da qualche altra parte con un altro plugin come PlaceHolderAPI.
+
+// Other Menu
+menu.other.title=Altre impostazioni
+menu.other.update-notify.title=Notifiche aggiornamenti
+menu.other.update-notify.description=Avvisa gli amministratori e gli operatori quando si uniscono al server se è disponibile una versione più recente.
+menu.other.update-checks.title=Controllo aggiornamento
+menu.other.update-checks.description=Attiva/disattiva i controlli di aggiornamento automatici.
