@@ -20,3 +20,6 @@ _config.yml
 
 # Testing Files
 */me/masstrix/eternalnature/testing/
+
+# Build Files
+/target
