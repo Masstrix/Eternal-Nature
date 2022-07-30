@@ -1,8 +1,8 @@
 name: EternalNature
 main: me.masstrix.eternalnature.EternalNature
-version: @VERSION@
+version: ${project.version}
 author: Masstrix
-api-version: 1.16
+api-version: 1.19
 website: https://github.com/Masstrix/Eternal-Nature
 
 softdepend: [PlaceholderAPI]
