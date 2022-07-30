@@ -48,8 +48,8 @@ import java.util.logging.Level;
 
 public class EternalNature extends JavaPlugin {
 
-    private static final MinecraftVersion REQUIRED_VER = new MinecraftVersion("1.17");
-    private static final MinecraftVersion LATEST_BUILD = new MinecraftVersion("1.17.1");
+    private static final MinecraftVersion REQUIRED_VER = new MinecraftVersion("1.19");
+    private static final MinecraftVersion LATEST_BUILD = new MinecraftVersion("1.19.1");
     private static boolean serverVerUnTested;
 
     private EternalEngine engine;
@@ -166,7 +166,8 @@ public class EternalNature extends JavaPlugin {
 
         // Only check for updates if enabled.
         if (getConfig().getBoolean("general.check-for-updates")) {
-            new VersionChecker(PluginData.RESOURCE_ID, getDescription().getVersion()).run(info -> {
+            String ver = getDescription().getVersion().replace("-SNAPSHOT", "");
+            new VersionChecker(PluginData.RESOURCE_ID, ver).run(info -> {
                 if (info.isUnknown()) {
                     getLogger().log(Level.WARNING, "Failed to check plugin version. Are you running offline?");
                     debugLogger.warning("Failed to check version.");

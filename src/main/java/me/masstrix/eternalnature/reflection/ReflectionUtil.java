@@ -20,8 +20,11 @@ import me.masstrix.eternalnature.packet.WrappedPacket;
 //import net.minecraft.network.protocol.game.PacketPlayOutEntityDestroy;
 //import net.minecraft.server.level.EntityPlayer;
 //import net.minecraft.server.level.WorldServer;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -63,12 +66,12 @@ public class ReflectionUtil {
             asNMSItemMethod = craftItem.getMethod("asNMSCopy", ItemStack.class);
 
             // Locate the name of the PlayerConnection field in the EntityPlayer class
-//            for (Field f : EntityPlayer.class.getDeclaredFields()) {
-//                if (f.getType().getSimpleName().equals("PlayerConnection")) {
-//                    playerConnectionField = f.getName();
-//                    break;
-//                }
-//            }
+            for (Field f : net.minecraft.world.entity.player.Player.class.getDeclaredFields()) {
+                if (f.getType().getSimpleName().equals("PlayerConnection")) {
+                    playerConnectionField = f.getName();
+                    break;
+                }
+            }
 
         } catch (NoSuchMethodException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -191,18 +194,18 @@ public class ReflectionUtil {
      * @param packet    the packet or list of packets being sent to the player.
      */
     public static void sendPacket(Player to, Object... packet) {
-//        if (to == null || packet == null || packet.length == 0) return;
+        if (to == null || packet == null || packet.length == 0) return;
 //        Object pc = getConnection(to);
+        CraftPlayer craftplayer = (CraftPlayer) to;
+        ServerGamePacketListenerImpl connection = craftplayer.getHandle().connection;
 //        if (pc == null) return;
-//        try {
-//            Method sendMethod = pc.getClass().getDeclaredMethod("sendPacket", packetClass);
-//            for (Object p : packet) {
+        //            Method sendMethod = pc.getClass().getDeclaredMethod("sendPacket", packetClass);
+        for (Object p : packet) {
+//                TODO re add wrapping
 //                if (p instanceof WrappedPacket)
 //                    p = ((WrappedPacket) p).getPacket();
+            connection.send((Packet<?>) p);
 //                sendMethod.invoke(pc, p);
-//            }
-//        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-//            e.printStackTrace();
-//        }
+        }
     }
 }
