@@ -20,9 +20,9 @@ import me.masstrix.eternalnature.core.temperature.TempModifierType;
 import me.masstrix.eternalnature.core.temperature.TemperatureProfile;
 import me.masstrix.eternalnature.core.temperature.modifier.BiomeModifier;
 import me.masstrix.eternalnature.util.WorldTime;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.craftbukkit.libs.org.apache.commons.lang3.math.NumberUtils;
 
 public class BiomeModifierMap extends TemperatureModifierMap<Biome> {
 

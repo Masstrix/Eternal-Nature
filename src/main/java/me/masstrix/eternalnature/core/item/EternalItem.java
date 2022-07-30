@@ -52,6 +52,15 @@ public class EternalItem {
         return this;
     }
 
+    /**
+     * Creates an instance of this item from an item stack.
+     *
+     * @param item item stack to use.
+     */
+    public void fromItem(ItemStack item) {
+        this.stack = new ItemBuilder(item);
+    }
+
     public ItemStack create() {
         return stack.build();
     }

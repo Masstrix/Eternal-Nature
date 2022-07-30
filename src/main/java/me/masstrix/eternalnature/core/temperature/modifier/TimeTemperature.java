@@ -18,10 +18,9 @@ package me.masstrix.eternalnature.core.temperature.modifier;
 
 import me.masstrix.eternalnature.util.ConfigUtil;
 import me.masstrix.eternalnature.util.WorldTime;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.craftbukkit.libs.org.apache.commons.lang3.StringUtils;
-import org.bukkit.craftbukkit.libs.org.apache.commons.lang3.math.NumberUtils;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -11,5 +11,5 @@ public interface WrappedPacket {
      *
      * @return the packet associated.
      */
-    Object getPacket();
+//    Object getPacket();
 }

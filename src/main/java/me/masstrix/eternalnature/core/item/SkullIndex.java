@@ -20,7 +20,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.libs.org.apache.commons.codec.binary.Base64;
+//import org.bukkit.craftbukkit.libs.org.apache.commons.codec.binary.Base64;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
@@ -54,9 +54,9 @@ public enum SkullIndex {
         GameProfile profile = new GameProfile(UUID.randomUUID(), this.name());
         profile.getProperties().clear();
         PropertyMap map = profile.getProperties();
-        byte[] encoded = Base64.encodeBase64(String.format("{\"textures\":{\"SKIN\":" +
-                "{\"url\":\"http://textures.minecraft.net/texture/%s\"}}}", this.id).getBytes());
-        map.put("textures", new Property("textures", new String(encoded)));
+//        byte[] encoded = Base64.encodeBase64(String.format("{\"textures\":{\"SKIN\":" +
+//                "{\"url\":\"http://textures.minecraft.net/texture/%s\"}}}", this.id).getBytes());
+//        map.put("textures", new Property("textures", new String(encoded)));
 
         this.profile = profile;
 

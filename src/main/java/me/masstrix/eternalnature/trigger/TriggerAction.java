@@ -125,6 +125,7 @@ public abstract class TriggerAction {
 
         private Set<TriggerSound> sounds = new HashSet<>();
 
+        @SuppressWarnings("unchecked")
         @Override
         public PlaySound parse(String name, ConfigurationSection section) {
             if (section.isList(name)) {

@@ -17,9 +17,9 @@
 package me.masstrix.eternalnature.reflection;
 
 import me.masstrix.eternalnature.packet.WrappedPacket;
-import net.minecraft.network.protocol.game.PacketPlayOutEntityDestroy;
-import net.minecraft.server.level.EntityPlayer;
-import net.minecraft.server.level.WorldServer;
+//import net.minecraft.network.protocol.game.PacketPlayOutEntityDestroy;
+//import net.minecraft.server.level.EntityPlayer;
+//import net.minecraft.server.level.WorldServer;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -63,12 +63,12 @@ public class ReflectionUtil {
             asNMSItemMethod = craftItem.getMethod("asNMSCopy", ItemStack.class);
 
             // Locate the name of the PlayerConnection field in the EntityPlayer class
-            for (Field f : EntityPlayer.class.getDeclaredFields()) {
-                if (f.getType().getSimpleName().equals("PlayerConnection")) {
-                    playerConnectionField = f.getName();
-                    break;
-                }
-            }
+//            for (Field f : EntityPlayer.class.getDeclaredFields()) {
+//                if (f.getType().getSimpleName().equals("PlayerConnection")) {
+//                    playerConnectionField = f.getName();
+//                    break;
+//                }
+//            }
 
         } catch (NoSuchMethodException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -110,15 +110,15 @@ public class ReflectionUtil {
      * @param world world to get the world server for.
      * @return the world's WorldServer
      */
-    public static WorldServer getWorldHandle(World world) {
-        Object cWorld = craftWorld.cast(world);
-        try {
-            return (WorldServer) getWorldHandleMethod.invoke(cWorld);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
+//    public static WorldServer getWorldHandle(World world) {
+//        Object cWorld = craftWorld.cast(world);
+//        try {
+//            return (WorldServer) getWorldHandleMethod.invoke(cWorld);
+//        } catch (IllegalAccessException | InvocationTargetException e) {
+//            e.printStackTrace();
+//        }
+//        return null;
+//    }
 
     /**
      * Returns a converted bukkit ItemStack as a minecraft ItemStack.
@@ -191,18 +191,18 @@ public class ReflectionUtil {
      * @param packet    the packet or list of packets being sent to the player.
      */
     public static void sendPacket(Player to, Object... packet) {
-        if (to == null || packet == null || packet.length == 0) return;
-        Object pc = getConnection(to);
-        if (pc == null) return;
-        try {
-            Method sendMethod = pc.getClass().getDeclaredMethod("sendPacket", packetClass);
-            for (Object p : packet) {
-                if (p instanceof WrappedPacket)
-                    p = ((WrappedPacket) p).getPacket();
-                sendMethod.invoke(pc, p);
-            }
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
-        }
+//        if (to == null || packet == null || packet.length == 0) return;
+//        Object pc = getConnection(to);
+//        if (pc == null) return;
+//        try {
+//            Method sendMethod = pc.getClass().getDeclaredMethod("sendPacket", packetClass);
+//            for (Object p : packet) {
+//                if (p instanceof WrappedPacket)
+//                    p = ((WrappedPacket) p).getPacket();
+//                sendMethod.invoke(pc, p);
+//            }
+//        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+//            e.printStackTrace();
+//        }
     }
 }

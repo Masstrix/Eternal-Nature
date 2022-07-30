@@ -26,7 +26,7 @@ import java.util.logging.Logger;
 
 public class BuildInfo {
 
-    private static int build = -1;
+    private static String buildDate = "Unknown Date";
     private static String version = "Unknown";
     private static boolean snapshot;
 
@@ -49,7 +49,7 @@ public class BuildInfo {
                 properties.load(in);
 
                 // Set constant values
-                build = Integer.parseInt(properties.getProperty("build", "-1"));
+                buildDate = properties.getProperty("build-date", "Unknown Date");
                 version = properties.getProperty("version", "Unknown");
                 snapshot = Boolean.parseBoolean(properties.getProperty("snapshot", "true"));
             } catch (IOException e) {
@@ -81,7 +81,7 @@ public class BuildInfo {
     /**
      * @return the unique builder number.
      */
-    public static int getBuild() {
-        return build;
+    public static String getBuild() {
+        return buildDate;
     }
 }

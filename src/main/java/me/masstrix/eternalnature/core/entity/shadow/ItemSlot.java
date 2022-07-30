@@ -16,7 +16,9 @@
 
 package me.masstrix.eternalnature.core.entity.shadow;
 
-import net.minecraft.world.entity.EnumItemSlot;
+//import net.minecraft.world.entity.EnumItemSlot;
+
+import net.minecraft.world.entity.EquipmentSlot;
 
 public enum ItemSlot {
     MAINHAND,
@@ -26,17 +28,17 @@ public enum ItemSlot {
     CHEST,
     HEAD;
 
-    private final EnumItemSlot NMS;
+    private final EquipmentSlot NMS;
 
     ItemSlot() {
-        this.NMS = EnumItemSlot.values()[this.ordinal()];
+        this.NMS = EquipmentSlot.values()[this.ordinal()];
     }
 
     public boolean isArmorSlot() {
         return this.ordinal() > OFFHAND.ordinal();
     }
 
-    public EnumItemSlot nms() {
+    public EquipmentSlot nms() {
         return NMS;
     }
 }
