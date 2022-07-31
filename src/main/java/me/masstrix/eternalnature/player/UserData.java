@@ -89,6 +89,10 @@ public class UserData implements EternalUser, Configurable {
     private boolean isBurning;
     private boolean isFreezing;
 
+    // Debug info
+    private double debugTempArmour = 0;
+    private double debugTempHand = 0;
+
     //
     // Configuration
     //
@@ -335,6 +339,11 @@ public class UserData implements EternalUser, Configurable {
                         .append("" + MathUtil.round(temperature, 2))
                         .color(PluginData.Colors.SECONDARY)
                         .append("/" + MathUtil.round(tempExact, 2))
+                        .color(PluginData.Colors.TERTIARY);
+                builder.append("\n   ", ComponentBuilder.FormatRetention.NONE)
+                        .color(PluginData.Colors.MESSAGE)
+                        .append("Hands: " + MathUtil.round(debugTempHand, 2)
+                                + "  Armour: " + MathUtil.round(debugTempArmour, 2))
                         .color(PluginData.Colors.TERTIARY);
                 if (isBurning) builder.append(" ☀").color(ChatColor.RED)
                         .append("(DMG)").color(ChatColor.GRAY);
@@ -836,6 +845,10 @@ public class UserData implements EternalUser, Configurable {
         boolean inWater = isBlockWater(loc.getBlock());
         double emission = 0;
 
+        // Reset debug
+        debugTempArmour = 0;
+        debugTempHand = 0;
+
         // Add nearby block temperature if enabled.
         if (tmpUseBlocks) {
             if (forceNew) tempScanner.quickUpdate();
@@ -875,7 +888,9 @@ public class UserData implements EternalUser, Configurable {
             ItemStack[] armor = player.getEquipment().getArmorContents();
             for (ItemStack i : armor) {
                 if (i == null) continue;
-                emission += tempData.getEmission(TempModifierType.CLOTHING, i.getType());
+                double equipmentTemp = tempData.getEmission(TempModifierType.CLOTHING, i.getType());
+                emission += equipmentTemp;
+                debugTempArmour += equipmentTemp;
             }
 
             // Add temperature depending on what the player is holding
@@ -884,10 +899,12 @@ public class UserData implements EternalUser, Configurable {
             if (mainHand != Material.AIR) {
                 double mainTemp = tempData.getEmission(TempModifierType.BLOCK, mainHand);
                 emission += mainTemp / 10;
+                debugTempHand += mainTemp / 10;
             }
             if (offHand != Material.AIR) {
                 double offTemp = tempData.getEmission(TempModifierType.BLOCK, offHand);
                 emission += offTemp / 10;
+                debugTempHand += offTemp / 10;
             }
         }
 
