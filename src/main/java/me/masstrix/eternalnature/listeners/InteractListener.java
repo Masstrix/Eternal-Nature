@@ -26,11 +26,16 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.util.Vector;
+
+import java.util.List;
 
 public class InteractListener implements Listener, Configurable {
 
@@ -61,6 +66,30 @@ public class InteractListener implements Listener, Configurable {
                 .getBlock().getType() == Material.WATER) {
             return;
         }
+        // Don't interact with water if they are hitting.
+        if (!event.getAction().name().contains(player.getMainHand().name())) {
+            return;
+        }
+
+        // Ignore other hand otherwise we get greedy and sip twice.
+        if (event.getHand() != EquipmentSlot.OFF_HAND) return;
+
+
+        // Don't drink if they are swimming! That's called drowning.
+        if (player.getEyeLocation().getBlock().getType() == Material.WATER) {
+            return;
+        }
+
+        // Dont drink if the player is looking at an entity.
+        List<Entity> entities = player.getNearbyEntities(4, 4, 4);
+        for (Entity e : entities) {
+            Location eye = player.getEyeLocation();
+            Vector toEntity = e.getLocation().toVector().subtract(eye.toVector());
+            double dot = toEntity.normalize().dot(eye.getDirection());
+
+            if (dot > 0.95D)
+                return;
+        }
 
         Location origin = player.getEyeLocation().clone();
         Vector direction = origin.getDirection().clone().normalize();
@@ -70,6 +99,11 @@ public class InteractListener implements Listener, Configurable {
         for (int i = 0; i < 3; i++) {
             origin.add(direction);
             Block block = origin.getBlock();
+
+            // We can't quite sip through walls.
+            if (!block.isPassable()) {
+                break;
+            }
             if (block.isLiquid() && block.getType() == Material.WATER) {
                 UserData data = ENGINE.getUserData(player.getUniqueId());
                 if (!data.isHydrationFull()) {
