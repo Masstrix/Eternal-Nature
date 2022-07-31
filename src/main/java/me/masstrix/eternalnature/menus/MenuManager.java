@@ -92,7 +92,7 @@ public final class MenuManager implements Listener {
         // Find a menu that matches then run the on click event if there is a match found.
         for (GlobalMenu menu : menus.values()) {
             if (menu.isInventorySimilar(inv)) {
-                menu.processClick(event.getSlot(), (Player) event.getWhoClicked(), event.getClick());
+//                menu.processClick(event.getSlot(), (Player) event.getWhoClicked(), event.getClick());
                 event.setCancelled(true);
                 break;
             }
