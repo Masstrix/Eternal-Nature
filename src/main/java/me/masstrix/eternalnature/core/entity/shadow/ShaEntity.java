@@ -10,6 +10,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_19_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_19_R1.util.CraftChatMessage;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -24,6 +25,7 @@ public abstract class ShaEntity <E extends Entity> {
     final Set<Player> VIS = new ConcurrentSet<>();
     private final ItemStack[] ITEMS = new ItemStack[ItemSlot.values().length];
     private Location location;
+    private String customName = "";
 
     public ShaEntity(Location loc) {
         ENTITY = createEntity(((CraftWorld) loc.getWorld()).getHandle(), loc);
@@ -50,6 +52,14 @@ public abstract class ShaEntity <E extends Entity> {
         sendUpdates(packet);
     }
 
+    /**
+     * Sends an entity data packet to the player to update the entity data for this shadow
+     * entity.
+     *
+     * @see #sendMetaDataUpdate()
+     *
+     * @param player who to send the packet to.
+     */
     public final void sendMetaDataUpdate(Player player) {
         if (!VIS.contains(player)) return;
         ClientboundSetEntityDataPacket packet = new ClientboundSetEntityDataPacket(
@@ -60,6 +70,11 @@ public abstract class ShaEntity <E extends Entity> {
         ReflectionUtil.sendPacket(player, packet);
     }
 
+    /**
+     * Sends an update packet to all players this entity is visible to.
+     *
+     * @param packet packets to send.
+     */
     @SuppressWarnings("all")
     public final void sendUpdates(Packet<?>... packet) {
         VIS.forEach(p->ReflectionUtil.sendPacket(p, packet));
@@ -107,15 +122,13 @@ public abstract class ShaEntity <E extends Entity> {
     }
 
     public void setCustomName(String name) {
-//        ENTITY.setCustomName();
-//        ENTITY.setCustomName(new ChatComponentText(name));
-//        sendMetaDataUpdate();
+        this.customName = name;
+        ENTITY.setCustomName(CraftChatMessage.fromString(name)[0]);
+        sendMetaDataUpdate();
     }
 
     public String getCustomName() {
-//        IChatBaseComponent txt = ENTITY.getCustomName();
-//        return txt != null ? txt.getText() : "";
-        return "";
+        return customName;
     }
 
     public void setCustomNameVisible(boolean visible) {
