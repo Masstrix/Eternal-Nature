@@ -109,6 +109,7 @@ public class Configuration {
      * @param configurable configurable to subscribe to the handler.
      */
     public void subscribe(Configurable configurable) {
+        if (configurable == null) return;
         configurables.add(configurable);
     }
 
@@ -118,6 +119,7 @@ public class Configuration {
      * @param configurable configurable to unsubscribe from the handler.
      */
     public void unsubscribe(Configurable configurable) {
+        if (configurable == null) return;
         configurables.remove(configurable);
     }
 

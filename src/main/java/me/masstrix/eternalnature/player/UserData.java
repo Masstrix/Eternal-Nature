@@ -133,6 +133,9 @@ public class UserData implements EternalUser, Configurable {
             this.temperature = data.getAmbientTemperature(5, 15,
                     loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
         }
+        // Save player data to config.
+        save();
+
         setup();
 
         // debugging

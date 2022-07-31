@@ -32,6 +32,7 @@ import me.masstrix.eternalnature.util.EnumUtils;
 import me.masstrix.eternalnature.util.Stopwatch;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -70,7 +71,8 @@ public class EternalEngine implements Configurable {
         return temperatureUnit;
     }
 
-    private EternalEngine() {}
+    private EternalEngine() {
+    }
 
     /**
      * Creates an instance of the engine and starts it.
@@ -79,7 +81,7 @@ public class EternalEngine implements Configurable {
      */
     EternalEngine(EternalNature plugin) {
         if (enabled) return;
-        enabled  = true;
+        enabled = true;
         this.plugin = plugin;
         this.defaultTempProfile = new TemperatureProfile(
                 new Configuration(plugin, "temperature-config")
@@ -163,10 +165,12 @@ public class EternalEngine implements Configurable {
             return users.get(uuid);
         }
 
-        ConfigurationSection section = plugin.getPlayerConfig().getYml()
-                .getConfigurationSection(uuid.toString());
+        YamlConfiguration configuration = plugin.getPlayerConfig().getYml();
         UserData user;
-        if (section != null) {
+
+        if (configuration.contains(uuid.toString())) {
+            ConfigurationSection section = plugin.getPlayerConfig().getYml()
+                    .getConfigurationSection(uuid.toString());
             user = new UserData(plugin, uuid, section.getDouble("temp"), section.getDouble("hydration"));
             user.setThirstTimer(section.getInt("effects.thirst"));
         } else {
