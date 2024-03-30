@@ -22,6 +22,25 @@
     </a>
 </p>
 
+<table style="min-width: 100%">
+  <thead>
+    <tr>
+      <td align="left">
+        <h4>:information_source: Project is no longer Maintained</h4>
+      </td>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        <p>This project is no longer being maintained and can be considered abandoned at this time. Any future feature requests or bug reportrs will likely go un-noticed.</p>
+          <p>if you want to continue this project in future versions I welcome you to make a fork and continue development of this plugin.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
 # Information
 
 [Eternal Nature][spigot] is a spigot plugin aimed towards adding more realistic effects and systems for 
